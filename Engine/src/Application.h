@@ -49,6 +49,8 @@ private:
 	void CreateInstance();
 	void SetupDebugMessenger();
 	void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void PickPhysicalDevice();
+	bool IsDeviceSuitable(VkPhysicalDevice device);
 
 private:
 	GLFWwindow* m_WindowHandle {};
@@ -57,8 +59,12 @@ private:
 	// The starting point of Vulkan app.
 	// It represents a connection between app and Vulkan library.
 	VkInstance m_Instance {};
-
 	VkDebugUtilsMessengerEXT debugMessenger;
+
+	// a handle to a physical device in Vulkan
+	// You must first create a VkInstance, then use
+	// vkEnumeratePhysicalDevices() to get available one
+	VkPhysicalDevice m_PhysicalDevice {};
 	
 	VkSurfaceKHR m_Surface {};
 	

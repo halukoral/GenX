@@ -1,5 +1,4 @@
 #include "Application.h"
-#include "Log.h"
 #include "Core.h"
 
 #define GLFW_INCLUDE_VULKAN
@@ -20,7 +19,8 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
 	if (func != nullptr)
 	{
 		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	} else
+	}
+	else
 	{
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
@@ -42,7 +42,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData)
 {
-	LOG_ERROR("validation layer: {0}", pCallbackData->pMessage);
+    std::cerr << "validation layer: " << pCallbackData->pMessage << '\n';
 	return VK_FALSE;
 }
 
@@ -95,7 +95,7 @@ void CheckVkResult(VkResult err)
 	if (err == 0)
 		return;
 
-	LOG_ERROR("[vulkan] Error: VkResult = {0}", err);
+	std::cerr << "[vulkan] Error: VkResult = " << err << '\n';
 
 	if (err < 0)
 		abort();
@@ -103,7 +103,7 @@ void CheckVkResult(VkResult err)
 
 static void GlfwErrorCallback(int error, const char* description)
 {
-	LOG_ERROR("GLFW Error ({0}): {1}", error, description);
+	std::cerr << "GLFW Error : " << error << description << '\n';
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,14 +130,14 @@ void Application::Init()
 {
 	if (!InitWindow())
 	{
-		LOG_ERROR("Could not create window!");
+		std::cerr << "Could not create window!\n";
 		glfwTerminate();
 		return;
 	}
 
 	if (!InitVulkan())
 	{
-		LOG_ERROR("Could not init Vulkan!");
+		std::cerr << "Could not init Vulkan!\n";
 		glfwTerminate();
 		return;
 	}
@@ -149,14 +149,14 @@ bool Application::InitWindow()
 	glfwSetErrorCallback(GlfwErrorCallback);
 	if (!glfwInit())
 	{
-		LOG_ERROR("Could not initialize GLFW!");
+		std::cerr << "Could not initialize GLFW!\n";
 		return false;
 	}
 
 	// Setup Vulkan
 	if (!glfwVulkanSupported())
 	{
-		LOG_ERROR("GLFW: Vulkan not supported!");
+		std::cerr << "GLFW: Vulkan not supported!\n";
 		return false;
 	}
 	
@@ -179,7 +179,7 @@ bool Application::InitVulkan()
 
 	if (PhysicalDeviceCount == 0)
 	{
-		LOG_ERROR("No Vulkan capable GPU found");
+		std::cerr << "No Vulkan capable GPU found!\n";
 		return false;
 	}
 
@@ -187,12 +187,10 @@ bool Application::InitVulkan()
 	Devices.resize(PhysicalDeviceCount);
 	vkEnumeratePhysicalDevices(m_Instance, &PhysicalDeviceCount, Devices.data());
 
-	LOG_INFO("{0} : Found {1} physical device(s)", __FUNCTION__, PhysicalDeviceCount);
-
 	VkResult Result = glfwCreateWindowSurface(m_Instance, m_WindowHandle, nullptr, &m_Surface);
 	if (Result != VK_SUCCESS)
 	{
-		LOG_ERROR("Could not create Vulkan surface");
+		std::cerr << "Could not create Vulkan surface!\n";
 		return false;
 	}
 
@@ -224,14 +222,14 @@ void Application::CreateInstance()
 {
 	if (EnableValidationLayers && !CheckValidationLayerSupport())
 	{
-		LOG_ERROR("Validation layers requested, but not available!");
+		throw std::runtime_error("validation layers requested, but not available!");
 	}
 	
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = "Hello Triangle";
+	appInfo.pApplicationName = "Engine";
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.pEngineName = "No Engine";
+	appInfo.pEngineName = "GenX";
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -261,21 +259,20 @@ void Application::CreateInstance()
 	VkResult Result = vkCreateInstance(&createInfo, nullptr, &m_Instance);
 	if (Result != VK_SUCCESS)
 	{
-		LOG_ERROR("Could not create Vulkan instance");
+		throw std::runtime_error("failed to create instance!");
 	}
 }
 
 void Application::SetupDebugMessenger()
 {
-	if constexpr (!EnableValidationLayers)
-		return;
+	if constexpr (!EnableValidationLayers) return;
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	PopulateDebugMessengerCreateInfo(createInfo);
 
 	if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
 	{
-		LOG_ERROR("failed to set up debug messenger!");
+		throw std::runtime_error("failed to set up debug messenger!");
 	}
 }
 
@@ -285,6 +282,49 @@ void Application::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateIn
 	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	createInfo.pfnUserCallback = debugCallback;
+}
+
+void Application::PickPhysicalDevice()
+{
+	// Instead of just checking if a device is suitable or not
+	// and going with the first one, you could also give each device
+	// a score and pick the highest one.
+
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+
+	if (deviceCount == 0)
+	{
+		throw std::runtime_error("failed to find GPUs with Vulkan support!");
+	}
+
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+
+	for (const auto& device : devices)
+	{
+		if (IsDeviceSuitable(device))
+		{
+			m_PhysicalDevice = device;
+			break;
+		}
+	}
+
+	if (m_PhysicalDevice == VK_NULL_HANDLE)
+	{
+		throw std::runtime_error("failed to find a suitable GPU!");
+	}
+}
+
+bool Application::IsDeviceSuitable(VkPhysicalDevice device)
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+		   deviceFeatures.geometryShader;
 }
 
 void Application::Run()
