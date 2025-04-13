@@ -41,16 +41,19 @@ public:
 	void Close();
 
 	static float GetTime();
-	GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
+	GLFWwindow* GetWindowHandle() const { return m_Window; }
 	
 private:
 	void Init();
+	bool InitVulkan();
 	void Shutdown();
 
+	void CreateInstance();
+	
 private:
 	
 	AppSpec m_Spec;
-	GLFWwindow* m_WindowHandle = nullptr;
+	GLFWwindow* m_Window = nullptr;
 	bool m_Running = false;
 
 	float m_TimeStep = 0.0f;
@@ -59,6 +62,12 @@ private:
 
 	std::vector<std::shared_ptr<Layer>> m_LayerStack;
 	std::function<void()> m_MenubarCallback;
+
+	///////////////////////////////////////////////////////////
+	/// VULKAN
+	
+	VkInstance m_Instance;
+
 };
 
 // Implemented by CLIENT

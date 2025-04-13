@@ -57,13 +57,55 @@ void Application::Init()
 	}
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	m_WindowHandle = glfwCreateWindow((int)m_Spec.Width, (int)m_Spec.Height, m_Spec.Name.c_str(), nullptr, nullptr);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	m_Window = glfwCreateWindow((int)m_Spec.Width, (int)m_Spec.Height, m_Spec.Name.c_str(), nullptr, nullptr);
 
 	// Setup Vulkan
 	if (!glfwVulkanSupported())
 	{
 		std::cerr << "GLFW: Vulkan not supported!\n";
 		return;
+	}
+
+	if (!InitVulkan())
+	{
+		std::cerr << "Couldn't initialize VULKAN!\n";
+		return;
+	}
+}
+
+bool Application::InitVulkan()
+{
+	CreateInstance();
+	return true;
+}
+
+void Application::CreateInstance()
+{
+	VkApplicationInfo appInfo{};
+	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	appInfo.pApplicationName = "Vulkan Application";
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.pEngineName = "GenX Engine";
+	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.apiVersion = VK_API_VERSION_1_0;
+
+	VkInstanceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	createInfo.pApplicationInfo = &appInfo;
+
+	// Get Suggested Extensions
+	uint32_t glfwExtensionCount = 0;
+	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+	createInfo.enabledExtensionCount = glfwExtensionCount;
+	createInfo.ppEnabledExtensionNames = glfwExtensions;
+
+	createInfo.enabledLayerCount = 0;
+
+	if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create instance!");
 	}
 }
 
@@ -74,7 +116,10 @@ void Application::Shutdown()
 
 	m_LayerStack.clear();
 
-	glfwDestroyWindow(m_WindowHandle);
+	////////////////////////////////
+	vkDestroyInstance(m_Instance, nullptr);
+	
+	glfwDestroyWindow(m_Window);
 	glfwTerminate();
 
 	g_ApplicationRunning = false;
@@ -85,7 +130,7 @@ void Application::Run()
 	m_Running = true;
 
 	// Main loop
-	while (!glfwWindowShouldClose(m_WindowHandle) && m_Running)
+	while (!glfwWindowShouldClose(m_Window) && m_Running)
 	{
 		glfwPollEvents();
 		
