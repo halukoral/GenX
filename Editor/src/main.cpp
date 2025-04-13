@@ -7,11 +7,11 @@ class EditorLayer : public Layer
 public:
     void OnUIRender() override
     {
-        ImGui::Begin("Hello");
-        ImGui::Button("Button");
-        ImGui::End();
-
-        ImGui::ShowDemoWindow();
+        // ImGui::Begin("Hello");
+        // ImGui::Button("Button");
+        // ImGui::End();
+        //
+        // ImGui::ShowDemoWindow();
     }
 };
 
@@ -22,16 +22,16 @@ Application* CreateApplication(int argc, char** argv)
 
     auto app = new Application(spec);
     app->PushLayer<EditorLayer>();
-    app->SetMenubarCallback([app]()
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Exit"))
-            {
-                app->Close();
-            }
-            ImGui::EndMenu();
-        }
-    });
+    // app->SetMenubarCallback([app]()
+    // {
+    //     if (ImGui::BeginMenu("File"))
+    //     {
+    //         if (ImGui::MenuItem("Exit"))
+    //         {
+    //             app->Close();
+    //         }
+    //         ImGui::EndMenu();
+    //     }
+    // });
     return app;
 }

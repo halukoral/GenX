@@ -1,4 +1,5 @@
 #pragma once
+
 #include "pch.h"
 #include "Layer.h"
 #include "vulkan/vulkan.h"
@@ -41,15 +42,6 @@ public:
 
 	static float GetTime();
 	GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
-
-	static VkInstance GetInstance();
-	static VkPhysicalDevice GetPhysicalDevice();
-	static VkDevice GetDevice();
-
-	static VkCommandBuffer GetCommandBuffer(bool begin);
-	static void FlushCommandBuffer(VkCommandBuffer commandBuffer);
-
-	static void SubmitResourceFree(std::function<void()>&& func);
 	
 private:
 	void Init();
