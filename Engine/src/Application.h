@@ -52,7 +52,8 @@ private:
 	void CreateInstance();
 	void SetupDebugMessenger();
 	void PickPhysicalDevice();
-
+	void CreateLogicalDeviceAndQueues();
+	
 	static gsl::span<gsl::czstring> GetSuggestedInstanceExtensions();
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
@@ -92,11 +93,15 @@ private:
 	/////////////////////////////////////////////////
 	/// VULKAN
 	
-	VkInstance m_Instance;
-	VkDebugUtilsMessengerEXT m_DebugMessenger;
-	VkPhysicalDevice m_PhysicalDevice;
+	VkInstance m_Instance {};
+	VkDebugUtilsMessengerEXT m_DebugMessenger {};
 
-	
+	// After selecting physical device, you need to
+	// set up a logical device to interface it.
+	VkPhysicalDevice m_PhysicalDevice {};
+	VkDevice m_LogicalDevice {};
+
+	VkQueue m_GraphicsQueue {};
 };
 
 // Implemented by CLIENT

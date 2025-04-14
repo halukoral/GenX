@@ -179,6 +179,7 @@ bool Application::InitVulkan()
 	CreateInstance();
 	SetupDebugMessenger();
 	PickPhysicalDevice();
+	CreateLogicalDeviceAndQueues();
 	return true;
 }
 
@@ -189,14 +190,14 @@ void Application::Shutdown()
 
 	m_LayerStack.clear();
 
-	////////////////////////////////
 	if (EnableValidationLayers)
 	{
 		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
-	
+
+	vkDestroyDevice(m_LogicalDevice, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
-	
+
 	glfwDestroyWindow(m_Window);
 	glfwTerminate();
 
@@ -423,5 +424,45 @@ void Application::PickPhysicalDevice()
 	}*/
 	
 }
+
+void Application::CreateLogicalDeviceAndQueues()
+{
+	QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
+
+	if (!indices.IsValid())
+	{
+		spdlog::error("failed to get queue families!");
+		std::exit(EXIT_FAILURE);
+	}
+
+	// Vulkan lets you assign priorities to queues to
+	// influence the scheduling of command buffer execution.
+	// This is required even if there is only a single queue:
+	float queuePriority = 1.0f;
+
+	// VkDeviceQueueCreateInfo describes the number of queues we want for a single queue family.
+	VkDeviceQueueCreateInfo queueCreateInfo{};
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+
+	// We also need to specify the set of device features that we’ll be using
+	VkPhysicalDeviceFeatures deviceFeatures{};
+
+	VkDeviceCreateInfo deviceCreateInfo{};
+	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceCreateInfo.queueCreateInfoCount = 1;
+	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+	deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+	deviceCreateInfo.enabledExtensionCount = 0;
+
+	VkResult result = vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice);
+	if (result != VK_SUCCESS)
+	{
+		spdlog::error("failed to create logical device!");
+		std::exit(EXIT_FAILURE);
+	}
+}  
 
 #pragma endregion
