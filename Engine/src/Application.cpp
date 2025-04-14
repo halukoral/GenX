@@ -12,6 +12,10 @@
 extern bool g_ApplicationRunning;
 static Application* s_Instance = nullptr;
 
+#pragma region VALIDATION_LAYERS
+
+#pragma region VK_FUNCTION_EXT_IMPL
+
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(
 	VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* info,
@@ -43,6 +47,8 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 		function(instance, debugMessenger, allocator);
 	}
 }
+
+#pragma endregion
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL ValidationCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT severity,
@@ -86,7 +92,42 @@ namespace
 	{
 		spdlog::error ("Glfw Validation: {}", description);
 	}
+
+	bool IsLayerNameEqual(gsl::czstring name, const VkLayerProperties& properties)
+	{
+		return streq(properties.layerName, name);
+	}
+
+	bool IsLayerSupported(gsl::span<VkLayerProperties> layers, gsl::czstring name)
+	{
+		return std::ranges::any_of(layers, std::bind_front(IsLayerNameEqual, name));
+	}
 }
+
+bool Application::AreAllLayersSupported(gsl::span<gsl::czstring> layers)
+{
+	auto supportedLayers = GetSupportedValidationLayers();
+
+	return std::ranges::all_of(layers, std::bind_front(IsLayerSupported, supportedLayers));
+}
+
+void Application::SetupDebugMessenger()
+{
+	if (!EnableValidationLayers)
+	{
+		return;
+	}
+
+	VkDebugUtilsMessengerCreateInfoEXT info = GetCreateMessengerInfo();
+	VkResult result = vkCreateDebugUtilsMessengerEXT(m_Instance, &info, nullptr, &debugMessenger);
+	if (result != VK_SUCCESS)
+	{
+		spdlog::error("Cannot create debug messenger");
+		return;
+	}
+}
+
+#pragma endregion
 
 Application::Application(AppSpec spec) : m_Spec(std::move(spec))
 {
@@ -194,6 +235,8 @@ float Application::GetTime()
 {
 	return (float)glfwGetTime();
 }
+
+#pragma region INSTANCE_AND_EXTENSIONS
 
 void Application::CreateInstance()
 {
@@ -304,14 +347,6 @@ namespace
 	{
 		return std::ranges::any_of(extensions,std::bind_front(IsExtensionNameEqual, name));
 	}
-
-	bool IsLayerNameEqual(gsl::czstring name, const VkLayerProperties& properties) {
-		return streq(properties.layerName, name);
-	}
-
-	bool IsLayerSupported(gsl::span<VkLayerProperties> layers, gsl::czstring name) {
-		return std::ranges::any_of(layers, std::bind_front(IsLayerNameEqual, name));
-	}
 }
 
 bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions)
@@ -321,25 +356,4 @@ bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& exte
 	return std::ranges::all_of(extensions,std::bind_front(IsExtensionSupported, supportedExtensions));
 }
 
-bool Application::AreAllLayersSupported(gsl::span<gsl::czstring> layers)
-{
-	auto supportedLayers = GetSupportedValidationLayers();
-
-	return std::ranges::all_of(layers, std::bind_front(IsLayerSupported, supportedLayers));
-}
-
-void Application::SetupDebugMessenger()
-{
-	if (!EnableValidationLayers)
-	{
-		return;
-	}
-
-	VkDebugUtilsMessengerCreateInfoEXT info = GetCreateMessengerInfo();
-	VkResult result = vkCreateDebugUtilsMessengerEXT(m_Instance, &info, nullptr, &debugMessenger);
-	if (result != VK_SUCCESS)
-	{
-		spdlog::error("Cannot create debug messenger");
-		return;
-	}
-}
+#pragma endregion
