@@ -11,8 +11,8 @@
         ../ThirdParty/imgui
         ../ThirdParty/imgui/backends
         ../ThirdParty/glfw/include
-        ../ThirdParty/tinyobjloader
         ../ThirdParty/stb_image
+        ../ThirdParty/tinyobjloader
         ../ThirdParty/glm
         ${VULKAN_SDK_INCLUDE}
     )

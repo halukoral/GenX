@@ -11,3 +11,6 @@
 [submodule "ThirdParty/GLFW"]
 	path = ThirdParty/GLFW
 	url = https://github.com/glfw/glfw.git
+[submodule "ThirdParty/gsl"]
+	path = ThirdParty/gsl
+	url = https://github.com/microsoft/GSL.git
