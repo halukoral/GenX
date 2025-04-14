@@ -5,7 +5,7 @@
 
 	#define GX_DEBUGBREAK() __debugbreak()
 	#define GX_ENABLE_ASSERTS
-	constexpr bool EnableValidationLayers = true;
+	bool EnableValidationLayers = true;
 
 #else
 

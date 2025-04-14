@@ -49,28 +49,15 @@ private:
 
 	void CreateInstance();
 
-	static gsl::span<gsl::czstring> GetSuggestedExtensions();
+	static gsl::span<gsl::czstring> GetSuggestedInstanceExtensions();
+	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
 	static bool AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions);
-	
-	//////////////////////////////////////////////////////
-	/// Debug
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData)
-	{
-		std::cerr << "validation layer: " << pCallbackData->pMessage << '\n';
-		return VK_FALSE;
-	}
 
-	static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	static std::vector<VkLayerProperties> GetSupportedValidationLayers();
+	static bool AreAllLayersSupported(gsl::span<gsl::czstring> layers);
 	void SetupDebugMessenger();
-	static std::vector<const char*> GetRequiredExtensions();
-	static bool CheckValidationLayerSupport();
-	//////////////////////////////////////////////////////
-	
+
 private:
 	
 	AppSpec m_Spec;
@@ -84,7 +71,7 @@ private:
 	std::vector<std::shared_ptr<Layer>> m_LayerStack;
 	std::function<void()> m_MenubarCallback;
 
-	///////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////
 	/// VULKAN
 	
 	VkInstance m_Instance;
