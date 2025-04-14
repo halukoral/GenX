@@ -51,6 +51,7 @@ private:
 
 	static gsl::span<gsl::czstring> GetSuggestedExtensions();
 	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
+	static bool AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions);
 	
 	//////////////////////////////////////////////////////
 	/// Debug

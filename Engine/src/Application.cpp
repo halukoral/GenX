@@ -13,45 +13,45 @@ static Application* s_Instance = nullptr;
 
 const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
-VkResult CreateDebugUtilsMessengerEXT(
-	VkInstance instance,
-	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-	const VkAllocationCallbacks* pAllocator,
-	VkDebugUtilsMessengerEXT* pDebugMessenger)
-{
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	}
-	return VK_ERROR_EXTENSION_NOT_PRESENT;
-}
-
-void DestroyDebugUtilsMessengerEXT(
-	VkInstance instance,
-	VkDebugUtilsMessengerEXT debugMessenger,
-	const VkAllocationCallbacks* pAllocator)
-{
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		func(instance, debugMessenger, pAllocator);
-	}
-}
-
-void CheckVkResult(const VkResult err)
-{
-	if (err == 0)
-		return;
-
-	std::cerr << "[vulkan] Error: VkResult = " << err << '\n';
-
-	if (err < 0)
-		abort();
-}
-
 namespace
 {
+	VkResult CreateDebugUtilsMessengerEXT(
+		VkInstance instance,
+		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+		const VkAllocationCallbacks* pAllocator,
+		VkDebugUtilsMessengerEXT* pDebugMessenger)
+	{
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		if (func != nullptr)
+		{
+			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		}
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+	void DestroyDebugUtilsMessengerEXT(
+		VkInstance instance,
+		VkDebugUtilsMessengerEXT debugMessenger,
+		const VkAllocationCallbacks* pAllocator)
+	{
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		if (func != nullptr)
+		{
+			func(instance, debugMessenger, pAllocator);
+		}
+	}
+
+	void CheckVkResult(const VkResult err)
+	{
+		if (err == 0)
+			return;
+
+		std::cerr << "[vulkan] Error: VkResult = " << err << '\n';
+
+		if (err < 0)
+			abort();
+	}
+
 	void GlfwErrorCallback(int error, const char* description)
 	{
 		std::cerr << "Glfw Error " << error << description << '\n';
@@ -117,22 +117,9 @@ void Application::CreateInstance()
 	}
 
 	auto suggestedExtensions = GetSuggestedExtensions();
-	auto supportedExtensions = GetSupportedInstanceExtensions();
-
-	auto isExtensionSupported =
-		[&supportedExtensions](const char* extensionName)
-		{
-			return std::ranges::any_of(supportedExtensions,
-				[extensionName](const VkExtensionProperties& extension)
-				{
-				   return std::strcmp(extensionName, extension.extensionName) == 0;
-				}
-			);
-		};
-
-	if (!std::ranges::all_of(suggestedExtensions, isExtensionSupported))
+	if (!AreAllExtensionsSupported(suggestedExtensions))
 	{
-		std::exit(EXIT_FAILURE);
+		std::exit(EXIT_FAILURE);		
 	}
 	
 	VkApplicationInfo appInfo{};
@@ -192,6 +179,24 @@ std::vector<VkExtensionProperties> Application::GetSupportedInstanceExtensions()
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 	return availableExtensions;
+}
+
+bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions)
+{
+	auto supportedExtensions = GetSupportedInstanceExtensions();
+
+	auto isExtensionSupported =
+		[&supportedExtensions](const char* extensionName)
+		{
+			return std::ranges::any_of(supportedExtensions,
+				[extensionName](const VkExtensionProperties& extension)
+				{
+				   return streq(extensionName, extension.extensionName);
+				}
+			);
+		};
+
+	return std::ranges::all_of(extensions, isExtensionSupported);
 }
 
 void Application::Shutdown()
