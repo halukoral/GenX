@@ -7,7 +7,6 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-#include <algorithm>
 #include <glm/common.hpp>
 #include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
@@ -181,9 +180,9 @@ bool Application::InitVulkan()
 {
 	CreateInstance();
 	SetupDebugMessenger();
+	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDeviceAndQueues();
-	CreateSurface();
 	return true;
 }
 
@@ -390,22 +389,35 @@ std::vector<VkPhysicalDevice> Application::GetAvailablePhysicalDevices() const
 	return devices;
 }
 
-Application::QueueFamilyIndices Application::FindQueueFamilies(const VkPhysicalDevice device)
+Application::QueueFamilyIndices Application::FindQueueFamilies(const VkPhysicalDevice device) const
 {
+	QueueFamilyIndices indices;
+
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-	const auto iter = std::ranges::find_if(queueFamilies, [](const VkQueueFamilyProperties& property)
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies)
 	{
-		return property.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT);
-	});
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			indices.graphicsFamily = i;
 
-	QueueFamilyIndices result;
-	result.graphicsFamily = iter - queueFamilies.begin();
-	return result;
+		VkBool32 presentSupport = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &presentSupport);
+
+		if (presentSupport)
+			indices.presentationFamily = i;
+
+		if (indices.IsValid())
+			break;
+
+		i++;
+	}
+
+	return indices;
 }
 
 void Application::PickPhysicalDevice()
@@ -434,6 +446,14 @@ void Application::CreateLogicalDeviceAndQueues()
 {
 	QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
 
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<uint32_t> uniqueQueueFamilies =
+	{
+		indices.graphicsFamily.value(),
+		indices.presentationFamily.value()
+	};
+	
+
 	if (!indices.IsValid())
 	{
 		spdlog::error("failed to get queue families!");
@@ -444,32 +464,37 @@ void Application::CreateLogicalDeviceAndQueues()
 	// influence the scheduling of command buffer execution.
 	// This is required even if there is only a single queue:
 	float queuePriority = 1.0f;
-
-	// VkDeviceQueueCreateInfo describes the number of queues we want for a single queue family.
-	VkDeviceQueueCreateInfo queueCreateInfo{};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
-	queueCreateInfo.pQueuePriorities = &queuePriority;
+	for (uint32_t queueFamily : uniqueQueueFamilies)
+	{
+		// VkDeviceQueueCreateInfo describes the number of queues we want for a single queue family.
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
 
 	// We also need to specify the set of device features that we’ll be using
 	VkPhysicalDeviceFeatures deviceFeatures{};
 
-	VkDeviceCreateInfo deviceCreateInfo{};
-	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	deviceCreateInfo.queueCreateInfoCount = 1;
-	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
-	deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-	deviceCreateInfo.enabledExtensionCount = 0;
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-	VkResult result = vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice);
-	if (result != VK_SUCCESS)
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+
+	createInfo.pEnabledFeatures = &deviceFeatures;
+
+	createInfo.enabledExtensionCount = 0;
+
+	if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_LogicalDevice) != VK_SUCCESS)
 	{
-		spdlog::error("failed to create logical device!");
-		std::exit(EXIT_FAILURE);
+		throw std::runtime_error("failed to create logical device!");
 	}
 
 	vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
+	vkGetDeviceQueue(m_LogicalDevice, indices.presentationFamily.value(), 0, &m_PresentQueue);
 }
 
 #pragma endregion

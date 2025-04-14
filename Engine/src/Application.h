@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 #include "pch.h"
 #include "Layer.h"
 #include "vulkan/vulkan.h"
@@ -51,9 +49,9 @@ private:
 
 	void CreateInstance();
 	void SetupDebugMessenger();
+	void CreateSurface();
 	void PickPhysicalDevice();
 	void CreateLogicalDeviceAndQueues();
-	void CreateSurface();
 	
 	
 	static gsl::span<gsl::czstring> GetSuggestedInstanceExtensions();
@@ -73,11 +71,11 @@ private:
 
 		[[nodiscard]] bool IsValid() const
 		{
-			return graphicsFamily.has_value() ; // && presentationFamily.has_value();
+			return graphicsFamily.has_value() && presentationFamily.has_value();
 		}
 	};
 
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
 	
 private:
 	
@@ -109,6 +107,7 @@ private:
 
 	// 4
 	VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
+	VkQueue m_PresentQueue = VK_NULL_HANDLE;
 
 	// 5
 	VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
