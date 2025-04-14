@@ -39,7 +39,6 @@ public:
 	}
 
 	void Close();
-
 	static float GetTime();
 	GLFWwindow* GetWindowHandle() const { return m_Window; }
 	
@@ -49,6 +48,27 @@ private:
 	void Shutdown();
 
 	void CreateInstance();
+
+	static gsl::span<gsl::czstring> GetSuggestedExtensions();
+	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
+	
+	//////////////////////////////////////////////////////
+	/// Debug
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
+	{
+		std::cerr << "validation layer: " << pCallbackData->pMessage << '\n';
+		return VK_FALSE;
+	}
+
+	static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void SetupDebugMessenger();
+	static std::vector<const char*> GetRequiredExtensions();
+	static bool CheckValidationLayerSupport();
+	//////////////////////////////////////////////////////
 	
 private:
 	
@@ -67,7 +87,7 @@ private:
 	/// VULKAN
 	
 	VkInstance m_Instance;
-
+	VkDebugUtilsMessengerEXT debugMessenger;
 };
 
 // Implemented by CLIENT
