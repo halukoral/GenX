@@ -1,10 +1,13 @@
 #include "Application.h"
 #include "Core.h"
 
-#define GLFW_INCLUDE_NONE
+#define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
-#include <algorithm>
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+#include <algorithm>
 #include <glm/common.hpp>
 #include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
@@ -180,6 +183,7 @@ bool Application::InitVulkan()
 	SetupDebugMessenger();
 	PickPhysicalDevice();
 	CreateLogicalDeviceAndQueues();
+	CreateSurface();
 	return true;
 }
 
@@ -195,6 +199,7 @@ void Application::Shutdown()
 		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 
+	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 	vkDestroyDevice(m_LogicalDevice, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
 
@@ -463,6 +468,23 @@ void Application::CreateLogicalDeviceAndQueues()
 		spdlog::error("failed to create logical device!");
 		std::exit(EXIT_FAILURE);
 	}
-}  
+
+	vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
+}
+
+#pragma endregion
+
+
+#pragma region PRESENTATION
+
+void Application::CreateSurface()
+{
+	VkResult result = glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface);
+	if (result != VK_SUCCESS)
+	{
+		spdlog::error("failed to create window surface!");
+		std::exit(EXIT_FAILURE);
+	}
+}
 
 #pragma endregion
