@@ -82,20 +82,9 @@ static VkDebugUtilsMessengerCreateInfoEXT GetCreateMessengerInfo()
 
 namespace
 {
-	void CheckVkResult(const VkResult err)
-	{
-		if (err == 0)
-			return;
-
-		std::cerr << "[vulkan] Error: VkResult = " << err << '\n';
-
-		if (err < 0)
-			abort();
-	}
-
 	void GlfwErrorCallback(int error, const char* description)
 	{
-		std::cerr << "Glfw Error " << error << description << '\n';
+		spdlog::error ("Glfw Validation: {}", description);
 	}
 }
 
@@ -122,7 +111,7 @@ void Application::Init()
 	glfwSetErrorCallback(GlfwErrorCallback);
 	if (!glfwInit())
 	{
-		std::cerr << "Could not initialize GLFW!\n";
+		spdlog::error("Failed to initialize GLFW!");
 		return;
 	}
 
@@ -133,13 +122,13 @@ void Application::Init()
 	// Setup Vulkan
 	if (!glfwVulkanSupported())
 	{
-		std::cerr << "GLFW: Vulkan not supported!\n";
+		spdlog::error("GLFW: Vulkan not supported!");
 		return;
 	}
 
 	if (!InitVulkan())
 	{
-		std::cerr << "Couldn't initialize VULKAN!\n";
+		spdlog::error("Failed to initialize Vulkan!");
 		return;
 	}
 }
@@ -350,8 +339,7 @@ void Application::SetupDebugMessenger()
 	VkResult result = vkCreateDebugUtilsMessengerEXT(m_Instance, &info, nullptr, &debugMessenger);
 	if (result != VK_SUCCESS)
 	{
-		std::cerr << "failed to create debug messenger!\n";
-		//spdlog::error("Cannot create debug messenger");
+		spdlog::error("Cannot create debug messenger");
 		return;
 	}
 }
