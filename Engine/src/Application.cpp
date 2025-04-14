@@ -181,22 +181,29 @@ std::vector<VkExtensionProperties> Application::GetSupportedInstanceExtensions()
 	return availableExtensions;
 }
 
+namespace 
+{
+	bool IsExtensionNameEqual(const gsl::czstring name, const VkExtensionProperties& extension)
+	{
+		return streq(extension.extensionName, name);
+	}
+
+	bool IsExtensionSupported(gsl::span<VkExtensionProperties> extensions, gsl::czstring name)
+	{
+		return std::ranges::any_of(
+		extensions,
+		std::bind_front(IsExtensionNameEqual, name)
+		);
+	}
+}
+
 bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions)
 {
 	auto supportedExtensions = GetSupportedInstanceExtensions();
-
-	auto isExtensionSupported =
-		[&supportedExtensions](const char* extensionName)
-		{
-			return std::ranges::any_of(supportedExtensions,
-				[extensionName](const VkExtensionProperties& extension)
-				{
-				   return streq(extensionName, extension.extensionName);
-				}
-			);
-		};
-
-	return std::ranges::all_of(extensions, isExtensionSupported);
+	return std::ranges::all_of(
+		extensions,
+		std::bind_front(IsExtensionSupported, supportedExtensions)
+	);
 }
 
 void Application::Shutdown()
