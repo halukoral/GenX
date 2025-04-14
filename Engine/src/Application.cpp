@@ -363,13 +363,9 @@ bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& exte
 
 bool Application::IsDeviceSuitable(const VkPhysicalDevice device)
 {
-	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(device, &properties);
+	const QueueFamilyIndices indices = FindQueueFamilies(device);
 
-	VkPhysicalDeviceFeatures features{};
-	vkGetPhysicalDeviceFeatures(device, &features);
-
-	return true;
+	return indices.IsValid();
 }
 
 std::vector<VkPhysicalDevice> Application::GetAvailablePhysicalDevices() const
@@ -388,6 +384,24 @@ std::vector<VkPhysicalDevice> Application::GetAvailablePhysicalDevices() const
 	return devices;
 }
 
+Application::QueueFamilyIndices Application::FindQueueFamilies(const VkPhysicalDevice device)
+{
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+	const auto iter = std::ranges::find_if(queueFamilies, [](const VkQueueFamilyProperties& property)
+	{
+		return property.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT);
+	});
+
+	QueueFamilyIndices result;
+	result.graphicsFamily = iter - queueFamilies.begin();
+	return result;
+}
+
 void Application::PickPhysicalDevice()
 {
 	auto devices = GetAvailablePhysicalDevices();
@@ -399,12 +413,14 @@ void Application::PickPhysicalDevice()
 		std::exit(EXIT_FAILURE);
 	}
 
-	for (const auto& device : devices)
-	{
+	m_PhysicalDevice = devices[0];
+
+	/*for (const auto& device : devices)
+	{	// print the device(s) that can support Vulkan
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(device, &properties);
 		spdlog::info(properties.deviceName);
-	}
+	}*/
 	
 }
 

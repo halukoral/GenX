@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "pch.h"
 #include "Layer.h"
 #include "vulkan/vulkan.h"
@@ -60,6 +62,19 @@ private:
 
 	bool IsDeviceSuitable(VkPhysicalDevice device);
 	std::vector<VkPhysicalDevice> GetAvailablePhysicalDevices() const;
+
+	struct QueueFamilyIndices
+	{
+		std::optional<uint32_t> graphicsFamily = std::nullopt;
+		std::optional<uint32_t> presentationFamily = std::nullopt;
+
+		[[nodiscard]] bool IsValid() const
+		{
+			return graphicsFamily.has_value() ; // && presentationFamily.has_value();
+		}
+	};
+
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 	
 private:
 	
