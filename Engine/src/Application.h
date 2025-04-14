@@ -93,6 +93,8 @@ private:
 	bool AreAllDeviceExtensionsSupported(VkPhysicalDevice device);
 	std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice device);
 
+	SwapChainProperties GetSwapChainProperties(VkPhysicalDevice device) const;
+	
 private:
 	
 	AppSpec m_Spec;

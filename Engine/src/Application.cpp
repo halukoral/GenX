@@ -406,6 +406,27 @@ std::vector<VkExtensionProperties> Application::GetAvailableDeviceExtensions(VkP
 	return extensions;
 }
 
+Application::SwapChainProperties Application::GetSwapChainProperties(VkPhysicalDevice device) const
+{
+	SwapChainProperties properties;
+
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_Surface, &properties.capabilities);
+
+	uint32_t format_count;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_Surface, &format_count, nullptr);
+
+	properties.formats.resize(format_count);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_Surface, &format_count, properties.formats.data());
+
+	uint32_t modes_count;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_Surface, &modes_count, nullptr);
+
+	properties.presentModes.resize(modes_count);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_Surface, &modes_count, properties.presentModes.data());
+
+	return properties;
+}
+
 Application::QueueFamilyIndices Application::FindQueueFamilies(const VkPhysicalDevice device) const
 {
 	uint32_t queueFamilyCount = 0;
