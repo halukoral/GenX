@@ -55,6 +55,7 @@ add_subdirectory(Engine)
 add_subdirectory(Editor)
 
 include(FetchContent)
+
 FetchContent_Declare(GSL
     GIT_REPOSITORY "https://github.com/microsoft/GSL"
     GIT_TAG "v4.2.0"
@@ -62,6 +63,14 @@ FetchContent_Declare(GSL
 )
 FetchContent_MakeAvailable(GSL)
 target_link_libraries(Engine Microsoft.GSL::GSL)
+
+FetchContent_Declare(spdlog
+    GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
+    GIT_TAG "v1.15.2"
+    GIT_SHALLOW ON
+)
+FetchContent_MakeAvailable(spdlog)
+target_link_libraries(Engine spdlog)
 
 # Set default startup project for Visual Studio
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Editor)

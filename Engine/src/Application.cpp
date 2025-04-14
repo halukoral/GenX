@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/common.hpp>
 #include <vulkan/vulkan.h>
+#include <spdlog/spdlog.h>
 
 extern bool g_ApplicationRunning;
 static Application* s_Instance = nullptr;
@@ -51,13 +52,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL ValidationCallback(
 {
 	if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 	{
-		std::cout << "Vulkan Validation: " << callback_data->pMessage << '\n';
-		//spdlog::warn("Vulkan Validation: {}", callback_data->pMessage);
+		spdlog::warn("Vulkan Validation: {}", callback_data->pMessage);
 	}
 	else
 	{
-		std::cout << "Vulkan Error: " << callback_data->pMessage << '\n';
-		//spdlog::error("Vulkan Error: {}", callback_data->pMessage);
+		spdlog::error("Vulkan Error: {}", callback_data->pMessage);
 	}
 
 	return VK_FALSE;
