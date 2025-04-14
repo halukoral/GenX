@@ -119,7 +119,7 @@ void Application::SetupDebugMessenger()
 	}
 
 	VkDebugUtilsMessengerCreateInfoEXT info = GetCreateMessengerInfo();
-	VkResult result = vkCreateDebugUtilsMessengerEXT(m_Instance, &info, nullptr, &debugMessenger);
+	VkResult result = vkCreateDebugUtilsMessengerEXT(m_Instance, &info, nullptr, &m_DebugMessenger);
 	if (result != VK_SUCCESS)
 	{
 		spdlog::error("Cannot create debug messenger");
@@ -178,6 +178,7 @@ bool Application::InitVulkan()
 {
 	CreateInstance();
 	SetupDebugMessenger();
+	PickPhysicalDevice();
 	return true;
 }
 
@@ -191,7 +192,7 @@ void Application::Shutdown()
 	////////////////////////////////
 	if (EnableValidationLayers)
 	{
-		vkDestroyDebugUtilsMessengerEXT(m_Instance, debugMessenger, nullptr);
+		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 	
 	vkDestroyInstance(m_Instance, nullptr);
@@ -282,7 +283,7 @@ void Application::CreateInstance()
 
 gsl::span<gsl::czstring> Application::GetSuggestedInstanceExtensions()
 {
-	std::uint32_t glfwExtensionCount = 0;
+	uint32_t glfwExtensionCount = 0;
 	gsl::czstring* glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	return {glfwExtensions, glfwExtensionCount};
 }
@@ -308,7 +309,7 @@ std::vector<gsl::czstring> Application::GetRequiredInstanceExtensions()
 
 std::vector<VkExtensionProperties> Application::GetSupportedInstanceExtensions()
 {
-	std::uint32_t extensionCount = 0;
+	uint32_t extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
 	if (extensionCount == 0)
@@ -323,7 +324,7 @@ std::vector<VkExtensionProperties> Application::GetSupportedInstanceExtensions()
 
 std::vector<VkLayerProperties> Application::GetSupportedValidationLayers()
 {
-	std::uint32_t count;
+	uint32_t count;
 	vkEnumerateInstanceLayerProperties(&count, nullptr);
 
 	if (count == 0)
@@ -354,6 +355,57 @@ bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& exte
 	auto supportedExtensions = GetSupportedInstanceExtensions();
 
 	return std::ranges::all_of(extensions,std::bind_front(IsExtensionSupported, supportedExtensions));
+}
+
+#pragma endregion
+
+#pragma region DEVICES_AND_QUEUES
+
+bool Application::IsDeviceSuitable(const VkPhysicalDevice device)
+{
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(device, &properties);
+
+	VkPhysicalDeviceFeatures features{};
+	vkGetPhysicalDeviceFeatures(device, &features);
+
+	return true;
+}
+
+std::vector<VkPhysicalDevice> Application::GetAvailablePhysicalDevices() const
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+
+	if (deviceCount == 0)
+	{
+		return {};
+	}
+
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+
+	return devices;
+}
+
+void Application::PickPhysicalDevice()
+{
+	auto devices = GetAvailablePhysicalDevices();
+	std::erase_if(devices, std::not_fn( std::bind_front(&Application::IsDeviceSuitable, this) ));
+
+	if (devices.empty())
+	{
+		spdlog::error("failed to get physical device list!");
+		std::exit(EXIT_FAILURE);
+	}
+
+	for (const auto& device : devices)
+	{
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(device, &properties);
+		spdlog::info(properties.deviceName);
+	}
+	
 }
 
 #pragma endregion

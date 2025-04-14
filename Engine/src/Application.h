@@ -48,16 +48,19 @@ private:
 	void Shutdown();
 
 	void CreateInstance();
+	void SetupDebugMessenger();
+	void PickPhysicalDevice();
 
 	static gsl::span<gsl::czstring> GetSuggestedInstanceExtensions();
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
-	static bool AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions);
-
 	static std::vector<VkLayerProperties> GetSupportedValidationLayers();
+	static bool AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions);
 	static bool AreAllLayersSupported(gsl::span<gsl::czstring> layers);
-	void SetupDebugMessenger();
 
+	bool IsDeviceSuitable(VkPhysicalDevice device);
+	std::vector<VkPhysicalDevice> GetAvailablePhysicalDevices() const;
+	
 private:
 	
 	AppSpec m_Spec;
@@ -75,7 +78,10 @@ private:
 	/// VULKAN
 	
 	VkInstance m_Instance;
-	VkDebugUtilsMessengerEXT debugMessenger;
+	VkDebugUtilsMessengerEXT m_DebugMessenger;
+	VkPhysicalDevice m_PhysicalDevice;
+
+	
 };
 
 // Implemented by CLIENT
