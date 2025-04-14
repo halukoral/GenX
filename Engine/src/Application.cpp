@@ -362,6 +362,13 @@ bool Application::AreAllExtensionsSupported(const gsl::span<gsl::czstring>& exte
 	return std::ranges::all_of(extensions,std::bind_front(IsExtensionSupported, supportedExtensions));
 }
 
+bool Application::AreAllDeviceExtensionsSupported(const VkPhysicalDevice device)
+{
+	auto availableExtensions = GetAvailableDeviceExtensions(device);
+
+	return std::ranges::all_of(m_RequiredDeviceExtensions,std::bind_front(IsExtensionSupported, availableExtensions));
+}
+
 #pragma endregion
 
 #pragma region DEVICES_AND_QUEUES
@@ -370,7 +377,7 @@ bool Application::IsDeviceSuitable(const VkPhysicalDevice device)
 {
 	const QueueFamilyIndices indices = FindQueueFamilies(device);
 
-	return indices.IsValid();
+	return indices.IsValid() && AreAllDeviceExtensionsSupported(device);
 }
 
 std::vector<VkPhysicalDevice> Application::GetAvailablePhysicalDevices() const
@@ -389,35 +396,45 @@ std::vector<VkPhysicalDevice> Application::GetAvailablePhysicalDevices() const
 	return devices;
 }
 
+std::vector<VkExtensionProperties> Application::GetAvailableDeviceExtensions(VkPhysicalDevice device)
+{
+	uint32_t extensionCount = 0;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+	std::vector<VkExtensionProperties> extensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, extensions.data());
+	return extensions;
+}
+
 Application::QueueFamilyIndices Application::FindQueueFamilies(const VkPhysicalDevice device) const
 {
-	QueueFamilyIndices indices;
-
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-	int i = 0;
-	for (const auto& queueFamily : queueFamilies)
+	const auto iter =
+		std::ranges::find_if(queueFamilies, [](const VkQueueFamilyProperties& props)
+		{
+		  return props.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT);
+		});
+
+	QueueFamilyIndices result;
+	result.graphicsFamily = iter - queueFamilies.begin();
+
+	for (std::uint32_t i = 0; i < queueFamilies.size(); i++)
 	{
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-			indices.graphicsFamily = i;
-
-		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &presentSupport);
-
-		if (presentSupport)
-			indices.presentationFamily = i;
-
-		if (indices.IsValid())
+		VkBool32 has_presentation_support = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &has_presentation_support);
+		if (has_presentation_support)
+		{
+			result.presentationFamily = i;
 			break;
-
-		i++;
+		}
 	}
 
-	return indices;
+	return result;
 }
 
 void Application::PickPhysicalDevice()
@@ -483,10 +500,9 @@ void Application::CreateLogicalDeviceAndQueues()
 
 	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
 	createInfo.pEnabledFeatures = &deviceFeatures;
-
-	createInfo.enabledExtensionCount = 0;
+	createInfo.enabledExtensionCount = m_RequiredDeviceExtensions.size();
+	createInfo.ppEnabledExtensionNames = m_RequiredDeviceExtensions.data();
 
 	if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_LogicalDevice) != VK_SUCCESS)
 	{

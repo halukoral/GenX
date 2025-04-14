@@ -17,6 +17,30 @@ struct AppSpec
 
 class Application
 {
+private:
+	struct QueueFamilyIndices
+	{
+		std::optional<uint32_t> graphicsFamily = std::nullopt;
+		std::optional<uint32_t> presentationFamily = std::nullopt;
+
+		[[nodiscard]] bool IsValid() const
+		{
+			return graphicsFamily.has_value() && presentationFamily.has_value();
+		}
+	};
+
+	struct SwapChainProperties
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+
+		[[nodiscard]] bool IsValid() const
+		{
+			return !formats.empty() && !presentModes.empty();
+		}
+	};
+	
 public:
 	Application(AppSpec spec = AppSpec());
 	~Application();
@@ -43,6 +67,7 @@ public:
 	GLFWwindow* GetWindowHandle() const { return m_Window; }
 	
 private:
+	
 	void Init();
 	bool InitVulkan();
 	void Shutdown();
@@ -53,30 +78,21 @@ private:
 	void PickPhysicalDevice();
 	void CreateLogicalDeviceAndQueues();
 	
-	
-	static gsl::span<gsl::czstring> GetSuggestedInstanceExtensions();
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
-	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
+
 	static std::vector<VkLayerProperties> GetSupportedValidationLayers();
-	static bool AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions);
 	static bool AreAllLayersSupported(gsl::span<gsl::czstring> layers);
 
-	bool IsDeviceSuitable(VkPhysicalDevice device);
-	std::vector<VkPhysicalDevice> GetAvailablePhysicalDevices() const;
-
-	struct QueueFamilyIndices
-	{
-		std::optional<uint32_t> graphicsFamily = std::nullopt;
-		std::optional<uint32_t> presentationFamily = std::nullopt;
-
-		[[nodiscard]] bool IsValid() const
-		{
-			return graphicsFamily.has_value() && presentationFamily.has_value();
-		}
-	};
+	static gsl::span<gsl::czstring> GetSuggestedInstanceExtensions();
+	static std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
+	static bool AreAllExtensionsSupported(const gsl::span<gsl::czstring>& extensions);
 
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
-	
+	bool IsDeviceSuitable(VkPhysicalDevice device);
+	std::vector<VkPhysicalDevice> GetAvailablePhysicalDevices() const;
+	bool AreAllDeviceExtensionsSupported(VkPhysicalDevice device);
+	std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice device);
+
 private:
 	
 	AppSpec m_Spec;
@@ -111,6 +127,8 @@ private:
 
 	// 5
 	VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+
+	std::array<gsl::czstring, 1> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };
 
 // Implemented by CLIENT
