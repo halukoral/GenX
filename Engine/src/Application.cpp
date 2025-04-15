@@ -12,6 +12,8 @@
 #include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
 
+#include "Vertex.h"
+
 extern bool g_ApplicationRunning;
 static Application* s_Instance = nullptr;
 
@@ -185,6 +187,7 @@ bool Application::InitVulkan()
 	PickPhysicalDevice();
 	CreateLogicalDeviceAndQueues();
 	CreateSwapChain();
+	CreateRenderPass();
 	CreateGraphicsPipeline();
 	
 	return true;
@@ -203,6 +206,7 @@ void Application::Shutdown()
 	}
 
 	vkDestroyPipelineLayout(m_LogicalDevice, m_PipelineLayout, nullptr);
+	vkDestroyRenderPass(m_LogicalDevice, m_RenderPass, nullptr);
 	
 	for (const VkImageView image_view : m_SwapChainImageViews)
 	{
@@ -711,7 +715,7 @@ void Application::CreateImageViews()
 {
 	m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
-	const auto iter = m_SwapChainImageViews.begin();
+	auto iter = m_SwapChainImageViews.begin();
 	for (const VkImage image : m_SwapChainImages)
 	{
 		VkImageViewCreateInfo info = {};
@@ -734,7 +738,7 @@ void Application::CreateImageViews()
 		{
 			std::exit(EXIT_FAILURE);
 		}
-		std::next(iter);
+		iter = std::next(iter);
 	}
 }
 
@@ -785,7 +789,42 @@ VkRect2D Application::GetScissor() const
 	return scissor;
 }
 
-void Application::CreateGraphicsPipeline() const
+void Application::CreateRenderPass()
+{
+	VkAttachmentDescription colorAttachment = {};
+	colorAttachment.format = m_SurfaceFormat.format;
+	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference colorAttachmentRef = {};
+	colorAttachmentRef.attachment = 0;
+	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription mainSubpass = {};
+	mainSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	mainSubpass.colorAttachmentCount = 1;
+	mainSubpass.pColorAttachments = &colorAttachmentRef;
+
+	VkRenderPassCreateInfo renderPassInfo = {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = 1;
+	renderPassInfo.pAttachments = &colorAttachment;
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &mainSubpass;
+
+	VkResult result = vkCreateRenderPass(m_LogicalDevice, &renderPassInfo, nullptr, &m_RenderPass);
+	if (result != VK_SUCCESS)
+	{
+		std::exit(EXIT_FAILURE);
+	}
+}
+
+void Application::CreateGraphicsPipeline()
 {
 	std::vector<uint8_t> vertexData = Utils::ReadFile("../basic.vert.spv");
 	VkShaderModule vertexShader = CreateShaderModule(vertexData);
@@ -838,9 +877,15 @@ void Application::CreateGraphicsPipeline() const
 	viewportInfo.scissorCount = 1;
 	viewportInfo.pScissors = &scissor;
 
+	auto vertexBindingDescription = Vertex::GetBindingDescription();
+	auto vertexAttributeDescriptions = Vertex::GetAttributeDescriptions();
+	
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.pVertexBindingDescriptions = &vertexBindingDescription;
+	vertexInputInfo.vertexAttributeDescriptionCount = vertexAttributeDescriptions.size();
+	vertexInputInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
 	inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -886,6 +931,35 @@ void Application::CreateGraphicsPipeline() const
 	VkResult vkResult = vkCreatePipelineLayout(m_LogicalDevice, &layoutInfo, nullptr, &m_PipelineLayout);
 
 	if (vkResult != VK_SUCCESS)
+	{
+		std::exit(EXIT_FAILURE);
+	}
+
+	VkGraphicsPipelineCreateInfo pipelineInfo = {};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineInfo.stageCount = stageInfos.size();
+	pipelineInfo.pStages = stageInfos.data();
+	pipelineInfo.pVertexInputState = &vertexInputInfo;
+	pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
+	pipelineInfo.pViewportState = &viewportInfo;
+	pipelineInfo.pRasterizationState = &rasterizationStateInfo;
+	pipelineInfo.pMultisampleState = &multisamplingInfo;
+	pipelineInfo.pDepthStencilState = nullptr;
+	pipelineInfo.pColorBlendState = &colorBlendingInfo;
+	pipelineInfo.pDynamicState = &dynamicStateInfo;
+	pipelineInfo.layout = m_PipelineLayout;
+	pipelineInfo.renderPass = m_RenderPass;
+	pipelineInfo.subpass = 0;
+
+	VkResult pipeline_result = vkCreateGraphicsPipelines(
+		m_LogicalDevice,
+		VK_NULL_HANDLE,
+		1,
+		&pipelineInfo,
+		nullptr,
+		&m_Pipeline);
+	
+	if (pipeline_result != VK_SUCCESS)
 	{
 		std::exit(EXIT_FAILURE);
 	}

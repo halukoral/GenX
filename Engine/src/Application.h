@@ -79,7 +79,8 @@ private:
 	void CreateLogicalDeviceAndQueues();
 	void CreateSwapChain();
 	void CreateImageViews();
-	void CreateGraphicsPipeline() const;
+	void CreateRenderPass();
+	void CreateGraphicsPipeline();
 	
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 
@@ -153,6 +154,8 @@ private:
 
 	// 7
 	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+	VkRenderPass m_RenderPass = VK_NULL_HANDLE;
+	VkPipeline m_Pipeline = VK_NULL_HANDLE;
 
 	
 	std::array<gsl::czstring, 1> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
