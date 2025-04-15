@@ -77,6 +77,7 @@ private:
 	void CreateSurface();
 	void PickPhysicalDevice();
 	void CreateLogicalDeviceAndQueues();
+	void CreateSwapChain();
 	
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 
@@ -93,7 +94,12 @@ private:
 	bool AreAllDeviceExtensionsSupported(VkPhysicalDevice device);
 	std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice device);
 
+	// Swap chain functions
 	SwapChainProperties GetSwapChainProperties(VkPhysicalDevice device) const;
+	VkSurfaceFormatKHR ChooseSwapSurfaceFromat(gsl::span<VkSurfaceFormatKHR> formats);
+	VkPresentModeKHR ChooseSwapPresentMode(gsl::span<VkPresentModeKHR> modes);
+	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	uint32_t ChooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities);
 	
 private:
 	
@@ -130,6 +136,14 @@ private:
 	// 5
 	VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
 
+	// 6
+	VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
+	VkSurfaceFormatKHR m_SurfaceFormat;
+	VkPresentModeKHR m_PresentMode;
+	VkExtent2D m_Extent;
+	std::vector<VkImage> m_SwapChainImages;
+	std::vector<VkImageView> m_SwapChainImageViews;
+	
 	std::array<gsl::czstring, 1> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };
 
