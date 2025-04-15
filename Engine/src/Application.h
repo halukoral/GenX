@@ -150,6 +150,10 @@ private:
 	VkExtent2D m_Extent;
 	std::vector<VkImage> m_SwapChainImages;
 	std::vector<VkImageView> m_SwapChainImageViews;
+
+	// 7
+	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+
 	
 	std::array<gsl::czstring, 1> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };

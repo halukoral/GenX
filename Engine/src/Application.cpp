@@ -202,6 +202,8 @@ void Application::Shutdown()
 		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 
+	vkDestroyPipelineLayout(m_LogicalDevice, m_PipelineLayout, nullptr);
+	
 	for (const VkImageView image_view : m_SwapChainImageViews)
 	{
 		vkDestroyImageView(m_LogicalDevice, image_view, nullptr);
@@ -854,6 +856,39 @@ void Application::CreateGraphicsPipeline() const
 	rasterizationStateInfo.cullMode = VK_CULL_MODE_NONE;
 	rasterizationStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterizationStateInfo.depthBiasEnable = VK_FALSE;
+
+	VkPipelineMultisampleStateCreateInfo multisamplingInfo = {};
+	multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisamplingInfo.sampleShadingEnable = VK_FALSE;
+	multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+
+	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+											VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+
+	colorBlendAttachment.blendEnable = VK_TRUE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
+	VkPipelineColorBlendStateCreateInfo colorBlendingInfo = {};
+	colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorBlendingInfo.logicOpEnable = VK_FALSE;
+	colorBlendingInfo.attachmentCount = 1;
+	colorBlendingInfo.pAttachments = &colorBlendAttachment;
+
+	VkPipelineLayoutCreateInfo layoutInfo = {};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	VkResult vkResult = vkCreatePipelineLayout(m_LogicalDevice, &layoutInfo, nullptr, &m_PipelineLayout);
+
+	if (vkResult != VK_SUCCESS)
+	{
+		std::exit(EXIT_FAILURE);
+	}
 }
 
 #pragma endregion
