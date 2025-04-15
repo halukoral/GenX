@@ -189,6 +189,7 @@ bool Application::InitVulkan()
 	CreateSwapChain();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
+	CreateFramebuffers();
 	
 	return true;
 }
@@ -209,9 +210,14 @@ void Application::Shutdown()
 	vkDestroyPipelineLayout(m_LogicalDevice, m_PipelineLayout, nullptr);
 	vkDestroyRenderPass(m_LogicalDevice, m_RenderPass, nullptr);
 	
-	for (const VkImageView image_view : m_SwapChainImageViews)
+	for (const auto imageView : m_SwapChainImageViews)
 	{
-		vkDestroyImageView(m_LogicalDevice, image_view, nullptr);
+		vkDestroyImageView(m_LogicalDevice, imageView, nullptr);
+	}
+
+	for (const auto frameBuffer : m_SwapChainFramebuffers)
+	{
+		vkDestroyFramebuffer(m_LogicalDevice, frameBuffer, nullptr);
 	}
 	
 	vkDestroyDevice(m_LogicalDevice, nullptr);
@@ -962,6 +968,35 @@ void Application::CreateGraphicsPipeline()
 	if (pipeline_result != VK_SUCCESS)
 	{
 		std::exit(EXIT_FAILURE);
+	}
+}
+
+#pragma endregion
+
+#pragma region DRAWING
+
+void Application::CreateFramebuffers()
+{
+	m_SwapChainFramebuffers.resize(m_SwapChainImageViews.size());
+
+	for (size_t i = 0; i < m_SwapChainImageViews.size(); i++)
+	{
+		VkImageView attachment = m_SwapChainImageViews[i];
+
+		VkFramebufferCreateInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		info.renderPass = m_RenderPass;
+		info.attachmentCount = 1;
+		info.pAttachments = &attachment;
+		info.width = m_Extent.width;
+		info.height = m_Extent.height;
+		info.layers = 1;
+
+		const VkResult result = vkCreateFramebuffer(m_LogicalDevice, &info, nullptr, &m_SwapChainFramebuffers[i]);
+		if (result != VK_SUCCESS)
+		{
+			std::exit(EXIT_FAILURE);
+		}
 	}
 }
 

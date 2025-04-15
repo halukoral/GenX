@@ -81,6 +81,7 @@ private:
 	void CreateImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
+	void CreateFramebuffers();
 	
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 
@@ -149,6 +150,7 @@ private:
 	VkSurfaceFormatKHR m_SurfaceFormat;
 	VkPresentModeKHR m_PresentMode;
 	VkExtent2D m_Extent;
+	
 	std::vector<VkImage> m_SwapChainImages;
 	std::vector<VkImageView> m_SwapChainImageViews;
 
@@ -156,6 +158,9 @@ private:
 	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 	VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 	VkPipeline m_Pipeline = VK_NULL_HANDLE;
+
+	// 8
+	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 	
 	std::array<gsl::czstring, 1> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };
