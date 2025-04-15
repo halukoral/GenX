@@ -99,7 +99,7 @@ private:
 
 	// Swap chain functions
 	SwapChainProperties GetSwapChainProperties(VkPhysicalDevice device) const;
-	VkSurfaceFormatKHR ChooseSwapSurfaceFromat(gsl::span<VkSurfaceFormatKHR> formats);
+	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(gsl::span<VkSurfaceFormatKHR> formats);
 	VkPresentModeKHR ChooseSwapPresentMode(gsl::span<VkPresentModeKHR> modes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	uint32_t ChooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities);
@@ -156,7 +156,6 @@ private:
 	VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 	VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 	VkPipeline m_Pipeline = VK_NULL_HANDLE;
-
 	
 	std::array<gsl::czstring, 1> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };

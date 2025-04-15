@@ -589,7 +589,7 @@ namespace
 	}
 }
 
-VkSurfaceFormatKHR Application::ChooseSwapSurfaceFromat(gsl::span<VkSurfaceFormatKHR> formats)
+VkSurfaceFormatKHR Application::ChooseSwapSurfaceFormat(gsl::span<VkSurfaceFormatKHR> formats)
 {
 	if (formats.size() == 1 && formats[0].format == VK_FORMAT_UNDEFINED)
 	{
@@ -662,7 +662,7 @@ void Application::CreateSwapChain()
 {
 	SwapChainProperties properties = GetSwapChainProperties(m_PhysicalDevice);
 
-	m_SurfaceFormat = ChooseSwapSurfaceFromat(properties.formats);
+	m_SurfaceFormat = ChooseSwapSurfaceFormat(properties.formats);
 	m_PresentMode = ChooseSwapPresentMode(properties.presentModes);
 	m_Extent = ChooseSwapExtent(properties.capabilities);
 	uint32_t image_count = ChooseSwapImageCount(properties.capabilities);
