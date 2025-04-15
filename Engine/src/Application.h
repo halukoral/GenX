@@ -79,6 +79,7 @@ private:
 	void CreateLogicalDeviceAndQueues();
 	void CreateSwapChain();
 	void CreateImageViews();
+	void CreateGraphicsPipeline();
 	
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 
@@ -101,7 +102,10 @@ private:
 	VkPresentModeKHR ChooseSwapPresentMode(gsl::span<VkPresentModeKHR> modes);
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	uint32_t ChooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities);
-	
+
+	// Graphics Pipeline
+	VkShaderModule CreateShaderModule(gsl::span<uint8_t> buffer) const;
+
 private:
 	
 	AppSpec m_Spec;

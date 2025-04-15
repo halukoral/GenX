@@ -78,9 +78,10 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT E
 
 # Shaders
 file(GLOB_RECURSE ShaderSources CONFIGURE_DEPENDS
-	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
-	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Engine/shaders/*.vert"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Engine/shaders/*.frag"
 )
 
 add_shaders(VulkanEngineShaders ${ShaderSources})
 add_dependencies(Engine VulkanEngineShaders)
+add_dependencies(Editor VulkanEngineShaders)

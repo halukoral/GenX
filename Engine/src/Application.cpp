@@ -98,7 +98,7 @@ namespace
 
 	bool IsLayerNameEqual(gsl::czstring name, const VkLayerProperties& properties)
 	{
-		return streq(properties.layerName, name);
+		return Utils::streq(properties.layerName, name);
 	}
 
 	bool IsLayerSupported(gsl::span<VkLayerProperties> layers, gsl::czstring name)
@@ -185,6 +185,7 @@ bool Application::InitVulkan()
 	PickPhysicalDevice();
 	CreateLogicalDeviceAndQueues();
 	CreateSwapChain();
+	CreateGraphicsPipeline();
 	
 	return true;
 }
@@ -356,7 +357,7 @@ namespace
 {
 	bool IsExtensionNameEqual(const gsl::czstring name, const VkExtensionProperties& extension)
 	{
-		return streq(extension.extensionName, name);
+		return Utils::streq(extension.extensionName, name);
 	}
 
 	bool IsExtensionSupported(gsl::span<VkExtensionProperties> extensions, gsl::czstring name)
@@ -732,6 +733,55 @@ void Application::CreateImageViews()
 			std::exit(EXIT_FAILURE);
 		}
 		std::next(iter);
+	}
+}
+
+#pragma endregion
+
+#pragma region GRAPHICS_PIPELINE
+
+VkShaderModule Application::CreateShaderModule(const gsl::span<uint8_t> buffer) const
+{
+	if (buffer.empty())
+	{
+		return VK_NULL_HANDLE;
+	}
+
+	VkShaderModuleCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	info.codeSize = buffer.size();
+	info.pCode = reinterpret_cast<std::uint32_t*>(buffer.data());
+
+	VkShaderModule shaderModule;
+	VkResult result = vkCreateShaderModule(m_LogicalDevice, &info, nullptr, &shaderModule);
+	if (result != VK_SUCCESS)
+	{
+		return VK_NULL_HANDLE;
+	}
+
+	return shaderModule;
+}
+
+void Application::CreateGraphicsPipeline()
+{
+	std::vector<uint8_t> vertexData = Utils::ReadFile("../basic.vert.spv");
+	VkShaderModule vertexShader = CreateShaderModule(vertexData);
+
+	gsl::final_action destroyVertex([this, vertexShader]()
+		{
+			vkDestroyShaderModule(m_LogicalDevice, vertexShader, nullptr);
+		});
+
+	std::vector<uint8_t> basic_fragment_data = Utils::ReadFile("../basic.frag.spv");
+	VkShaderModule fragmentShader = CreateShaderModule(basic_fragment_data);
+	gsl::final_action destroyFragment([this, fragmentShader]()
+		{
+			vkDestroyShaderModule(m_LogicalDevice, fragmentShader, nullptr);
+		});
+
+	if (vertexShader == VK_NULL_HANDLE || fragmentShader == VK_NULL_HANDLE)
+	{
+		std::exit(EXIT_FAILURE);
 	}
 }
 
