@@ -78,6 +78,7 @@ private:
 	void PickPhysicalDevice();
 	void CreateLogicalDeviceAndQueues();
 	void CreateSwapChain();
+	void CreateImageViews();
 	
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 
