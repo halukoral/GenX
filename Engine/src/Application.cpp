@@ -205,6 +205,7 @@ void Application::Shutdown()
 		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 
+	vkDestroyPipeline(m_LogicalDevice, m_Pipeline, nullptr);
 	vkDestroyPipelineLayout(m_LogicalDevice, m_PipelineLayout, nullptr);
 	vkDestroyRenderPass(m_LogicalDevice, m_RenderPass, nullptr);
 	
@@ -213,10 +214,9 @@ void Application::Shutdown()
 		vkDestroyImageView(m_LogicalDevice, image_view, nullptr);
 	}
 	
-	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
-
-	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 	vkDestroyDevice(m_LogicalDevice, nullptr);
+	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
 
 	glfwDestroyWindow(m_Window);
