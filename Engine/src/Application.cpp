@@ -708,8 +708,9 @@ void Application::CreateImageViews()
 {
 	m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
-	const auto image_view_it = m_SwapChainImageViews.begin();
-	for (const VkImage image : m_SwapChainImages) {
+	const auto iter = m_SwapChainImageViews.begin();
+	for (const VkImage image : m_SwapChainImages)
+	{
 		VkImageViewCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		info.image = image;
@@ -725,12 +726,12 @@ void Application::CreateImageViews()
 		info.subresourceRange.baseArrayLayer = 0;
 		info.subresourceRange.layerCount = 1;
 
-		VkResult result = vkCreateImageView(m_LogicalDevice, &info, nullptr, &*image_view_it);
+		VkResult result = vkCreateImageView(m_LogicalDevice, &info, nullptr, &*iter);
 		if (result != VK_SUCCESS)
 		{
 			std::exit(EXIT_FAILURE);
 		}
-		std::next(image_view_it);
+		std::next(iter);
 	}
 }
 
