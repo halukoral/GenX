@@ -4,6 +4,9 @@ project(GenX)
 
 find_package(Vulkan REQUIRED)
 
+include(FetchContent)
+include(cmake/Shaders.cmake)
+
 set(CMAKE_CXX_STANDARD 20)
 
 # Build Types
@@ -54,8 +57,6 @@ target_include_directories(glm INTERFACE ThirdParty/glm)
 add_subdirectory(Engine)
 add_subdirectory(Editor)
 
-include(FetchContent)
-
 FetchContent_Declare(GSL
     GIT_REPOSITORY "https://github.com/microsoft/GSL"
     GIT_TAG "v4.2.0"
@@ -74,3 +75,12 @@ target_link_libraries(Engine spdlog)
 
 # Set default startup project for Visual Studio
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Editor)
+
+# Shaders
+file(GLOB_RECURSE ShaderSources CONFIGURE_DEPENDS
+	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
+	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
+)
+
+add_shaders(VulkanEngineShaders ${ShaderSources})
+add_dependencies(Engine VulkanEngineShaders)
