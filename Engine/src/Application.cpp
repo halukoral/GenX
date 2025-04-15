@@ -201,6 +201,13 @@ void Application::Shutdown()
 		vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 
+	for (const VkImageView image_view : m_SwapChainImageViews)
+	{
+		vkDestroyImageView(m_LogicalDevice, image_view, nullptr);
+	}
+	
+	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
+
 	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 	vkDestroyDevice(m_LogicalDevice, nullptr);
 	vkDestroyInstance(m_Instance, nullptr);
