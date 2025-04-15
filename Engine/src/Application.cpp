@@ -835,6 +835,25 @@ void Application::CreateGraphicsPipeline() const
 	viewportInfo.pViewports = &viewport;
 	viewportInfo.scissorCount = 1;
 	viewportInfo.pScissors = &scissor;
+
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
+	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
+	inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
+
+	VkPipelineRasterizationStateCreateInfo rasterizationStateInfo = {};
+	rasterizationStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizationStateInfo.depthClampEnable = VK_FALSE;
+	rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
+	rasterizationStateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizationStateInfo.lineWidth = 1.0f;
+	rasterizationStateInfo.cullMode = VK_CULL_MODE_NONE;
+	rasterizationStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizationStateInfo.depthBiasEnable = VK_FALSE;
 }
 
 #pragma endregion
