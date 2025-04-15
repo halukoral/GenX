@@ -762,7 +762,28 @@ VkShaderModule Application::CreateShaderModule(const gsl::span<uint8_t> buffer) 
 	return shaderModule;
 }
 
-void Application::CreateGraphicsPipeline()
+VkViewport Application::GetViewport() const
+{
+	VkViewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast<float_t>(m_Extent.width);
+	viewport.height = static_cast<float_t>(m_Extent.height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	return viewport;
+}
+
+VkRect2D Application::GetScissor() const
+{
+	VkRect2D scissor = {};
+	scissor.offset = {0, 0};
+	scissor.extent = m_Extent;
+	return scissor;
+}
+
+void Application::CreateGraphicsPipeline() const
 {
 	std::vector<uint8_t> vertexData = Utils::ReadFile("../basic.vert.spv");
 	VkShaderModule vertexShader = CreateShaderModule(vertexData);
@@ -772,8 +793,8 @@ void Application::CreateGraphicsPipeline()
 			vkDestroyShaderModule(m_LogicalDevice, vertexShader, nullptr);
 		});
 
-	std::vector<uint8_t> basic_fragment_data = Utils::ReadFile("../basic.frag.spv");
-	VkShaderModule fragmentShader = CreateShaderModule(basic_fragment_data);
+	std::vector<uint8_t> fragmentData = Utils::ReadFile("../basic.frag.spv");
+	VkShaderModule fragmentShader = CreateShaderModule(fragmentData);
 	gsl::final_action destroyFragment([this, fragmentShader]()
 		{
 			vkDestroyShaderModule(m_LogicalDevice, fragmentShader, nullptr);
@@ -783,6 +804,37 @@ void Application::CreateGraphicsPipeline()
 	{
 		std::exit(EXIT_FAILURE);
 	}
+
+	VkPipelineShaderStageCreateInfo vertexStageInfo = {};
+	vertexStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertexStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertexStageInfo.module = vertexShader;
+	vertexStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragmentStageInfo = {};
+	fragmentStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragmentStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragmentStageInfo.module = fragmentShader;
+	fragmentStageInfo.pName = "main";
+
+	std::array stageInfos = { vertexStageInfo, fragmentStageInfo };
+
+	std::array dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+
+	VkPipelineDynamicStateCreateInfo dynamicStateInfo = {};
+	dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicStateInfo.dynamicStateCount = dynamicStates.size();
+	dynamicStateInfo.pDynamicStates = dynamicStates.data();
+
+	const VkViewport viewport = GetViewport();
+	const VkRect2D scissor = GetScissor();
+
+	VkPipelineViewportStateCreateInfo viewportInfo = {};
+	viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportInfo.viewportCount = 1;
+	viewportInfo.pViewports = &viewport;
+	viewportInfo.scissorCount = 1;
+	viewportInfo.pScissors = &scissor;
 }
 
 #pragma endregion

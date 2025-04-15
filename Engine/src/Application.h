@@ -79,7 +79,7 @@ private:
 	void CreateLogicalDeviceAndQueues();
 	void CreateSwapChain();
 	void CreateImageViews();
-	void CreateGraphicsPipeline();
+	void CreateGraphicsPipeline() const;
 	
 	static std::vector<gsl::czstring> GetRequiredInstanceExtensions();
 
@@ -105,7 +105,9 @@ private:
 
 	// Graphics Pipeline
 	VkShaderModule CreateShaderModule(gsl::span<uint8_t> buffer) const;
-
+	VkViewport GetViewport() const;
+	VkRect2D GetScissor() const;
+	
 private:
 	
 	AppSpec m_Spec;
