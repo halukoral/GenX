@@ -1,7 +1,7 @@
 # GenX
  A simple application framework designed to be used with Vulkan. Windows only.
 
- Based on Cherno's [Walnut](https://github.com/StudioCherno/Walnut.git). This framework uses CMake instead of premake like the one Cherno used. 
+ Based on [Walnut](https://github.com/StudioCherno/Walnut.git) and [LittleVulkanEngine](https://github.com/blurrypiano/littleVulkanEngine).
  
  Since I am developing this project for learning purposes, you may find errors whether in CMake or in the codes. I would appreciate if you keep me informed about these errors, if any.
 
