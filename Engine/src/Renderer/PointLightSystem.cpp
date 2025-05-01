@@ -58,7 +58,9 @@ void PointLightSystem::CreatePipeline(const VkRenderPass renderPass)
 	Pipeline::DefaultPipelineConfigInfo(pipelineConfig);
 	Pipeline::EnableAlphaBlending(pipelineConfig);
 	pipelineConfig.AttributeDescriptions.clear();
+	pipelineConfig.AttributeDescriptions = Model::Vertex::GetAttributeDescriptions();
 	pipelineConfig.BindingDescriptions.clear();
+	pipelineConfig.BindingDescriptions = Model::Vertex::GetBindingDescriptions();
 	pipelineConfig.RenderPass = renderPass;
 	pipelineConfig.PipelineLayout = m_PipelineLayout;
 	m_Pipeline = std::make_unique<Pipeline>(

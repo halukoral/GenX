@@ -54,6 +54,10 @@ void RenderSystem::CreatePipeline(VkRenderPass renderPass)
 	Pipeline::DefaultPipelineConfigInfo(pipelineConfig);
 	pipelineConfig.RenderPass = renderPass;
 	pipelineConfig.PipelineLayout = m_PipelineLayout;
+	pipelineConfig.AttributeDescriptions.clear();
+	pipelineConfig.AttributeDescriptions = Model::Vertex::GetAttributeDescriptions();
+	pipelineConfig.BindingDescriptions.clear();
+	pipelineConfig.BindingDescriptions = Model::Vertex::GetBindingDescriptions();
 	m_Pipeline = std::make_unique<Pipeline>(
 		m_Device,
 		"../basic.vert.spv",

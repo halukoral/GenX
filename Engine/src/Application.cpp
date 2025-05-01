@@ -101,7 +101,7 @@ void Application::Init()
 	
 	InitVulkan();
 
-	InitImgui();
+	//InitImgui();
 }
 
 bool Application::InitVulkan()
@@ -171,7 +171,7 @@ void Application::Shutdown()
 
 	m_LayerStack.clear();
 
-	CleanupImGui();
+	//CleanupImGui();
 	
 	g_ApplicationRunning = false;
 }
@@ -345,7 +345,7 @@ void Application::LoadGameObjects()
 	auto floor = GameObject::CreateGameObject();
 	floor.Model = model;
 	floor.Transform.Position = {0.f, .5f, 0.f};
-	floor.Transform.Scale = {3.f, 1.f, 3.f};
+	floor.Transform.Scale = {3.f, .1f, 3.f};
 	m_GameObjects.emplace(floor.GetId(), std::move(floor));
 
 	const std::vector<glm::vec3> lightColors
