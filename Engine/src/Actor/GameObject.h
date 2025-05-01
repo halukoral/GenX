@@ -11,7 +11,7 @@
 
 struct PointLightComponent
 {
-	float lightIntensity = 1.0f;
+	float LightIntensity = 1.0f;
 };
 
 class GameObject
@@ -20,7 +20,8 @@ public:
 	using id_t = unsigned int;
 	using Map = std::unordered_map<id_t, GameObject>;
 	
-	static GameObject createGameObject() {
+	static GameObject CreateGameObject()
+	{
 		static id_t currentId = 0;
 		return GameObject{currentId++};
 	}
@@ -30,21 +31,21 @@ public:
 	GameObject(GameObject &&) = default;
 	GameObject &operator=(GameObject &&) = default;
 
-	id_t getId() { return id; }
+	id_t GetId() const { return id; }
 
-	static GameObject makePointLight(
+	static GameObject MakePointLight(
 		float intensity = 10.f,
 		float radius = 0.1f,
 		glm::vec3 color = glm::vec3(1.f)
 	);
 	
-	glm::vec3 color{};
-	TransformComponent transform{};
+	glm::vec3 Color{};
+	TransformComponent Transform{};
 
-	std::shared_ptr<Model> model{};
-	std::unique_ptr<PointLightComponent> pointLight = nullptr;
+	Ref<Model> Model{};
+	Scope<PointLightComponent> PointLight = nullptr;
 
 private:
-	GameObject(id_t objId) : id{objId} {}
+	GameObject(const id_t objId) : id{objId} {}
 	id_t id;
 };

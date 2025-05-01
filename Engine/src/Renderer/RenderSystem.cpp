@@ -78,11 +78,11 @@ void RenderSystem::RenderGameObjects(FrameInfo &frameInfo)
 	for (auto& kv : frameInfo.GameObjects)
 	{
 		auto& obj = kv.second;
-		if (obj.model == nullptr) continue;
+		if (obj.Model == nullptr) continue;
 
-		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(obj.transform.GetTransform())));
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(obj.Transform.GetTransform())));
 		SimplePushConstantData push{};
-		push.modelMatrix = obj.transform.GetTransform();
+		push.modelMatrix = obj.Transform.GetTransform();
 		push.normalMatrix = normalMatrix;
 
 		vkCmdPushConstants(
@@ -92,7 +92,7 @@ void RenderSystem::RenderGameObjects(FrameInfo &frameInfo)
 			0,
 			sizeof(SimplePushConstantData),
 			&push);
-		obj.model->Bind(frameInfo.CommandBuffer);
-		obj.model->Draw(frameInfo.CommandBuffer);
+		obj.Model->Bind(frameInfo.CommandBuffer);
+		obj.Model->Draw(frameInfo.CommandBuffer);
 	}
 }

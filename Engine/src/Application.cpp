@@ -1,6 +1,5 @@
 #include "Application.h"
 #include "Core.h"
-#include "Vertex.h"
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
@@ -30,17 +29,6 @@ static Application* s_Instance = nullptr;
 
 static ImGui_ImplVulkanH_Window g_MainWindowData;
 static uint32_t                 g_MinImageCount = 2;
-
-namespace std
-{
-	template<> struct hash<Vertex>
-	{
-		size_t operator()(Vertex const& vertex) const
-		{
-			return ((hash<glm::vec3>()(vertex.Position) ^ (hash<glm::vec2>()(vertex.TextCoord) << 1)));
-		}
-	};
-}
 
 static void CheckVkResult(const VkResult err)
 {
@@ -218,14 +206,18 @@ void Application::Run()
 			.Build(globalDescriptorSets[i]);
 	}
 
-	RenderSystem simpleRenderSystem{
+	RenderSystem simpleRenderSystem
+	{
 		m_Device,
 		m_Renderer.GetSwapChainRenderPass(),
-		globalSetLayout->GetDescriptorSetLayout()};
-	PointLightSystem pointLightSystem{
+		globalSetLayout->GetDescriptorSetLayout()
+	};
+	PointLightSystem pointLightSystem
+	{
 		m_Device,
 		m_Renderer.GetSwapChainRenderPass(),
-		globalSetLayout->GetDescriptorSetLayout()};
+		globalSetLayout->GetDescriptorSetLayout()
+	};
 
 
 
@@ -336,25 +328,25 @@ void Application::LoadGameObjects()
 {
 	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "flat_vase.obj");
 
-	auto flatVase = GameObject::createGameObject();
-	flatVase.model = model;
-	flatVase.transform.Position = {-.5f, .5f, 0.f};
-	flatVase.transform.Scale = {3.f, 1.5f, 3.f};
-	m_GameObjects.emplace(flatVase.getId(), std::move(flatVase));
+	auto flatVase = GameObject::CreateGameObject();
+	flatVase.Model = model;
+	flatVase.Transform.Position = {-.5f, .5f, 0.f};
+	flatVase.Transform.Scale = {3.f, 1.5f, 3.f};
+	m_GameObjects.emplace(flatVase.GetId(), std::move(flatVase));
 
 	model = Model::CreateModelFromFile(m_Device, "smooth_vase.obj");
-	auto smoothVase = GameObject::createGameObject();
-	smoothVase.model = model;
-	smoothVase.transform.Position = {.5f, .5f, 0.f};
-	smoothVase.transform.Scale = {3.f, 1.5f, 3.f};
-	m_GameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
+	auto smoothVase = GameObject::CreateGameObject();
+	smoothVase.Model = model;
+	smoothVase.Transform.Position = {.5f, .5f, 0.f};
+	smoothVase.Transform.Scale = {3.f, 1.5f, 3.f};
+	m_GameObjects.emplace(smoothVase.GetId(), std::move(smoothVase));
 
 	model = Model::CreateModelFromFile(m_Device, "cube.obj");
-	auto floor = GameObject::createGameObject();
-	floor.model = model;
-	floor.transform.Position = {0.f, .5f, 0.f};
-	floor.transform.Scale = {3.f, 1.f, 3.f};
-	m_GameObjects.emplace(floor.getId(), std::move(floor));
+	auto floor = GameObject::CreateGameObject();
+	floor.Model = model;
+	floor.Transform.Position = {0.f, .5f, 0.f};
+	floor.Transform.Scale = {3.f, 1.f, 3.f};
+	m_GameObjects.emplace(floor.GetId(), std::move(floor));
 
 	const std::vector<glm::vec3> lightColors
 	{
@@ -368,13 +360,13 @@ void Application::LoadGameObjects()
 
 	for (int i = 0; i < lightColors.size(); i++)
 	{
-		auto pointLight = GameObject::makePointLight(0.2f);
-		pointLight.color = lightColors[i];
+		auto pointLight = GameObject::MakePointLight(0.2f);
+		pointLight.Color = lightColors[i];
 		auto rotateLight = glm::rotate(
 			glm::mat4(1.f),
 			(i * glm::two_pi<float>()) / lightColors.size(),
 			{0.f, -1.f, 0.f});
-		pointLight.transform.Position = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
-		m_GameObjects.emplace(pointLight.getId(), std::move(pointLight));
+		pointLight.Transform.Position = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+		m_GameObjects.emplace(pointLight.GetId(), std::move(pointLight));
 	}
 }

@@ -17,7 +17,7 @@ public:
 		glm::vec3 Position{};
 		glm::vec3 Color{};
 		glm::vec3 Normal{};
-		glm::vec2 Uv{};
+		glm::vec2 TextCoord{};
 		
 		static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
 		static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
@@ -27,7 +27,7 @@ public:
 			return	Position == other.Position &&
 					Color == other.Color &&
 					Normal == other.Normal &&
-					Uv == other.Uv;
+					TextCoord == other.TextCoord;
 		}
 	};
 
