@@ -58,34 +58,34 @@ public:
 	VkFormat FindSupportedFormat(
 		const std::vector<VkFormat> &candidates,
 		VkImageTiling tiling,
-		VkFormatFeatureFlags features);
+		VkFormatFeatureFlags features) const;
 
 	// Buffer Helper Functions
 	BufferHandle CreateBuffer(
 		VkDeviceSize size,
 		VkBufferUsageFlags usage,
-		VkMemoryPropertyFlags properties);
+		VkMemoryPropertyFlags properties) const;
 	
 	VkCommandBuffer BeginSingleTimeCommands() const;
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer) const;
 
-	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 	void CopyBufferToImage(
 		VkBuffer buffer,
 		VkImage image,
 		uint32_t width,
 		uint32_t height,
-		uint32_t layerCount);
+		uint32_t layerCount) const;
 
 	void CreateImageWithInfo(
 		const VkImageCreateInfo &imageInfo,
 		VkMemoryPropertyFlags properties,
 		VkImage &image,
-		VkDeviceMemory &imageMemory);
+		VkDeviceMemory &imageMemory) const;
 
 	VkPhysicalDeviceProperties Properties;
 
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
 
 private:
 	void CreateInstance();
