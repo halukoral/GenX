@@ -59,11 +59,31 @@ void Model::Builder::LoadModel(const std::string& filepath)
 				attrib.vertices[3 * index.vertex_index + 2]
 			};
 
-			vertex.TextCoord =
+			vertex.Color =
 			{
-				attrib.texcoords[2 * index.texcoord_index + 0],
-				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				attrib.colors[3 * index.vertex_index + 0],
+				attrib.colors[3 * index.vertex_index + 1],
+				attrib.colors[3 * index.vertex_index + 2],
 			};
+			
+			if (index.normal_index >= 0)
+			{
+				vertex.Normal =
+				{
+					attrib.normals[3 * index.normal_index + 0],
+					attrib.normals[3 * index.normal_index + 1],
+					attrib.normals[3 * index.normal_index + 2],
+				};
+			}
+
+			if (index.texcoord_index >= 0)
+			{
+				vertex.TextCoord =
+				{
+					attrib.texcoords[2 * index.texcoord_index + 0],
+					attrib.texcoords[2 * index.texcoord_index + 1],
+				};
+			}
 
 			vertex.Color = {1.0f, 1.0f, 1.0f};
 
