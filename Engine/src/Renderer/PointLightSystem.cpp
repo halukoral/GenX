@@ -5,18 +5,18 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <ranges>
 
 #include "ECS/Components/TransformComponent.h"
 
 struct PointLightPushConstants
 {
-	glm::vec4 position{};
-	glm::vec4 color{};
-	float radius;
+	glm::vec4 Position{};
+	glm::vec4 Color{};
+	float Radius;
 };
 
-PointLightSystem::PointLightSystem(
-	Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
+PointLightSystem::PointLightSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
 	: m_Device{device}
 {
 	CreatePipelineLayout(globalSetLayout);
@@ -50,7 +50,7 @@ void PointLightSystem::CreatePipelineLayout(VkDescriptorSetLayout globalSetLayou
 	}
 }
 
-void PointLightSystem::CreatePipeline(VkRenderPass renderPass)
+void PointLightSystem::CreatePipeline(const VkRenderPass renderPass)
 {
 	assert(m_PipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
@@ -68,41 +68,43 @@ void PointLightSystem::CreatePipeline(VkRenderPass renderPass)
 		pipelineConfig);
 }
 
-void PointLightSystem::Update(FrameInfo& frameInfo, GlobalUbo& ubo)
+void PointLightSystem::Update(const FrameInfo& frameInfo, GlobalUbo& ubo)
 {
 	auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.FrameTime, {0.f, -1.f, 0.f});
 	int lightIndex = 0;
 	for (auto& kv : frameInfo.GameObjects)
 	{
 		auto& obj = kv.second;
-		if (obj.pointLight == nullptr) continue;
+		if (obj.PointLight == nullptr) continue;
 
 		//assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
 		// update light position
-		obj.transform.Position = glm::vec3(rotateLight * glm::vec4(obj.transform.Position, 1.f));
+		obj.Transform.Position = glm::vec3(rotateLight * glm::vec4(obj.Transform.Position, 1.f));
 
 		// copy light to ubo
-		ubo.PointLights[lightIndex].Position = glm::vec4(obj.transform.Position, 1.f);
-		ubo.PointLights[lightIndex].Color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+		ubo.PointLights[lightIndex].Position = glm::vec4(obj.Transform.Position, 1.f);
+		ubo.PointLights[lightIndex].Color = glm::vec4(obj.Color, obj.PointLight->LightIntensity);
 
 		lightIndex += 1;
 	}
 	ubo.NumLights = lightIndex;
 }
 
-void PointLightSystem::Render(FrameInfo& frameInfo) {
+void PointLightSystem::Render(const FrameInfo& frameInfo) const
+{
 	// sort lights
 	std::map<float, GameObject::id_t> sorted;
-	for (auto& kv : frameInfo.GameObjects) {
-		auto& obj = kv.second;
-		if (obj.pointLight == nullptr) continue;
+	for (auto& val : frameInfo.GameObjects | std::views::values)
+	{
+		auto& obj = val;
+		if (obj.PointLight == nullptr) continue;
 
 		// calculate distance
-		auto transform = frameInfo.Camera.GetEntity()->GetComponent<TransformComponent>();
-		auto offset = transform->Position - obj.transform.Position;
+		const auto transform = frameInfo.Camera.GetEntity()->GetComponent<TransformComponent>();
+		auto offset = transform->Position - obj.Transform.Position;
 		float disSquared = glm::dot(offset, offset);
-		sorted[disSquared] = obj.getId();
+		sorted[disSquared] = obj.GetId();
 	}
 
 	m_Pipeline->Bind(frameInfo.CommandBuffer);
@@ -118,14 +120,15 @@ void PointLightSystem::Render(FrameInfo& frameInfo) {
 		nullptr);
 
 	// iterate through sorted lights in reverse order
-	for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+	for (auto& it : std::ranges::reverse_view(sorted))
+	{
 		// use game obj id to find light object
-		auto& obj = frameInfo.GameObjects.at(it->second);
+		auto& obj = frameInfo.GameObjects.at(it.second);
 
 		PointLightPushConstants push{};
-		push.position = glm::vec4(obj.transform.Position, 1.f);
-		push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-		push.radius = obj.transform.Scale.x;
+		push.Position = glm::vec4(obj.Transform.Position, 1.f);
+		push.Color = glm::vec4(obj.Color, obj.PointLight->LightIntensity);
+		push.Radius = obj.Transform.Scale.x;
 
 		vkCmdPushConstants(
 			frameInfo.CommandBuffer,

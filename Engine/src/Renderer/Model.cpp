@@ -24,7 +24,7 @@ namespace std {
 		size_t operator()(Model::Vertex const &vertex) const
 		{
 			size_t seed = 0;
-			hashCombine(seed, vertex.Position, vertex.Color, vertex.Normal, vertex.Uv);
+			hashCombine(seed, vertex.Position, vertex.Color, vertex.Normal, vertex.TextCoord);
 			return seed;
 		}
 	};
@@ -52,41 +52,20 @@ void Model::Builder::LoadModel(const std::string& filepath)
 		{
 			Vertex vertex{};
 
-			if (index.vertex_index >= 0)
+			vertex.Position =
 			{
-				vertex.Position =
-				{
-					attrib.vertices[3 * index.vertex_index + 0],
-					attrib.vertices[3 * index.vertex_index + 1],
-					attrib.vertices[3 * index.vertex_index + 2],
-				};
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2]
+			};
 
-				vertex.Color =
-				{
-					attrib.colors[3 * index.vertex_index + 0],
-					attrib.colors[3 * index.vertex_index + 1],
-					attrib.colors[3 * index.vertex_index + 2],
-				};
-			}
-
-			if (index.normal_index >= 0)
+			vertex.TextCoord =
 			{
-				vertex.Normal =
-				{
-					attrib.normals[3 * index.normal_index + 0],
-					attrib.normals[3 * index.normal_index + 1],
-					attrib.normals[3 * index.normal_index + 2],
-				};
-			}
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+			};
 
-			if (index.texcoord_index >= 0)
-			{
-				vertex.Uv =
-				{
-					attrib.texcoords[2 * index.texcoord_index + 0],
-					attrib.texcoords[2 * index.texcoord_index + 1],
-				};
-			}
+			vertex.Color = {1.0f, 1.0f, 1.0f};
 
 			if (!uniqueVertices.contains(vertex))
 			{
@@ -219,6 +198,6 @@ std::vector<VkVertexInputAttributeDescription> Model::Vertex::GetAttributeDescri
 	attributeDescriptions.push_back({0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, Position)});
 	attributeDescriptions.push_back({1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, Color)});
 	attributeDescriptions.push_back({2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, Normal)});
-	attributeDescriptions.push_back({3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, Uv)});
+	attributeDescriptions.push_back({3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, TextCoord)});
 	return attributeDescriptions;
 }
