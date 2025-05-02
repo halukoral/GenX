@@ -1,13 +1,11 @@
 #include "Model.h"
+#include "Core.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
-#ifndef ENGINE_DIR
-#define ENGINE_DIR "../"
-#endif
 
 // from: https://stackoverflow.com/a/57595105
 template <typename T, typename... Rest>
