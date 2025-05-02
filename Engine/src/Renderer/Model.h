@@ -1,4 +1,4 @@
-#pragma once
+#pragma oncej
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -7,6 +7,7 @@
 
 #include "Buffer.h"
 #include "Device.h"
+#include "Image.h"
 
 
 class Model
@@ -39,13 +40,13 @@ public:
 		void LoadModel(const std::string &filepath);
 	};
 	
-	Model(Device &device, const Model::Builder &builder);
+	Model(Device &device, const Model::Builder &builder, const std::string &texturePath = "");
 	~Model();
 
 	Model(const Model &) = delete;
 	Model &operator=(const Model &) = delete;
 
-	static std::unique_ptr<Model> CreateModelFromFile(Device &device, const std::string &filepath);
+	static std::unique_ptr<Model> CreateModelFromFile(Device &device, const std::string &filepath, const std::string &texturePath = "");
 	
 	void Bind(VkCommandBuffer commandBuffer) const;
 	void Draw(VkCommandBuffer commandBuffer) const;
@@ -53,7 +54,9 @@ public:
 private:
 	void CreateVertexBuffers(const std::vector<Vertex> &vertices);
 	void CreateIndexBuffers(const std::vector<uint32_t> &indices);
-	
+
+	void CreateTextureImage(const std::string &texturePath);
+
 	Device &m_Device;
 	
 	std::unique_ptr<Buffer> m_VertexBuffer;
@@ -62,4 +65,6 @@ private:
 	bool m_HasIndexBuffer = false;
 	std::unique_ptr<Buffer> m_IndexBuffer;
 	uint32_t m_IndexCount;
+
+	std::unique_ptr<Image> m_Texture;
 };

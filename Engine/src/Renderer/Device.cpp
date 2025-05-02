@@ -278,9 +278,9 @@ void Device::CreateLogicalDevice()
 	}
 
 	// We also need to specify the set of device features that we’ll be using
-	// we'll come back this later.
 	VkPhysicalDeviceFeatures deviceFeatures{};
-
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
+	
 	// With the previous two structures in place, we can
 	// start filling in the VkDeviceCreateInfo structure.
 	VkDeviceCreateInfo createInfo{};

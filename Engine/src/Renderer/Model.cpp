@@ -95,21 +95,26 @@ void Model::Builder::LoadModel(const std::string& filepath)
 	}
 }
 
-Model::Model(Device& device, const Model::Builder &builder) : m_Device(device)
+Model::Model(Device& device, const Model::Builder &builder, const std::string &texturePath) : m_Device(device)
 {
 	CreateVertexBuffers(builder.Vertices);
 	CreateIndexBuffers(builder.Indices);
+
+	if (!texturePath.empty())
+	{
+		CreateTextureImage(texturePath);
+	}
 }
 
 Model::~Model()
 {
 }
 
-std::unique_ptr<Model> Model::CreateModelFromFile(Device& device, const std::string& filepath)
+std::unique_ptr<Model> Model::CreateModelFromFile(Device& device, const std::string& filepath, const std::string& texturePath)
 {
 	Builder builder{};
 	builder.LoadModel(ENGINE_DIR + filepath);
-	return std::make_unique<Model>(device, builder);
+	return std::make_unique<Model>(device, builder, texturePath);
 }
 
 void Model::Bind(const VkCommandBuffer commandBuffer) const
@@ -200,6 +205,10 @@ void Model::CreateIndexBuffers(const std::vector<uint32_t>& indices)
 	m_Device.CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
 }
 
+void Model::CreateTextureImage(const std::string& texturePath)
+{
+	m_Texture = std::make_unique<Image>(m_Device, texturePath);
+}
 
 std::vector<VkVertexInputBindingDescription> Model::Vertex::GetBindingDescriptions()
 {
