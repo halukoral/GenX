@@ -31,6 +31,7 @@ public:
 	VkResult InvalidateIndex(int index) const;
 
 	VkBuffer				GetBuffer() const			{ return m_Handle.Buffer; }
+	VkDeviceMemory			GetBufferMemory() const		{ return m_Handle.Memory; }
 	void*					GetMappedMemory() const		{ return m_Mapped; }
 	uint32_t				GetInstanceCount() const	{ return m_InstanceCount; }
 	VkDeviceSize			GetInstanceSize() const		{ return m_InstanceSize; }

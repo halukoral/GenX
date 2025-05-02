@@ -53,7 +53,7 @@ public:
 	const Window&		GetWindow() const			{ return m_Window; }
 	
 	SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(m_PhysicalDevice); }
-	QueueFamilyIndices FindPhysicalQueueFamilies()	{ return FindQueueFamilies(m_PhysicalDevice); }
+	QueueFamilyIndices FindPhysicalQueueFamilies() const { return FindQueueFamilies(m_PhysicalDevice); }
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 	VkFormat FindSupportedFormat(
 		const std::vector<VkFormat> &candidates,
