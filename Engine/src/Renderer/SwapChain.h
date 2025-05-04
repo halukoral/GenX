@@ -65,10 +65,7 @@ private:
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 	VkRenderPass m_RenderPass;
 
-	std::vector<VkImage> m_DepthImages;
-	std::vector<VkDeviceMemory> m_DepthImageMemorys;
-	std::vector<VkImageView> m_DepthImageViews;
-
+	std::vector<Image> m_DepthImages;
 	std::vector<Image> m_SwapChainImages;
 
 	std::shared_ptr<Device> m_Device;

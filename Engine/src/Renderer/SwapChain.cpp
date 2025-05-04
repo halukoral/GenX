@@ -21,13 +21,6 @@ SwapChain::~SwapChain()
 		m_SwapChain = nullptr;
 	}
 
-	for (int i = 0; i < m_DepthImages.size(); i++)
-	{
-		vkDestroyImageView(m_Device->GetLogicalDevice(), m_DepthImageViews[i], nullptr);
-		vkDestroyImage(m_Device->GetLogicalDevice(), m_DepthImages[i], nullptr);
-		vkFreeMemory(m_Device->GetLogicalDevice(), m_DepthImageMemorys[i], nullptr);
-	}
-
 	for (auto framebuffer : m_SwapChainFramebuffers)
 	{
 		vkDestroyFramebuffer(m_Device->GetLogicalDevice(), framebuffer, nullptr);
@@ -288,7 +281,7 @@ void SwapChain::CreateFramebuffers() {
 	m_SwapChainFramebuffers.resize(ImageCount());
 	for (size_t i = 0; i < ImageCount(); i++)
 	{
-		std::array<VkImageView, 2> attachments = {m_SwapChainImages[i].GetImageView(), m_DepthImageViews[i]};
+		std::array<VkImageView, 2> attachments = {m_SwapChainImages[i].GetImageView(), m_DepthImages[i].GetImageView()};
 
 		VkExtent2D swapChainExtent = GetSwapChainExtent();
 		VkFramebufferCreateInfo framebufferInfo = {};
@@ -318,8 +311,6 @@ void SwapChain::CreateDepthResources()
 	VkExtent2D swapChainExtent = GetSwapChainExtent();
 
 	m_DepthImages.resize(ImageCount());
-	m_DepthImageMemorys.resize(ImageCount());
-	m_DepthImageViews.resize(ImageCount());
 
 	for (int i = 0; i < m_DepthImages.size(); i++)
 	{
@@ -342,12 +333,12 @@ void SwapChain::CreateDepthResources()
 		m_Device->CreateImageWithInfo(
 			imageInfo,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			m_DepthImages[i],
-			m_DepthImageMemorys[i]);
+			m_DepthImages[i].GetImageRef(),
+			m_DepthImages[i].GetImageMemoryRef());
 
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewInfo.image = m_DepthImages[i];
+		viewInfo.image = m_DepthImages[i].GetImage();
 		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewInfo.format = depthFormat;
 		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -356,7 +347,8 @@ void SwapChain::CreateDepthResources()
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &m_DepthImageViews[i]) != VK_SUCCESS) {
+		if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &m_DepthImages[i].GetImageViewRef()) != VK_SUCCESS)
+		{
 			throw std::runtime_error("failed to create texture image view!");
 		}
 	}
