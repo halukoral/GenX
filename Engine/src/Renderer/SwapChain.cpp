@@ -192,7 +192,13 @@ void SwapChain::CreateSwapChain()
 	// retrieve the handles.
 	vkGetSwapchainImagesKHR(m_Device->GetLogicalDevice(), m_SwapChain, &imageCount, nullptr);
 	m_SwapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(m_Device->GetLogicalDevice(), m_SwapChain, &imageCount, m_SwapChainImages.data());
+	std::vector<VkImage> images(imageCount);
+	vkGetSwapchainImagesKHR(m_Device->GetLogicalDevice(), m_SwapChain, &imageCount, images.data());
+
+	for (size_t i = 0; i < imageCount; i++)
+	{
+		m_SwapChainImages[i] = Image(m_Device, images[i]);
+	}
 
 	m_SwapChainImageFormat = surfaceFormat.format;
 	m_SwapChainExtent = extent;
@@ -205,7 +211,7 @@ void SwapChain::CreateImageViews()
 	{
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewInfo.image = m_SwapChainImages[i];
+		viewInfo.image = m_SwapChainImages[i].GetImage();
 		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewInfo.format = m_SwapChainImageFormat;
 		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

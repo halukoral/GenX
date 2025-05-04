@@ -3,6 +3,8 @@
 #include "Device.h"
 #include <vulkan/vulkan.h>
 
+#include "Image.h"
+
 class SwapChain
 {
 public:
@@ -66,7 +68,8 @@ private:
 	std::vector<VkImage> m_DepthImages;
 	std::vector<VkDeviceMemory> m_DepthImageMemorys;
 	std::vector<VkImageView> m_DepthImageViews;
-	std::vector<VkImage> m_SwapChainImages;
+
+	std::vector<Image> m_SwapChainImages;
 	std::vector<VkImageView> m_SwapChainImageViews;
 
 	std::shared_ptr<Device> m_Device;
