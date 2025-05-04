@@ -33,7 +33,7 @@ public:
 	}
 	VkFormat FindDepthFormat();
 
-	VkResult AcquireNextImage(uint32_t *imageIndex);
+	VkResult AcquireNextImage(uint32_t *imageIndex) const;
 	VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
 	bool CompareSwapFormats(const SwapChain& swapChain) const
@@ -66,6 +66,7 @@ private:
 	std::vector<VkImage> m_DepthImages;
 	std::vector<VkDeviceMemory> m_DepthImageMemorys;
 	std::vector<VkImageView> m_DepthImageViews;
+	
 	std::vector<VkImage> m_SwapChainImages;
 	std::vector<VkImageView> m_SwapChainImageViews;
 

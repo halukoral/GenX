@@ -60,11 +60,8 @@ void SwapChain::Initialize()
 	CreateSyncObjects();
 }
 
-VkResult SwapChain::AcquireNextImage(uint32_t *imageIndex)
+VkResult SwapChain::AcquireNextImage(uint32_t *imageIndex) const
 {
-	int y = 56;
-
-
 	vkWaitForFences(
 		m_Device.GetLogicalDevice(),
 		1,
@@ -72,9 +69,7 @@ VkResult SwapChain::AcquireNextImage(uint32_t *imageIndex)
 		VK_TRUE,
 		std::numeric_limits<uint64_t>::max());
 
-	int x = 56;
-	
-	VkResult result = vkAcquireNextImageKHR(
+	const VkResult result = vkAcquireNextImageKHR(
 		m_Device.GetLogicalDevice(),
 		m_SwapChain,
 		std::numeric_limits<uint64_t>::max(),
@@ -95,8 +90,8 @@ VkResult SwapChain::SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = {m_ImageAvailableSemaphores[m_CurrentFrame]};
-	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	const VkSemaphore waitSemaphores[] = {m_ImageAvailableSemaphores[m_CurrentFrame]};
+	constexpr VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
@@ -104,15 +99,16 @@ VkResult SwapChain::SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = buffers;
 
-	VkSemaphore signalSemaphores[] = {m_RenderFinishedSemaphores[m_CurrentFrame]};
+	const VkSemaphore signalSemaphores[] = {m_RenderFinishedSemaphores[m_CurrentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
 	vkResetFences(m_Device.GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 	if (vkQueueSubmit(m_Device.GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) !=
-		VK_SUCCESS) {
+		VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to submit draw command buffer!");
-		}
+	}
 
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -120,13 +116,13 @@ VkResult SwapChain::SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = signalSemaphores;
 
-	VkSwapchainKHR swapChains[] = {m_SwapChain};
+	const VkSwapchainKHR swapChains[] = {m_SwapChain};
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 
 	presentInfo.pImageIndices = imageIndex;
 
-	auto result = vkQueuePresentKHR(m_Device.GetPresentQueue(), &presentInfo);
+	const auto result = vkQueuePresentKHR(m_Device.GetPresentQueue(), &presentInfo);
 
 	m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 

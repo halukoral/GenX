@@ -326,12 +326,10 @@ void Application::CreateImGuiDescriptorPool()
 
 void Application::LoadGameObjects()
 {
-	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "flat_vase.obj");
+	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "viking_room.obj", "viking_room.png");
 
 	auto flatVase = GameObject::CreateGameObject();
 	flatVase.Model = model;
-	flatVase.Transform.Position = {-.5f, .5f, 0.f};
-	flatVase.Transform.Scale = {3.f, 1.5f, 3.f};
 	m_GameObjects.emplace(flatVase.GetId(), std::move(flatVase));
 
 	model = Model::CreateModelFromFile(m_Device, "smooth_vase.obj");
