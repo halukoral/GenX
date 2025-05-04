@@ -4,6 +4,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+Image::Image(Device& device) : m_Device(device)
+{
+}
+
+Image::Image(Device& device, VkImage& image) : m_Device(device) , m_Image(image)
+{
+}
+
 Image::Image(Device& device, const std::string& filepath) : m_Device(device)
 {
 	CreateTextureImage(filepath);
@@ -13,9 +21,9 @@ Image::Image(Device& device, const std::string& filepath) : m_Device(device)
 
 Image::~Image()
 {
-	vkDestroyImageView(m_Device.GetLogicalDevice(), textureImageView, nullptr);
-	vkFreeMemory(m_Device.GetLogicalDevice(), textureImageMemory, nullptr);
-	vkDestroyImage(m_Device.GetLogicalDevice(), textureImage, nullptr);
+	vkDestroyImageView(m_Device.GetLogicalDevice(), m_ImageView, nullptr);
+	vkFreeMemory(m_Device.GetLogicalDevice(), m_ImageMemory, nullptr);
+	vkDestroyImage(m_Device.GetLogicalDevice(), m_Image, nullptr);
 }
 
 void Image::CreateTextureImage(const std::string& filepath)
@@ -41,11 +49,11 @@ void Image::CreateTextureImage(const std::string& filepath)
 
 	stbi_image_free(pixels);
 
-	CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+	CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Image, m_ImageMemory);
 
-	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	CopyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	TransitionImageLayout(m_Image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	CopyBufferToImage(stagingBuffer, m_Image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	TransitionImageLayout(m_Image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	vkDestroyBuffer(m_Device.GetLogicalDevice(), stagingBuffer, nullptr);
 	vkFreeMemory(m_Device.GetLogicalDevice(), stagingBufferMemory, nullptr);
@@ -53,7 +61,7 @@ void Image::CreateTextureImage(const std::string& filepath)
 
 void Image::CreateTextureImageView()
 {
-	textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+	//m_ImageView = CreateImageView(VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 void Image::CreateTextureSampler()
@@ -76,7 +84,7 @@ void Image::CreateTextureSampler()
 	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-	if (vkCreateSampler(m_Device.GetLogicalDevice(), &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
+	if (vkCreateSampler(m_Device.GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create texture sampler!");
 	}
@@ -163,11 +171,11 @@ void Image::CreateImage(
 	vkBindImageMemory(m_Device.GetLogicalDevice(), image, imageMemory, 0);
 }
 
-VkImageView Image::CreateImageView(VkImage image, VkFormat format) const
+void Image::CreateImageView(VkFormat format)
 {
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewInfo.image = image;
+	viewInfo.image = m_Image;
 	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // TODO: Make configurable.
 	viewInfo.format = format;
 	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -178,13 +186,10 @@ VkImageView Image::CreateImageView(VkImage image, VkFormat format) const
 	viewInfo.subresourceRange.baseArrayLayer = 0;
 	viewInfo.subresourceRange.layerCount = 1;
 
-	VkImageView imageView;
-	if (vkCreateImageView(m_Device.GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+	if (vkCreateImageView(m_Device.GetLogicalDevice(), &viewInfo, nullptr, &m_ImageView) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create texture image view!");
 	}
-
-	return imageView;
 }
 
 void Image::TransitionImageLayout(

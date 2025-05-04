@@ -660,7 +660,6 @@ void Device::CopyBufferToImage(
 	EndSingleTimeCommands(commandBuffer);
 }
 
-
 void Device::CreateImageWithInfo(
 	const VkImageCreateInfo &imageInfo,
 	const VkMemoryPropertyFlags properties,

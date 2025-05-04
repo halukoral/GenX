@@ -1,4 +1,4 @@
-#pragma oncej
+#pragma once
 
 // libs
 #define GLM_FORCE_RADIANS

@@ -4,12 +4,11 @@
 class Image
 {
 public:
+	Image(Device &device);
+	Image(Device &device, VkImage& image);
 	Image(Device &device, const std::string &filepath);
 	~Image();
 
-	Image(const Image &) = delete;
-	Image &operator=(const Image &) = delete;
-	
 	void CreateTextureImage(const std::string& filepath);
 	void CreateTextureImageView();
 	void CreateTextureSampler();
@@ -23,8 +22,8 @@ public:
 		VkMemoryPropertyFlags properties,
 		VkImage& image,
 		VkDeviceMemory& imageMemory) const;
-
-	VkImageView CreateImageView(VkImage image, VkFormat format) const;
+	
+	void CreateImageView(VkFormat format);
 
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 					VkDeviceMemory& bufferMemory) const;
@@ -32,10 +31,22 @@ public:
 	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
 
+	[[nodiscard]] VkImage			GetImage() const		{ return m_Image; }
+	[[nodiscard]] VkImageView		GetImageView() const	{ return m_ImageView; }
+	[[nodiscard]] VkDeviceMemory	GetImageMemory() const	{ return m_ImageMemory; }
+
+	[[nodiscard]] VkImage&			GetImageRef() 			{ return m_Image; }
+	[[nodiscard]] VkImageView&		GetImageViewRef() 		{ return m_ImageView; }
+	[[nodiscard]] VkDeviceMemory&	GetImageMemoryRef()		{ return m_ImageMemory; }
+
+	void SetImage(const VkImage& image) { m_Image = image; }
+	
 private:
 	Device& m_Device;
-	VkImage textureImage;
-	VkDeviceMemory textureImageMemory;
-	VkSampler textureSampler;
-	VkImageView textureImageView;
+
+	VkImage m_Image;
+	VkImageView m_ImageView;
+	VkDeviceMemory m_ImageMemory;
+
+	VkSampler m_TextureSampler;
 };
