@@ -1,7 +1,7 @@
 #include "Renderer.h"
 #include "Window.h"
 
-Renderer::Renderer(Window& window, Device& device)
+Renderer::Renderer(std::shared_ptr<Window>& window, const std::shared_ptr<Device>& device)
 	: m_Window{window}, m_Device{device}
 {
 }
@@ -19,13 +19,13 @@ void Renderer::Initialize()
 
 void Renderer::CreateSwapChain()
 {
-	auto extent = m_Window.GetExtent();
+	auto extent = m_Window->GetExtent();
 	while (extent.width == 0 || extent.height == 0)
 	{
-		extent = m_Window.GetExtent();
+		extent = m_Window->GetExtent();
 		glfwWaitEvents();
 	}
-	vkDeviceWaitIdle(m_Device.GetLogicalDevice());
+	vkDeviceWaitIdle(m_Device->GetLogicalDevice());
 
 	if (m_SwapChain == nullptr)
 	{
@@ -50,10 +50,10 @@ void Renderer::CreateCommandBuffers()
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = m_Device.GetCommandPool();
+	allocInfo.commandPool = m_Device->GetCommandPool();
 	allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-	if (vkAllocateCommandBuffers(m_Device.GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) !=
+	if (vkAllocateCommandBuffers(m_Device->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) !=
 		VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate command buffers!");
@@ -63,8 +63,8 @@ void Renderer::CreateCommandBuffers()
 void Renderer::FreeCommandBuffers()
 {
 	vkFreeCommandBuffers(
-		m_Device.GetLogicalDevice(),
-		m_Device.GetCommandPool(),
+		m_Device->GetLogicalDevice(),
+		m_Device->GetCommandPool(),
 		static_cast<uint32_t>(m_CommandBuffers.size()),
 		m_CommandBuffers.data());
 	m_CommandBuffers.clear();
@@ -111,9 +111,9 @@ void Renderer::EndFrame()
 
 	auto result = m_SwapChain->SubmitCommandBuffers(&commandBuffer, &m_CurrentImageIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-		m_Window.WasWindowResized())
+		m_Window->WasWindowResized())
 	{
-		m_Window.ResetWindowResizedFlag();
+		m_Window->ResetWindowResizedFlag();
 		CreateSwapChain();
 	}
 	else if (result != VK_SUCCESS)

@@ -33,7 +33,7 @@ struct QueueFamilyIndices
 class Device
 {
 public:
-	Device(Window &window);
+	Device(const std::shared_ptr<Window>& window);
 	~Device();
 
 	Device(const Device &) = delete;
@@ -50,42 +50,42 @@ public:
 	VkQueue 			GetPresentQueue() const		{ return m_PresentQueue; }
 	VkSurfaceKHR		GetSurface() const			{ return m_Surface; }
 	VkCommandPool		GetCommandPool() const		{ return m_CommandPool; }
-	const Window&		GetWindow() const			{ return m_Window; }
+	const Window&		GetWindow() const			{ return *m_Window; }
 	
 	SwapChainSupportDetails GetSwapChainSupport() const { return QuerySwapChainSupport(m_PhysicalDevice); }
-	QueueFamilyIndices FindPhysicalQueueFamilies() const { return FindQueueFamilies(m_PhysicalDevice); }
+	QueueFamilyIndices FindPhysicalQueueFamilies()	{ return FindQueueFamilies(m_PhysicalDevice); }
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 	VkFormat FindSupportedFormat(
 		const std::vector<VkFormat> &candidates,
 		VkImageTiling tiling,
-		VkFormatFeatureFlags features) const;
+		VkFormatFeatureFlags features);
 
 	// Buffer Helper Functions
 	BufferHandle CreateBuffer(
 		VkDeviceSize size,
 		VkBufferUsageFlags usage,
-		VkMemoryPropertyFlags properties) const;
+		VkMemoryPropertyFlags properties);
 	
 	VkCommandBuffer BeginSingleTimeCommands() const;
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer) const;
 
-	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void CopyBufferToImage(
 		VkBuffer buffer,
 		VkImage image,
 		uint32_t width,
 		uint32_t height,
-		uint32_t layerCount) const;
+		uint32_t layerCount);
 
 	void CreateImageWithInfo(
 		const VkImageCreateInfo &imageInfo,
 		VkMemoryPropertyFlags properties,
 		VkImage &image,
-		VkDeviceMemory &imageMemory) const;
+		VkDeviceMemory &imageMemory);
 
 	VkPhysicalDeviceProperties Properties;
 
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
 private:
 	void CreateInstance();
@@ -111,7 +111,7 @@ private:
 	
 	SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
 
-	Window &m_Window;
+	std::shared_ptr<Window> m_Window;
 
 	/////////////////////////////////////////////////
 	/// VULKAN

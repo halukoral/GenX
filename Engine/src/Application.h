@@ -74,7 +74,7 @@ public:
 
 	void			Close();
 	static float	GetTime();
-	GLFWwindow*		GetWindowHandle() const { return m_Window.GetWindow(); }
+	GLFWwindow*		GetWindowHandle() const { return m_Window->GetWindow(); }
 	CameraActor*	GetCameraActor() { return &m_CameraActor; }
 
 private:
@@ -109,9 +109,9 @@ private:
 	
 	/* --------------------------------------------------------------------*/
 
-	Window m_Window {m_Spec.Width, m_Spec.Height, m_Spec.Name};
-	Device m_Device {m_Window};
-	Renderer m_Renderer {m_Window, m_Device};
+	std::shared_ptr<Window> m_Window = std::make_shared<Window>(m_Spec.Width, m_Spec.Height, m_Spec.Name);
+	std::shared_ptr<Device> m_Device = std::make_shared<Device>(m_Window);
+	std::shared_ptr<Renderer> m_Renderer = std::make_shared<Renderer>(m_Window, m_Device);
 	
 	// note: order of declarations matters
 	std::unique_ptr<DescriptorPool> m_GlobalPool{};

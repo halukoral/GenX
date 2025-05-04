@@ -95,7 +95,7 @@ void Model::Builder::LoadModel(const std::string& filepath)
 	}
 }
 
-Model::Model(Device& device, const Model::Builder &builder, const std::string &texturePath) : m_Device(device)
+Model::Model(std::shared_ptr<Device> device, const Model::Builder &builder, const std::string &texturePath) : m_Device(device)
 {
 	CreateVertexBuffers(builder.Vertices);
 	CreateIndexBuffers(builder.Indices);
@@ -110,7 +110,7 @@ Model::~Model()
 {
 }
 
-std::unique_ptr<Model> Model::CreateModelFromFile(Device& device, const std::string& filepath, const std::string& texturePath)
+std::unique_ptr<Model> Model::CreateModelFromFile(std::shared_ptr<Device> device, const std::string& filepath, const std::string& texturePath)
 {
 	Builder builder{};
 	builder.LoadModel(ENGINE_DIR + filepath);
@@ -167,7 +167,7 @@ void Model::CreateVertexBuffers(const std::vector<Vertex>& vertices)
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	m_Device.CopyBuffer(stagingBuffer.GetBuffer(), m_VertexBuffer->GetBuffer(), bufferSize);
+	m_Device->CopyBuffer(stagingBuffer.GetBuffer(), m_VertexBuffer->GetBuffer(), bufferSize);
 }
 
 void Model::CreateIndexBuffers(const std::vector<uint32_t>& indices)
@@ -202,7 +202,7 @@ void Model::CreateIndexBuffers(const std::vector<uint32_t>& indices)
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	m_Device.CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
+	m_Device->CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
 }
 
 void Model::CreateTextureImage(const std::string& texturePath)

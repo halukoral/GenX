@@ -17,7 +17,7 @@ VkDeviceSize Buffer::GetAlignment(const VkDeviceSize instanceSize, const VkDevic
 }
 
 Buffer::Buffer(
-	Device& device,
+	std::shared_ptr<Device> device,
 	const VkDeviceSize instanceSize,
 	const uint32_t instanceCount,
 	const VkBufferUsageFlags usageFlags,
@@ -31,27 +31,27 @@ Buffer::Buffer(
 {
 	m_AlignmentSize = GetAlignment(instanceSize, minOffsetAlignment);
 	m_BufferSize = m_AlignmentSize * instanceCount;
-	m_Handle = device.CreateBuffer(m_BufferSize, usageFlags, memoryPropertyFlags);
+	m_Handle = device->CreateBuffer(m_BufferSize, usageFlags, memoryPropertyFlags);
 }
 
 Buffer::~Buffer()
 {
 	Unmap();
-	vkDestroyBuffer(m_Device.GetLogicalDevice(), m_Handle.Buffer, nullptr);
-	vkFreeMemory(m_Device.GetLogicalDevice(), m_Handle.Memory, nullptr);
+	vkDestroyBuffer(m_Device->GetLogicalDevice(), m_Handle.Buffer, nullptr);
+	vkFreeMemory(m_Device->GetLogicalDevice(), m_Handle.Memory, nullptr);
 }
 
 VkResult Buffer::Map(const VkDeviceSize size, const VkDeviceSize offset)
 {
 	assert(m_Handle.Buffer && m_Handle.Memory && "Called map on buffer before create");
-	return vkMapMemory(m_Device.GetLogicalDevice(), m_Handle.Memory, offset, size, 0, &m_Mapped);
+	return vkMapMemory(m_Device->GetLogicalDevice(), m_Handle.Memory, offset, size, 0, &m_Mapped);
 }
 
 void Buffer::Unmap()
 {
 	if (m_Mapped)
 	{
-		vkUnmapMemory(m_Device.GetLogicalDevice(), m_Handle.Memory);
+		vkUnmapMemory(m_Device->GetLogicalDevice(), m_Handle.Memory);
 		m_Mapped = nullptr;
 	}
 }
@@ -79,7 +79,7 @@ VkResult Buffer::Flush(const VkDeviceSize size, const VkDeviceSize offset) const
 	mappedRange.memory = m_Handle.Memory;
 	mappedRange.offset = offset;
 	mappedRange.size = size;
-	return vkFlushMappedMemoryRanges(m_Device.GetLogicalDevice(), 1, &mappedRange);
+	return vkFlushMappedMemoryRanges(m_Device->GetLogicalDevice(), 1, &mappedRange);
 }
 
 VkResult Buffer::Invalidate(const VkDeviceSize size, const VkDeviceSize offset) const
@@ -89,7 +89,7 @@ VkResult Buffer::Invalidate(const VkDeviceSize size, const VkDeviceSize offset) 
 	mappedRange.memory = m_Handle.Memory;
 	mappedRange.offset = offset;
 	mappedRange.size = size;
-	return vkInvalidateMappedMemoryRanges(m_Device.GetLogicalDevice(), 1, &mappedRange);
+	return vkInvalidateMappedMemoryRanges(m_Device->GetLogicalDevice(), 1, &mappedRange);
 }
 
 VkDescriptorBufferInfo Buffer::DescriptorInfo(const VkDeviceSize size, const VkDeviceSize offset) const

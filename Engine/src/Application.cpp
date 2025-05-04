@@ -91,24 +91,24 @@ void Application::Init()
 		return;
 	}
 
-	m_Window.SetEventCallback(GX_BIND(Application::OnEvent));
+	m_Window->SetEventCallback(GX_BIND(Application::OnEvent));
 
 	m_Layer = CreateRef<ApplicationLayer>();
 	m_Layer->SetCamera(this);
 	PushLayer(m_Layer);
 	
-	m_Window.DisableCursor();
+	m_Window->DisableCursor();
 	
 	InitVulkan();
 
-	//InitImgui();
+	InitImgui();
 }
 
 bool Application::InitVulkan()
 {
 	// Order matters
-	m_Device.Initialize();
-	m_Renderer.Initialize();
+	m_Device->Initialize();
+	m_Renderer->Initialize();
 
 	m_GlobalPool =
 	DescriptorPool::Builder(m_Device)
@@ -136,17 +136,17 @@ void Application::InitImgui()
 	ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
 	
 	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForVulkan(m_Window.GetWindow(), true);
+	ImGui_ImplGlfw_InitForVulkan(m_Window->GetWindow(), true);
 	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.Instance = m_Device.GetInstance();
-	init_info.PhysicalDevice = m_Device.GetPhysicalDevice();
-	init_info.Device = m_Device.GetLogicalDevice();
-	init_info.QueueFamily = m_Device.FindQueueFamilies(m_Device.GetPhysicalDevice()).GraphicsFamily.value();
-	init_info.Queue = m_Device.GetGraphicsQueue();
+	init_info.Instance = m_Device->GetInstance();
+	init_info.PhysicalDevice = m_Device->GetPhysicalDevice();
+	init_info.Device = m_Device->GetLogicalDevice();
+	init_info.QueueFamily = m_Device->FindQueueFamilies(m_Device->GetPhysicalDevice()).GraphicsFamily.value();
+	init_info.Queue = m_Device->GetGraphicsQueue();
 	//init_info.PipelineCache = YOUR_PIPELINE_CACHE;
 	init_info.DescriptorPool = m_ImGuiDescriptorPool;
 	init_info.Subpass = 0;
-	init_info.RenderPass = m_Renderer.GetSwapChainRenderPass();
+	init_info.RenderPass = m_Renderer->GetSwapChainRenderPass();
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = 2;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -157,11 +157,11 @@ void Application::InitImgui()
 
 void Application::CleanupImGui() const
 {
-	vkDeviceWaitIdle(m_Device.GetLogicalDevice());
+	vkDeviceWaitIdle(m_Device->GetLogicalDevice());
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-	vkDestroyDescriptorPool(m_Device.GetLogicalDevice(), m_ImGuiDescriptorPool, nullptr);
+	vkDestroyDescriptorPool(m_Device->GetLogicalDevice(), m_ImGuiDescriptorPool, nullptr);
 }
 
 void Application::Shutdown()
@@ -171,7 +171,7 @@ void Application::Shutdown()
 
 	m_LayerStack.clear();
 
-	//CleanupImGui();
+	CleanupImGui();
 	
 	g_ApplicationRunning = false;
 }
@@ -208,21 +208,21 @@ void Application::Run()
 
 	RenderSystem simpleRenderSystem
 	{
-		m_Device,
-		m_Renderer.GetSwapChainRenderPass(),
+		*m_Device,
+		m_Renderer->GetSwapChainRenderPass(),
 		globalSetLayout->GetDescriptorSetLayout()
 	};
 	PointLightSystem pointLightSystem
 	{
-		m_Device,
-		m_Renderer.GetSwapChainRenderPass(),
+		*m_Device,
+		m_Renderer->GetSwapChainRenderPass(),
 		globalSetLayout->GetDescriptorSetLayout()
 	};
 
 
 
 	// Main loop
-	while (!glfwWindowShouldClose(m_Window.GetWindow()) && m_Running)
+	while (!glfwWindowShouldClose(m_Window->GetWindow()) && m_Running)
 	{
 		glfwPollEvents();
 		
@@ -232,9 +232,9 @@ void Application::Run()
 		m_CameraActor.OnUpdate(m_TimeStep);
 		////////////////////////////////////
 		// Render
-		if (const auto commandBuffer = m_Renderer.BeginFrame())
+		if (const auto commandBuffer = m_Renderer->BeginFrame())
 		{
-			const int frameIndex = m_Renderer.GetFrameIndex();
+			const int frameIndex = m_Renderer->GetFrameIndex();
 			FrameInfo frameInfo
 			{
 				frameIndex,
@@ -255,7 +255,7 @@ void Application::Run()
 			uboBuffers[frameIndex]->Flush();
 
 			// render
-			m_Renderer.BeginSwapChainRenderPass(commandBuffer);
+			m_Renderer->BeginSwapChainRenderPass(commandBuffer);
 
 			// order here matters
 			simpleRenderSystem.RenderGameObjects(frameInfo);
@@ -269,10 +269,10 @@ void Application::Run()
 			// ImGui::ShowDemoWindow();
 			//
 			// ImGui::Render();
-			// ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_Renderer.getCurrentCommandBuffer());
+			// ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_Renderer->getCurrentCommandBuffer());
 
-			m_Renderer.EndSwapChainRenderPass(commandBuffer);
-			m_Renderer.EndFrame();
+			m_Renderer->EndSwapChainRenderPass(commandBuffer);
+			m_Renderer->EndFrame();
 		}
 		////////////////////////////////////
 
@@ -281,7 +281,7 @@ void Application::Run()
 		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
 		m_LastFrameTime = time;
 	}
-	vkDeviceWaitIdle(m_Device.GetLogicalDevice());
+	vkDeviceWaitIdle(m_Device->GetLogicalDevice());
 }
 
 void Application::Close()
@@ -318,7 +318,7 @@ void Application::CreateImGuiDescriptorPool()
 	pool_info.poolSizeCount = (uint32_t)std::size(pool_sizes);
 	pool_info.pPoolSizes    = pool_sizes;
 
-	if (vkCreateDescriptorPool(m_Device.GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(m_Device->GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create ImGui descriptor pool!");
 	}
@@ -326,16 +326,18 @@ void Application::CreateImGuiDescriptorPool()
 
 void Application::LoadGameObjects()
 {
-	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "viking_room.obj", "viking_room.png");
+	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "flat_vase.obj");
 
 	auto flatVase = GameObject::CreateGameObject();
 	flatVase.Model = model;
+	flatVase.Transform.Position = {-.5f, -.5f, 0.f};
+	flatVase.Transform.Scale = {3.f, 1.5f, 3.f};
 	m_GameObjects.emplace(flatVase.GetId(), std::move(flatVase));
 
 	model = Model::CreateModelFromFile(m_Device, "smooth_vase.obj");
 	auto smoothVase = GameObject::CreateGameObject();
 	smoothVase.Model = model;
-	smoothVase.Transform.Position = {.5f, .5f, 0.f};
+	smoothVase.Transform.Position = {.5f, -.5f, 0.f};
 	smoothVase.Transform.Scale = {3.f, 1.5f, 3.f};
 	m_GameObjects.emplace(smoothVase.GetId(), std::move(smoothVase));
 
@@ -343,7 +345,7 @@ void Application::LoadGameObjects()
 	auto floor = GameObject::CreateGameObject();
 	floor.Model = model;
 	floor.Transform.Position = {0.f, .5f, 0.f};
-	floor.Transform.Scale = {3.f, .1f, 3.f};
+	floor.Transform.Scale = {3.f, 1.f, 3.f};
 	m_GameObjects.emplace(floor.GetId(), std::move(floor));
 
 	const std::vector<glm::vec3> lightColors

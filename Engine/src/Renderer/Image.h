@@ -4,11 +4,42 @@
 class Image
 {
 public:
-	Image(Device &device);
-	Image(Device &device, VkImage& image);
-	Image(Device &device, const std::string &filepath);
+	Image() {}
+	Image(const std::shared_ptr<Device>& device);
+	Image(const std::shared_ptr<Device>& device, VkImage image);
+	Image(const std::shared_ptr<Device>& device, const std::string &filepath);
 	~Image();
 
+	Image(const Image &) = delete;
+	Image& operator=(const Image &) = delete;
+
+	// Move ctor
+	Image(Image&& other) noexcept
+	  : m_Device(other.m_Device)
+	  , m_Image(other.m_Image)
+	  , m_ImageMemory(other.m_ImageMemory)
+	  , m_ImageView(other.m_ImageView)
+	{
+		other.m_Image      = VK_NULL_HANDLE;
+		other.m_ImageMemory = VK_NULL_HANDLE;
+		other.m_ImageView  = VK_NULL_HANDLE;
+	}
+
+	// Move assign
+	Image& operator=(Image&& other) noexcept
+	{
+		if (this != &other)
+		{
+			m_Image       = other.m_Image;
+			m_ImageMemory  = other.m_ImageMemory;
+			m_ImageView   = other.m_ImageView;
+			other.m_Image      = VK_NULL_HANDLE;
+			other.m_ImageMemory = VK_NULL_HANDLE;
+			other.m_ImageView  = VK_NULL_HANDLE;
+		}
+		return *this;
+	}
+	
 	void CreateTextureImage(const std::string& filepath);
 	void CreateTextureImageView();
 	void CreateTextureSampler();
@@ -42,11 +73,11 @@ public:
 	void SetImage(const VkImage& image) { m_Image = image; }
 	
 private:
-	Device& m_Device;
+	std::shared_ptr<Device> m_Device;
 
-	VkImage m_Image;
-	VkImageView m_ImageView;
-	VkDeviceMemory m_ImageMemory;
+	VkImage m_Image {VK_NULL_HANDLE};
+	VkImageView m_ImageView {VK_NULL_HANDLE};
+	VkDeviceMemory m_ImageMemory {VK_NULL_HANDLE};
 
-	VkSampler m_TextureSampler;
+	VkSampler m_TextureSampler {VK_NULL_HANDLE};
 };

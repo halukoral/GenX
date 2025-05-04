@@ -6,7 +6,7 @@ class Buffer
 {
 public:
 	Buffer(
-		Device& device,
+		std::shared_ptr<Device> device,
 		VkDeviceSize instanceSize,
 		uint32_t instanceCount,
 		VkBufferUsageFlags usageFlags,
@@ -31,7 +31,6 @@ public:
 	VkResult InvalidateIndex(int index) const;
 
 	VkBuffer				GetBuffer() const			{ return m_Handle.Buffer; }
-	VkDeviceMemory			GetBufferMemory() const		{ return m_Handle.Memory; }
 	void*					GetMappedMemory() const		{ return m_Mapped; }
 	uint32_t				GetInstanceCount() const	{ return m_InstanceCount; }
 	VkDeviceSize			GetInstanceSize() const		{ return m_InstanceSize; }
@@ -43,7 +42,7 @@ public:
 private:
 	static VkDeviceSize GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
-	Device& m_Device;
+	std::shared_ptr<Device> m_Device;
 	BufferHandle m_Handle;
 	void* m_Mapped = nullptr;
 

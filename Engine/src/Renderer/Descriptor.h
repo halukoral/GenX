@@ -8,9 +8,9 @@ public:
 	class Builder
 	{
 	public:
-		Builder(Device& devicee) : m_Device{devicee} {}
+		Builder(const std::shared_ptr<Device>& device) : m_Device{device} {}
 
-		Builder &addBinding(
+		Builder& addBinding(
 			uint32_t binding,
 			VkDescriptorType descriptorType,
 			VkShaderStageFlags stageFlags,
@@ -18,7 +18,7 @@ public:
 		std::unique_ptr<DescriptorSetLayout> build() const;
 
 	private:
-		Device& m_Device;
+		std::shared_ptr<Device> m_Device;
 		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_Bindings{};
 	};
 
@@ -44,7 +44,7 @@ public:
 	class Builder
 	{
 	public:
-		Builder(Device &lveDevice) : m_Device{lveDevice} {}
+		Builder(const std::shared_ptr<Device>& device) : m_Device{device} {}
 
 		Builder& AddPoolSize(VkDescriptorType descriptorType, uint32_t count);
 		Builder& SetPoolFlags(VkDescriptorPoolCreateFlags flags);
@@ -52,14 +52,14 @@ public:
 		std::unique_ptr<DescriptorPool> Build() const;
 
 	private:
-		Device& m_Device;
+		std::shared_ptr<Device> m_Device;
 		uint32_t m_MaxSets = 1000;
 		std::vector<VkDescriptorPoolSize> m_PoolSizes{};
 		VkDescriptorPoolCreateFlags m_PoolFlags = 0;
 	};
 
 	DescriptorPool(
-		Device &lveDevice,
+		std::shared_ptr<Device> device,
 		uint32_t maxSets,
 		VkDescriptorPoolCreateFlags poolFlags,
 		const std::vector<VkDescriptorPoolSize> &poolSizes);
@@ -73,7 +73,7 @@ public:
 	void ResetPool() const;
 
 private:
-	Device& m_Device;
+	std::shared_ptr<Device> m_Device;
 	VkDescriptorPool m_DescriptorPool;
 
 	friend class DescriptorWriter;

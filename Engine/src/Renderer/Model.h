@@ -40,13 +40,13 @@ public:
 		void LoadModel(const std::string &filepath);
 	};
 	
-	Model(Device &device, const Model::Builder &builder, const std::string &texturePath = "");
+	Model(std::shared_ptr<Device> device, const Model::Builder &builder, const std::string &texturePath = "");
 	~Model();
 
 	Model(const Model &) = delete;
 	Model &operator=(const Model &) = delete;
 
-	static std::unique_ptr<Model> CreateModelFromFile(Device &device, const std::string &filepath, const std::string &texturePath = "");
+	static std::unique_ptr<Model> CreateModelFromFile(std::shared_ptr<Device> device, const std::string &filepath, const std::string &texturePath = "");
 	
 	void Bind(VkCommandBuffer commandBuffer) const;
 	void Draw(VkCommandBuffer commandBuffer) const;
@@ -57,7 +57,7 @@ private:
 
 	void CreateTextureImage(const std::string &texturePath);
 
-	Device &m_Device;
+	std::shared_ptr<Device> m_Device;
 	
 	std::unique_ptr<Buffer> m_VertexBuffer;
 	uint32_t m_VertexCount;
