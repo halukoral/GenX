@@ -21,7 +21,7 @@ public:
 	
 	VkFramebuffer	GetFrameBuffer(int index) const { return m_SwapChainFramebuffers[index]; }
 	VkRenderPass	GetRenderPass() const			{ return m_RenderPass; }
-	VkImageView		GetImageView(int index) const	{ return m_SwapChainImageViews[index]; }
+	VkImageView		GetImageView(int index) const	{ return m_SwapChainImages[index].GetImageView(); }
 	VkFormat		GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
 	VkExtent2D		GetSwapChainExtent() const		{ return m_SwapChainExtent; }
 	size_t			ImageCount() const				{ return m_SwapChainImages.size(); }
@@ -70,7 +70,6 @@ private:
 	std::vector<VkImageView> m_DepthImageViews;
 
 	std::vector<Image> m_SwapChainImages;
-	std::vector<VkImageView> m_SwapChainImageViews;
 
 	std::shared_ptr<Device> m_Device;
 	VkExtent2D m_WindowExtent;

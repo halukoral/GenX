@@ -15,12 +15,6 @@ SwapChain::SwapChain(const std::shared_ptr<Device>& device, const VkExtent2D win
 
 SwapChain::~SwapChain()
 {
-	for (auto imageView : m_SwapChainImageViews)
-	{
-		vkDestroyImageView(m_Device->GetLogicalDevice(), imageView, nullptr);
-	}
-	m_SwapChainImageViews.clear();
-
 	if (m_SwapChain != nullptr)
 	{
 		vkDestroySwapchainKHR(m_Device->GetLogicalDevice(), m_SwapChain, nullptr);
@@ -206,7 +200,6 @@ void SwapChain::CreateSwapChain()
 
 void SwapChain::CreateImageViews()
 {
-	m_SwapChainImageViews.resize(m_SwapChainImages.size());
 	for (size_t i = 0; i < m_SwapChainImages.size(); i++)
 	{
 		VkImageViewCreateInfo viewInfo{};
@@ -220,8 +213,11 @@ void SwapChain::CreateImageViews()
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &m_SwapChainImageViews[i]) !=
-			VK_SUCCESS)
+		if (vkCreateImageView(
+			m_Device->GetLogicalDevice(),
+			&viewInfo,
+			nullptr,
+			&m_SwapChainImages[i].GetImageViewRef()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create texture image view!");
 		}
@@ -292,7 +288,7 @@ void SwapChain::CreateFramebuffers() {
 	m_SwapChainFramebuffers.resize(ImageCount());
 	for (size_t i = 0; i < ImageCount(); i++)
 	{
-		std::array<VkImageView, 2> attachments = {m_SwapChainImageViews[i], m_DepthImageViews[i]};
+		std::array<VkImageView, 2> attachments = {m_SwapChainImages[i].GetImageView(), m_DepthImageViews[i]};
 
 		VkExtent2D swapChainExtent = GetSwapChainExtent();
 		VkFramebufferCreateInfo framebufferInfo = {};
