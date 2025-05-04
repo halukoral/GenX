@@ -10,6 +10,8 @@ public:
 	Image(const std::shared_ptr<Device>& device, const std::string &filepath);
 	~Image();
 
+	void Shutdown();
+	
 	Image(const Image &) = delete;
 	Image& operator=(const Image &) = delete;
 

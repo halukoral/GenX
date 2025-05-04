@@ -21,6 +21,16 @@ SwapChain::~SwapChain()
 		m_SwapChain = nullptr;
 	}
 
+	for (auto& image : m_SwapChainImages)
+	{
+		image.Shutdown();
+	}
+
+	for (auto& image : m_DepthImages)
+	{
+		image.Shutdown();
+	}
+
 	for (auto framebuffer : m_SwapChainFramebuffers)
 	{
 		vkDestroyFramebuffer(m_Device->GetLogicalDevice(), framebuffer, nullptr);

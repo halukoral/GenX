@@ -21,17 +21,25 @@ Image::Image(const std::shared_ptr<Device>& device, const std::string& filepath)
 
 Image::~Image()
 {
-	if (m_TextureSampler != VK_NULL_HANDLE)
-		vkDestroySampler(m_Device->GetLogicalDevice(), m_TextureSampler, nullptr);
+	Shutdown();
+}
 
-	if (m_ImageView != VK_NULL_HANDLE)
-		vkDestroyImageView(m_Device->GetLogicalDevice(), m_ImageView, nullptr);
+void Image::Shutdown()
+{
+	if (m_Device)
+	{
+		if (m_TextureSampler != VK_NULL_HANDLE)
+			vkDestroySampler(m_Device->GetLogicalDevice(), m_TextureSampler, nullptr);
 
-	if (m_ImageMemory != VK_NULL_HANDLE)
-		vkFreeMemory(m_Device->GetLogicalDevice(), m_ImageMemory, nullptr);
+		if (m_ImageView != VK_NULL_HANDLE)
+			vkDestroyImageView(m_Device->GetLogicalDevice(), m_ImageView, nullptr);
 
-	if (m_Image != VK_NULL_HANDLE)
-		vkDestroyImage(m_Device->GetLogicalDevice(), m_Image, nullptr);
+		if (m_ImageMemory != VK_NULL_HANDLE)
+			vkFreeMemory(m_Device->GetLogicalDevice(), m_ImageMemory, nullptr);
+
+		if (m_Image != VK_NULL_HANDLE)
+			vkDestroyImage(m_Device->GetLogicalDevice(), m_Image, nullptr);
+	}
 }
 
 void Image::CreateTextureImage(const std::string& filepath)
