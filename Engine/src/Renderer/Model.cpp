@@ -142,7 +142,7 @@ void Model::CreateVertexBuffers(const std::vector<Vertex>& vertices)
 {
 	m_VertexCount = static_cast<uint32_t>(vertices.size());
 	assert(m_VertexCount >= 3 && "Vertex count must be at least 3");
-	VkDeviceSize bufferSize = sizeof(vertices[0]) * m_VertexCount;
+	const VkDeviceSize bufferSize = sizeof(vertices[0]) * m_VertexCount;
 	uint32_t vertexSize = sizeof(vertices[0]);
 
 	Buffer stagingBuffer

@@ -322,6 +322,8 @@ void SwapChain::CreateDepthResources()
 	m_DepthImages.resize(m_SwapChainImages.size());
 	for (auto& depthImage : m_DepthImages)
 	{
+		depthImage.SetDevice(m_Device);
+		
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -339,7 +341,6 @@ void SwapChain::CreateDepthResources()
 		imageInfo.flags = 0;
 
 		depthImage.CreateImage(
-			m_Device,
 			imageInfo,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			depthImage.GetImageRef(),
@@ -416,13 +417,6 @@ VkPresentModeKHR SwapChain::ChooseSwapPresentMode(
 		}
 	}
 
-	// for (const auto &availablePresentMode : availablePresentModes) {
-	//   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-	//     std::cout << "Present mode: Immediate" << std::endl;
-	//     return availablePresentMode;
-	//   }
-	// }
-
 	std::cout << "Present mode: V-Sync" << '\n';
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
@@ -434,18 +428,16 @@ VkExtent2D SwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilit
 	{
 		return capabilities.currentExtent;
 	}
-	else
-	{
-		VkExtent2D actualExtent = m_WindowExtent;
-		actualExtent.width = std::max(
-			capabilities.minImageExtent.width,
-			std::min(capabilities.maxImageExtent.width, actualExtent.width));
-		actualExtent.height = std::max(
-			capabilities.minImageExtent.height,
-			std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
-		return actualExtent;
-	}
+	VkExtent2D actualExtent = m_WindowExtent;
+	actualExtent.width = std::max(
+		capabilities.minImageExtent.width,
+		std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	actualExtent.height = std::max(
+		capabilities.minImageExtent.height,
+		std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+	return actualExtent;
 }
 
 VkFormat SwapChain::FindDepthFormat() const

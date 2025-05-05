@@ -17,18 +17,18 @@ public:
 	Buffer(const Buffer&) = delete;
 	Buffer& operator=(const Buffer&) = delete;
 
-	VkResult Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-	void Unmap();
+	VkResult	Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+	void		Unmap();
 
-	void WriteToBuffer(const void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
-	VkResult Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
+	void		WriteToBuffer(const void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
+	VkResult	Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
+	VkResult	Invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
 	VkDescriptorBufferInfo DescriptorInfo(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
-	VkResult Invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
 
-	void WriteToIndex(const void* data, int index) const;
-	VkResult FlushIndex(int index) const;
+	void		WriteToIndex(const void* data, int index) const;
+	VkResult	FlushIndex(int index) const;
+	VkResult	InvalidateIndex(int index) const;
 	VkDescriptorBufferInfo DescriptorInfoForIndex(int index) const;
-	VkResult InvalidateIndex(int index) const;
 
 	VkBuffer				GetBuffer() const			{ return m_Handle.Buffer; }
 	void*					GetMappedMemory() const		{ return m_Mapped; }

@@ -69,13 +69,7 @@ public:
 	VkCommandBuffer BeginSingleTimeCommands() const;
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer) const;
 
-	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void CopyBufferToImage(
-		VkBuffer buffer,
-		VkImage image,
-		uint32_t width,
-		uint32_t height,
-		uint32_t layerCount);
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
 	VkPhysicalDeviceProperties Properties;
 
