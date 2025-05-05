@@ -7,10 +7,9 @@ public:
 	Image() {}
 	Image(const std::shared_ptr<Device>& device);
 	Image(const std::shared_ptr<Device>& device, VkImage image);
-	Image(const std::shared_ptr<Device>& device, const std::string &filepath);
 	~Image();
 
-	void Shutdown();
+	void Shutdown() const;
 	
 	Image(const Image &) = delete;
 	Image& operator=(const Image &) = delete;
@@ -41,25 +40,15 @@ public:
 		}
 		return *this;
 	}
-	
-	void CreateTextureImage(const std::string& filepath);
-	void CreateTextureImageView();
-	void CreateTextureSampler();
 
 	void CreateImage(
-		uint32_t width,
-		uint32_t height,
-		VkFormat format,
-		VkImageTiling tiling,
-		VkImageUsageFlags usage,
+		const std::shared_ptr<Device>& device,
+		const VkImageCreateInfo &imageInfo,
 		VkMemoryPropertyFlags properties,
-		VkImage& image,
-		VkDeviceMemory& imageMemory) const;
+		VkImage &image,
+		VkDeviceMemory &imageMemory);
 	
 	void CreateImageView(VkFormat format);
-
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-					VkDeviceMemory& bufferMemory) const;
 
 	void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 	void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;

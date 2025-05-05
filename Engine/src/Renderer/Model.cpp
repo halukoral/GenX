@@ -100,10 +100,7 @@ Model::Model(std::shared_ptr<Device> device, const Model::Builder &builder, cons
 	CreateVertexBuffers(builder.Vertices);
 	CreateIndexBuffers(builder.Indices);
 
-	if (!texturePath.empty())
-	{
-		CreateTextureImage(texturePath);
-	}
+	// TODO: Add texture support
 }
 
 Model::~Model()
@@ -203,11 +200,6 @@ void Model::CreateIndexBuffers(const std::vector<uint32_t>& indices)
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	m_Device->CopyBuffer(stagingBuffer.GetBuffer(), m_IndexBuffer->GetBuffer(), bufferSize);
-}
-
-void Model::CreateTextureImage(const std::string& texturePath)
-{
-	m_Texture = std::make_unique<Image>(m_Device, texturePath);
 }
 
 std::vector<VkVertexInputBindingDescription> Model::Vertex::GetBindingDescriptions()

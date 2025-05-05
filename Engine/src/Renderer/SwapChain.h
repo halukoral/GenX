@@ -24,7 +24,7 @@ public:
 	VkImageView		GetImageView(int index) const	{ return m_SwapChainImages[index].GetImageView(); }
 	VkFormat		GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
 	VkExtent2D		GetSwapChainExtent() const		{ return m_SwapChainExtent; }
-	size_t			ImageCount() const				{ return m_SwapChainImages.size(); }
+	size_t			GetImageCount() const			{ return m_SwapChainImages.size(); }
 	uint8_t			GetCurrentFrame() const			{ return m_CurrentFrame; }
 	uint32_t		Width() const					{ return m_SwapChainExtent.width; }
 	uint32_t		Height() const					{ return m_SwapChainExtent.height; }

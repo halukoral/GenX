@@ -663,33 +663,3 @@ void Device::CopyBufferToImage(
 		&region);
 	EndSingleTimeCommands(commandBuffer);
 }
-
-
-void Device::CreateImageWithInfo(
-	const VkImageCreateInfo &imageInfo,
-	VkMemoryPropertyFlags properties,
-	VkImage &image,
-	VkDeviceMemory &imageMemory) {
-	if (vkCreateImage(m_LogicalDevice, &imageInfo, nullptr, &image) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create image!");
-	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetImageMemoryRequirements(m_LogicalDevice, image, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-	if (vkAllocateMemory(m_LogicalDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate image memory!");
-	}
-
-	if (vkBindImageMemory(m_LogicalDevice, image, imageMemory, 0) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to bind image memory!");
-	}
-}

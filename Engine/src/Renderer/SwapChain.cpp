@@ -287,8 +287,8 @@ void SwapChain::CreateRenderPass()
 }
 
 void SwapChain::CreateFramebuffers() {
-	m_SwapChainFramebuffers.resize(ImageCount());
-	for (size_t i = 0; i < ImageCount(); i++)
+	m_SwapChainFramebuffers.resize(GetImageCount());
+	for (size_t i = 0; i < GetImageCount(); i++)
 	{
 		std::array<VkImageView, 2> attachments = {m_SwapChainImages[i].GetImageView(), m_DepthImages[i].GetImageView()};
 
@@ -319,8 +319,7 @@ void SwapChain::CreateDepthResources()
 	m_SwapChainDepthFormat = depthFormat;
 	const VkExtent2D swapChainExtent = GetSwapChainExtent();
 
-	m_DepthImages.resize(ImageCount());
-
+	m_DepthImages.resize(m_SwapChainImages.size());
 	for (auto& depthImage : m_DepthImages)
 	{
 		VkImageCreateInfo imageInfo{};
@@ -339,7 +338,8 @@ void SwapChain::CreateDepthResources()
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.flags = 0;
 
-		m_Device->CreateImageWithInfo(
+		depthImage.CreateImage(
+			m_Device,
 			imageInfo,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			depthImage.GetImageRef(),
@@ -368,7 +368,7 @@ void SwapChain::CreateSyncObjects()
 	m_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	m_RenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	m_InFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-	m_ImagesInFlight.resize(ImageCount(), VK_NULL_HANDLE);
+	m_ImagesInFlight.resize(GetImageCount(), VK_NULL_HANDLE);
 
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;

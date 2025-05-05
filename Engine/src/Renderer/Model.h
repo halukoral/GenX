@@ -9,7 +9,6 @@
 #include "Device.h"
 #include "Image.h"
 
-
 class Model
 {
 public:
@@ -54,8 +53,6 @@ public:
 private:
 	void CreateVertexBuffers(const std::vector<Vertex> &vertices);
 	void CreateIndexBuffers(const std::vector<uint32_t> &indices);
-
-	void CreateTextureImage(const std::string &texturePath);
 
 	std::shared_ptr<Device> m_Device;
 	

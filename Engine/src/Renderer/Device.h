@@ -77,12 +77,6 @@ public:
 		uint32_t height,
 		uint32_t layerCount);
 
-	void CreateImageWithInfo(
-		const VkImageCreateInfo &imageInfo,
-		VkMemoryPropertyFlags properties,
-		VkImage &image,
-		VkDeviceMemory &imageMemory);
-
 	VkPhysicalDeviceProperties Properties;
 
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
