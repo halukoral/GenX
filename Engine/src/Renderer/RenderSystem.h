@@ -15,7 +15,7 @@ public:
 	RenderSystem(const RenderSystem &) = delete;
 	RenderSystem &operator=(const RenderSystem &) = delete;
 
-	void RenderGameObjects(FrameInfo& frameInfo);
+	void RenderGameObjects(const FrameInfo& frameInfo) const;
 
 private:
 	void CreatePipelineLayout(VkDescriptorSetLayout globalSetLayout);

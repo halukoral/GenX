@@ -3,6 +3,7 @@
 // libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <ranges>
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
@@ -65,7 +66,7 @@ void RenderSystem::CreatePipeline(VkRenderPass renderPass)
 		pipelineConfig);
 }
 
-void RenderSystem::RenderGameObjects(FrameInfo &frameInfo)
+void RenderSystem::RenderGameObjects(const FrameInfo &frameInfo) const
 {
 	m_Pipeline->Bind(frameInfo.CommandBuffer);
 
@@ -79,12 +80,12 @@ void RenderSystem::RenderGameObjects(FrameInfo &frameInfo)
 		0,
 		nullptr);
 
-	for (auto& kv : frameInfo.GameObjects)
+	for (auto& val : frameInfo.GameObjects | std::views::values)
 	{
-		auto& obj = kv.second;
+		auto& obj = val;
 		if (obj.Model == nullptr) continue;
 
-		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(obj.Transform.GetTransform())));
+		const glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(obj.Transform.GetTransform())));
 		SimplePushConstantData push{};
 		push.modelMatrix = obj.Transform.GetTransform();
 		push.normalMatrix = normalMatrix;

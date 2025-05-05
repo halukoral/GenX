@@ -33,9 +33,9 @@ public:
 	{
 		return static_cast<float>(m_SwapChainExtent.width) / static_cast<float>(m_SwapChainExtent.height);
 	}
-	VkFormat FindDepthFormat();
+	VkFormat FindDepthFormat() const;
 
-	VkResult AcquireNextImage(uint32_t *imageIndex);
+	VkResult AcquireNextImage(uint32_t *imageIndex) const;
 	VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
 	bool CompareSwapFormats(const SwapChain& swapChain) const
@@ -53,9 +53,9 @@ private:
 	void CreateSyncObjects();
 
 	// Helper functions
-	VkSurfaceFormatKHR	ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
-	VkPresentModeKHR	ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
-	VkExtent2D			ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+	static VkSurfaceFormatKHR	ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+	static VkPresentModeKHR	ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
+	VkExtent2D			ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
 
 	VkFormat m_SwapChainImageFormat;
 	VkFormat m_SwapChainDepthFormat;

@@ -10,19 +10,20 @@ public:
 	public:
 		Builder(const std::shared_ptr<Device>& device) : m_Device{device} {}
 
-		Builder& addBinding(
+		Builder& AddBinding(
 			uint32_t binding,
 			VkDescriptorType descriptorType,
 			VkShaderStageFlags stageFlags,
 			uint32_t count = 1);
-		std::unique_ptr<DescriptorSetLayout> build() const;
+
+		[[nodiscard]] std::unique_ptr<DescriptorSetLayout> Build() const;
 
 	private:
 		std::shared_ptr<Device> m_Device;
 		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> m_Bindings{};
 	};
 
-	DescriptorSetLayout(Device &lveDevice, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings);
+	DescriptorSetLayout(Device &device, const std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding>& bindings);
 	~DescriptorSetLayout();
 	
 	DescriptorSetLayout(const DescriptorSetLayout &) = delete;
@@ -49,7 +50,8 @@ public:
 		Builder& AddPoolSize(VkDescriptorType descriptorType, uint32_t count);
 		Builder& SetPoolFlags(VkDescriptorPoolCreateFlags flags);
 		auto SetMaxSets(uint32_t count) -> Builder&;
-		std::unique_ptr<DescriptorPool> Build() const;
+
+		[[nodiscard]] std::unique_ptr<DescriptorPool> Build() const;
 
 	private:
 		std::shared_ptr<Device> m_Device;
@@ -59,7 +61,7 @@ public:
 	};
 
 	DescriptorPool(
-		std::shared_ptr<Device> device,
+		const std::shared_ptr<Device>& device,
 		uint32_t maxSets,
 		VkDescriptorPoolCreateFlags poolFlags,
 		const std::vector<VkDescriptorPoolSize> &poolSizes);

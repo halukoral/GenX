@@ -16,7 +16,7 @@ struct PointLightPushConstants
 	float Radius;
 };
 
-PointLightSystem::PointLightSystem(Device& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
+PointLightSystem::PointLightSystem(Device& device, const VkRenderPass renderPass, const VkDescriptorSetLayout globalSetLayout)
 	: m_Device{device}
 {
 	CreatePipelineLayout(globalSetLayout);
@@ -28,14 +28,14 @@ PointLightSystem::~PointLightSystem()
 	vkDestroyPipelineLayout(m_Device.GetLogicalDevice(), m_PipelineLayout, nullptr);
 }
 
-void PointLightSystem::CreatePipelineLayout(VkDescriptorSetLayout globalSetLayout)
+void PointLightSystem::CreatePipelineLayout(const VkDescriptorSetLayout globalSetLayout)
 {
 	VkPushConstantRange pushConstantRange{};
 	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	pushConstantRange.offset = 0;
 	pushConstantRange.size = sizeof(PointLightPushConstants);
 
-	std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+	const std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

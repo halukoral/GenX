@@ -114,6 +114,7 @@ bool Application::InitVulkan()
 	DescriptorPool::Builder(m_Device)
 		.SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT)
 		.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SwapChain::MAX_FRAMES_IN_FLIGHT)
+		.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SwapChain::MAX_FRAMES_IN_FLIGHT)
 		.Build();
 	LoadGameObjects();
 	
@@ -194,8 +195,9 @@ void Application::Run()
 
 	const auto globalSetLayout =
 	DescriptorSetLayout::Builder(m_Device)
-		.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-		.build();
+		.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+		.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+		.Build();
 	
 	std::vector<VkDescriptorSet> globalDescriptorSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
 	for (int i = 0; i < globalDescriptorSets.size(); i++)
@@ -326,18 +328,19 @@ void Application::CreateImGuiDescriptorPool()
 
 void Application::LoadGameObjects()
 {
-	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "flat_vase.obj");
+	std::shared_ptr<Model> model = Model::CreateModelFromFile(m_Device, "viking_room.obj");
 
-	auto flatVase = GameObject::CreateGameObject();
-	flatVase.Model = model;
-	flatVase.Transform.Position = {-.5f, -.5f, 0.f};
-	flatVase.Transform.Scale = {3.f, 1.5f, 3.f};
-	m_GameObjects.emplace(flatVase.GetId(), std::move(flatVase));
+	auto vikingRoom = GameObject::CreateGameObject();
+	vikingRoom.Model = model;
+	vikingRoom.Transform.Position = {-.75f, -1.25f, 0.f};
+	vikingRoom.Transform.Rotation = {90.f, 0.f, 0.f};
+	vikingRoom.Transform.Scale = {.75f, .75f, .75f};
+	m_GameObjects.emplace(vikingRoom.GetId(), std::move(vikingRoom));
 
 	model = Model::CreateModelFromFile(m_Device, "smooth_vase.obj");
 	auto smoothVase = GameObject::CreateGameObject();
 	smoothVase.Model = model;
-	smoothVase.Transform.Position = {.5f, -.5f, 0.f};
+	smoothVase.Transform.Position = {.75f, -.5f, 0.f};
 	smoothVase.Transform.Scale = {3.f, 1.5f, 3.f};
 	m_GameObjects.emplace(smoothVase.GetId(), std::move(smoothVase));
 
