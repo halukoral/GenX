@@ -60,10 +60,58 @@ Image& Image::operator=(Image&& other) noexcept
 }
 
 void Image::CreateImage(
+	const VkImageType imageType,
+	const uint32_t width,
+	const uint32_t height,
+	const VkFormat format,
+	const VkImageTiling tiling,
+	const VkImageUsageFlags usage,
+	const VkMemoryPropertyFlags memoryFlags)
+{
+	// Creation info.
+	VkImageCreateInfo image_create_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+	image_create_info.imageType = imageType;
+	image_create_info.extent.width = width;
+	image_create_info.extent.height = height;
+	image_create_info.extent.depth = 1;  // TODO: Support configurable depth.
+	image_create_info.mipLevels = 4;     // TODO: Support mip mapping
+	image_create_info.arrayLayers = 1;   // TODO: Support number of layers in the image.
+	image_create_info.format = format;
+	image_create_info.tiling = tiling;
+	image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	image_create_info.usage = usage;
+	image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;          // TODO: Configurable sample count.
+	image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;  // TODO: Configurable sharing mode.
+
+	if (vkCreateImage(m_Device->GetLogicalDevice(), &image_create_info, nullptr, &m_Image) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create image!");
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetImageMemoryRequirements(m_Device->GetLogicalDevice(), m_Image, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = m_Device->FindMemoryType(memRequirements.memoryTypeBits, memoryFlags);
+
+	if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &m_ImageMemory) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate image memory!");
+	}
+
+	if (vkBindImageMemory(m_Device->GetLogicalDevice(), m_Image, m_ImageMemory, 0) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to bind image memory!");
+	}
+}
+
+void Image::CreateImage(
 	const VkImageCreateInfo& imageInfo,
-	VkMemoryPropertyFlags properties,
+	const VkMemoryPropertyFlags properties,
 	VkImage& image,
-	VkDeviceMemory& imageMemory)
+	VkDeviceMemory& imageMemory) const
 {
 	if (vkCreateImage(m_Device->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
 	{
@@ -89,7 +137,7 @@ void Image::CreateImage(
 	}
 }
 
-void Image::CreateImageView(VkFormat format)
+void Image::CreateImageView(const VkFormat format)
 {
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

@@ -126,6 +126,12 @@ VkResult SwapChain::SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_
 	return result;
 }
 
+bool SwapChain::CompareSwapFormats(const SwapChain& swapChain) const
+{
+	return	swapChain.m_SwapChainDepthFormat == m_SwapChainDepthFormat &&
+			swapChain.m_SwapChainImageFormat == m_SwapChainImageFormat;
+}
+
 void SwapChain::CreateSwapChain()
 {
 	const SwapChainSupportDetails swapChainSupport = m_Device->GetSwapChainSupport();
@@ -136,7 +142,7 @@ void SwapChain::CreateSwapChain()
 
 	uint32_t imageCount = swapChainSupport.Capabilities.minImageCount + 1;
 	if (swapChainSupport.Capabilities.maxImageCount > 0 &&
-	  imageCount > swapChainSupport.Capabilities.maxImageCount)
+		imageCount > swapChainSupport.Capabilities.maxImageCount)
 	{
 		imageCount = swapChainSupport.Capabilities.maxImageCount;
 	}
@@ -152,6 +158,7 @@ void SwapChain::CreateSwapChain()
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
+	// Setup the queue family indices
 	const QueueFamilyIndices indices = m_Device->FindPhysicalQueueFamilies();
 	const uint32_t queueFamilyIndices[] = {indices.GraphicsFamily.value(), indices.PresentationFamily.value()};
 
@@ -174,14 +181,18 @@ void SwapChain::CreateSwapChain()
 	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
 
-	createInfo.oldSwapchain = m_OldSwapChain == nullptr ? VK_NULL_HANDLE : m_OldSwapChain->m_SwapChain;
+	createInfo.oldSwapchain = m_OldSwapChain == nullptr ?
+		VK_NULL_HANDLE :
+		m_OldSwapChain->m_SwapChain;
 
 	if (vkCreateSwapchainKHR(m_Device->GetLogicalDevice(), &createInfo, nullptr, &m_SwapChain) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create swap chain!");
 	}
 
-	// we only specified a minimum number of images in the swap chain, so the implementation is
+	// Images
+	// ------
+	// We only specified a minimum number of images in the swap chain, so the implementation is
 	// allowed to create a swap chain with more. That's why we'll first query the final number of
 	// images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
 	// retrieve the handles.
@@ -286,7 +297,8 @@ void SwapChain::CreateRenderPass()
 	}
 }
 
-void SwapChain::CreateFramebuffers() {
+void SwapChain::CreateFramebuffers()
+{
 	m_SwapChainFramebuffers.resize(GetImageCount());
 	for (size_t i = 0; i < GetImageCount(); i++)
 	{
@@ -438,6 +450,11 @@ VkExtent2D SwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilit
 		std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
 	return actualExtent;
+}
+
+float SwapChain::GetExtentAspectRatio() const
+{
+	return static_cast<float>(m_SwapChainExtent.width) / static_cast<float>(m_SwapChainExtent.height);
 }
 
 VkFormat SwapChain::FindDepthFormat() const

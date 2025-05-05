@@ -21,10 +21,19 @@ public:
 	Image& operator=(Image&& other) noexcept;
 
 	void CreateImage(
+		VkImageType imageType,
+		uint32_t width,
+		uint32_t height,
+		VkFormat format,
+		VkImageTiling tiling,
+		VkImageUsageFlags usage,
+		VkMemoryPropertyFlags memoryFlags);
+	
+	void CreateImage(
 		const VkImageCreateInfo &imageInfo,
 		VkMemoryPropertyFlags properties,
 		VkImage &image,
-		VkDeviceMemory &imageMemory);
+		VkDeviceMemory &imageMemory) const;
 	
 	void CreateImageView(VkFormat format);
 

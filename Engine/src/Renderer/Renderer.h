@@ -17,7 +17,7 @@ public:
 
 	VkRenderPass GetSwapChainRenderPass() const { return m_SwapChain->GetRenderPass(); }
 	bool IsFrameInProgress() const { return m_IsFrameStarted; }
-	float GetAspectRatio() const { return m_SwapChain->ExtentAspectRatio(); }
+	float GetAspectRatio() const { return m_SwapChain->GetExtentAspectRatio(); }
 
 	VkCommandBuffer GetCurrentCommandBuffer() const
 	{

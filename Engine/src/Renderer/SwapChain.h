@@ -26,24 +26,16 @@ public:
 	VkExtent2D		GetSwapChainExtent() const		{ return m_SwapChainExtent; }
 	size_t			GetImageCount() const			{ return m_SwapChainImages.size(); }
 	uint8_t			GetCurrentFrame() const			{ return m_CurrentFrame; }
-	uint32_t		Width() const					{ return m_SwapChainExtent.width; }
-	uint32_t		Height() const					{ return m_SwapChainExtent.height; }
+	uint32_t		GetWidth() const				{ return m_SwapChainExtent.width; }
+	uint32_t		GetHeight() const				{ return m_SwapChainExtent.height; }
+	float			GetExtentAspectRatio() const;
 
-	float ExtentAspectRatio() const
-	{
-		return static_cast<float>(m_SwapChainExtent.width) / static_cast<float>(m_SwapChainExtent.height);
-	}
-	VkFormat FindDepthFormat() const;
+	VkFormat		FindDepthFormat() const;
+	bool			CompareSwapFormats(const SwapChain& swapChain) const;
 
 	VkResult AcquireNextImage(uint32_t *imageIndex) const;
 	VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
-	bool CompareSwapFormats(const SwapChain& swapChain) const
-	{
-		return swapChain.m_SwapChainDepthFormat == m_SwapChainDepthFormat &&
-			   swapChain.m_SwapChainImageFormat == m_SwapChainImageFormat;
-	}
-	
 private:
 	void CreateSwapChain();
 	void CreateImageViews();
