@@ -1,22 +1,22 @@
 #pragma once
-#include "ECS/EntityManager.h"
+#include "ECS/EntityManagerOLD.h"
 
 class Actor
 {
 public:
 	Actor()
 	{
-		m_Entity = EntityManager::Get()->SpawnEntity<Entity>(s_Name + std::to_string(s_ActorCount++));
+		m_Entity = EntityManagerOLD::Get()->SpawnEntity<Entity>(s_Name + std::to_string(s_ActorCount++));
 	}
 	
 	Actor(const std::string& name)
 	{
-		m_Entity = EntityManager::Get()->SpawnEntity<Entity>(name);
+		m_Entity = EntityManagerOLD::Get()->SpawnEntity<Entity>(name);
 	}
 
 	Actor(const uint32_t& uuid, const std::string& name)
 	{
-		m_Entity = EntityManager::Get()->SpawnEntity<Entity>(uuid, name);
+		m_Entity = EntityManagerOLD::Get()->SpawnEntity<Entity>(uuid, name);
 	}
 
 	virtual ~Actor()
