@@ -3,40 +3,6 @@
 #include "pch.h"
 #include "Core.h"
 #include "Component.h"
-#include <typeindex>
-
-using EntityId2 = uint32_t;
-using ComponentTypeId = std::type_index;
-constexpr size_t CHUNK_CAPACITY = 64;
-
-struct Entity2
-{
-	uint32_t id;
-	uint32_t version;
-	bool operator==(const Entity2& other) const { return id == other.id && version == other.version; }
-	bool m_Invisible = false;
-
-	// Editor only
-	uint32_t m_IdForMousePick;
-};
-
-struct EntityInfo
-{
-	uint32_t archetypeId;
-	uint32_t chunkIndex;
-	uint32_t indexInChunk;
-	uint32_t version;
-};
-
-template<typename T>
-ComponentTypeId GetComponentTypeId()
-{
-	return std::type_index(typeid(T));
-}
-
-
-
-
 
 class Entity
 {
