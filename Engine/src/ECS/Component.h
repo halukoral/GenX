@@ -1,6 +1,9 @@
 #pragma once
 #include "Core.h"
 
+struct Position { float x, y, z; };
+struct Velocity { float dx, dy, dz; };
+
 enum class ComponentType
 {
 	Arrow,

@@ -1,98 +1,57 @@
 #pragma once
-#include "Types.h"
-#include <array>
-#include <queue>
-#include <cassert>
-#include <unordered_map>
-#include <string>
 
-class EntityManager {
+#include "pch.h"
+#include "Core.h"
+#include "Entity.h"
+//#include "spdlog/spdlog.h"
+
+class EntityManager
+{
 public:
-    EntityManager() {
-        // Entity ID havuzunu oluştur
-        for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-            m_AvailableEntities.push(entity);
-        }
-    }
+	EntityManager() = default;
+	~EntityManager() = default;
 
-    EntityID CreateEntity() {
-        assert(m_LivingEntityCount < MAX_ENTITIES && "Too many entities in existence.");
+	template<typename T, typename... Args>
+	Ref<T> SpawnEntity(Args&&... args)
+	{
+		Ref<T> entity = CreateRef<T>(std::forward<Args>(args)...);
+		entity->SetSelf(entity);
+		m_Entities.push_back(entity);
+		return std::static_pointer_cast<T>(entity);
+	}
+	
+	template<typename T>
+	Ref<Entity> GetFirstEntityByComponent()
+	{
+		for (int i = 0; i < (int) m_Entities.size(); i++)
+		{
+			if (auto cmp = m_Entities[i]->GetComponent<T>())
+			{
+				if (cmp->GetComponentType() == T::GetStaticType())
+				{
+					return m_Entities[i];
+				}
+			}
+		}
+		//spdlog::warn("The scene has no entities with requested component.");
+		return nullptr;
+	}
 
-        // Kullanılabilir bir entity ID al
-        EntityID id = m_AvailableEntities.front();
-        m_AvailableEntities.pop();
-        ++m_LivingEntityCount;
+	Ref<Entity> GetEntity(uint32_t id) const;
+	Ref<Entity> FindEntityByName(const std::string& entityName) const;
 
-        // Yeni entity için boş bir imza oluştur
-        m_Signatures[id].reset();
-        
-        return id;
-    }
+	void Clear() const;
+	void RemoveEntity(uint32_t entityId);
+	size_t GetEntityCount() const { return m_Entities.size(); }
 
-    void DestroyEntity(EntityID entity) {
-        assert(entity < MAX_ENTITIES && "Entity out of range.");
+	static Ref<EntityManager> Get() { return s_Instance; }
 
-        // Entity imzasını sıfırla ve ID'yi havuza geri ekle
-        m_Signatures[entity].reset();
-        m_AvailableEntities.push(entity);
-        --m_LivingEntityCount;
-        
-        // Eğer bu entity'nin bir adı varsa, onu da kaldır
-        auto it = m_EntityNames.find(entity);
-        if (it != m_EntityNames.end()) {
-            m_EntityNames.erase(it);
-        }
-    }
+	//friend RenderingManager;
 
-    void SetSignature(EntityID entity, Signature signature) {
-        assert(entity < MAX_ENTITIES && "Entity out of range.");
-
-        m_Signatures[entity] = signature;
-    }
-
-    Signature GetSignature(EntityID entity) const {
-        assert(entity < MAX_ENTITIES && "Entity out of range.");
-
-        return m_Signatures[entity];
-    }
-    
-    // Entity'ye isim atama
-    void SetEntityName(EntityID entity, const std::string& name) {
-        m_EntityNames[entity] = name;
-        m_NameToEntity[name] = entity;
-    }
-    
-    // İsme göre entity bulma
-    EntityID FindEntityByName(const std::string& name) const {
-        auto it = m_NameToEntity.find(name);
-        if (it != m_NameToEntity.end()) {
-            return it->second;
-        }
-        return MAX_ENTITIES; // Geçersiz entity ID
-    }
-    
-    // Entity'nin adını alma
-    std::string GetEntityName(EntityID entity) const {
-        auto it = m_EntityNames.find(entity);
-        if (it != m_EntityNames.end()) {
-            return it->second;
-        }
-        return ""; // İsimsiz entity
-    }
-    
-    size_t GetEntityCount() const { return m_LivingEntityCount; }
+protected:
+	std::vector<Ref<Entity>> m_Entities;
 
 private:
-    // Entity imzalarını tutan dizi
-    std::array<Signature, MAX_ENTITIES> m_Signatures{};
-    
-    // Kullanılabilir entity ID'lerini tutan kuyruk
-    std::queue<EntityID> m_AvailableEntities{};
-    
-    // Şu anda aktif olan entity sayısı
-    size_t m_LivingEntityCount = 0;
-    
-    // Entity isimleri
-    std::unordered_map<EntityID, std::string> m_EntityNames;
-    std::unordered_map<std::string, EntityID> m_NameToEntity;
+	static Ref<EntityManager> s_Instance;
+	
 };
