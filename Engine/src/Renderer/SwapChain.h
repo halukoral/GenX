@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 
 #include "Image.h"
+#include "RenderPass.h"
 
 class SwapChain
 {
@@ -20,7 +21,7 @@ public:
 	void Initialize();
 	
 	VkFramebuffer	GetFrameBuffer(int index) const { return m_SwapChainFramebuffers[index]; }
-	VkRenderPass	GetRenderPass() const			{ return m_RenderPass; }
+	VkRenderPass	GetRenderPass() const			{ return m_RenderPass.GetRenderPass(); }
 	VkImageView		GetImageView(int index) const	{ return m_SwapChainImages[index].GetImageView(); }
 	VkFormat		GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
 	VkExtent2D		GetSwapChainExtent() const		{ return m_SwapChainExtent; }
@@ -46,8 +47,8 @@ private:
 
 	// Helper functions
 	static VkSurfaceFormatKHR	ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
-	static VkPresentModeKHR	ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
-	VkExtent2D			ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
+	static VkPresentModeKHR		ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
+	VkExtent2D					ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
 
 	VkFormat m_SwapChainImageFormat;
 	VkFormat m_SwapChainDepthFormat;
@@ -55,7 +56,7 @@ private:
 	VkExtent2D m_SwapChainExtent;
 
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
-	VkRenderPass m_RenderPass;
+	RenderPass m_RenderPass;
 
 	std::vector<Image> m_DepthImages;
 	std::vector<Image> m_SwapChainImages;

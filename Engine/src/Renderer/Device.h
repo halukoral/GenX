@@ -1,8 +1,6 @@
 #pragma once
 
 #include "pch.h"
-#include <vulkan/vulkan_core.h>
-
 #include "Buffers.h"
 
 class Window;
