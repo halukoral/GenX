@@ -7,7 +7,7 @@ void Renderer::InitVulkan()
 	m_Image = std::make_unique<Image>(m_Device.get(), m_SwapChain.get());
 	m_RenderPass = std::make_unique<RenderPass>(m_Device.get(), m_SwapChain.get());
 	m_Pipeline = std::make_unique<Pipeline>(m_Device.get(), m_SwapChain.get(), m_RenderPass.get());
-	m_Descriptor = std::make_unique<Descriptor>(m_Device.get());
+	m_Descriptor = std::make_unique<Descriptor>(m_Device.get(), MAX_FRAMES_IN_FLIGHT);
 
 	imguiRenderer = std::make_unique<ImGuiRenderer>(
 		m_Device.get(), 
