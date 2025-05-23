@@ -19,9 +19,15 @@ class Renderer
 
 	const std::vector<Vertex> vertices =
 	{
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+
+	const std::vector<uint16_t> indices =
+	{
+		0, 1, 2, 2, 3, 0
 	};
 	
 public:
@@ -41,7 +47,8 @@ private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
 	void CreateVertexBuffer();
-
+	void CreateIndexBuffer();
+	
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 	void CreateCommandBuffers();
@@ -71,5 +78,8 @@ private:
 	VkBuffer m_VertexBuffer;
 	VkDeviceMemory m_VertexBufferMemory;
 
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+	
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 };

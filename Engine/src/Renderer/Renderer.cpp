@@ -21,6 +21,7 @@ void Renderer::InitVulkan()
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateVertexBuffer();
+	CreateIndexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -88,8 +89,29 @@ void Renderer::CreateVertexBuffer()
 	vkFreeMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, nullptr);
 }
 
+void Renderer::CreateIndexBuffer()
+{
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+	void* data;
+	vkMapMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, indices.data(), (size_t) bufferSize);
+	vkUnmapMemory(m_Device->GetLogicalDevice(), stagingBufferMemory);
+
+	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+
+	CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+	vkDestroyBuffer(m_Device->GetLogicalDevice(), stagingBuffer, nullptr);
+	vkFreeMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, nullptr);
+}
+
 void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-	VkBuffer& buffer, VkDeviceMemory& bufferMemory) const
+							VkBuffer& buffer, VkDeviceMemory& bufferMemory) const
 {
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -194,9 +216,10 @@ void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	VkBuffer vertexBuffers[] = {m_VertexBuffer};
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-	vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
-
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+	
 	imguiRenderer->Render(commandBuffer);
 	
 	vkCmdEndRenderPass(commandBuffer);
@@ -298,6 +321,9 @@ void Renderer::Cleanup()
 	vkDestroyBuffer(m_Device->GetLogicalDevice(), m_VertexBuffer, nullptr);
 	vkFreeMemory(m_Device->GetLogicalDevice(), m_VertexBufferMemory, nullptr);
 
+	vkDestroyBuffer(m_Device->GetLogicalDevice(), indexBuffer, nullptr);
+	vkFreeMemory(m_Device->GetLogicalDevice(), indexBufferMemory, nullptr);
+	
 	imguiRenderer.reset();
 	m_Descriptor.reset();
 	m_Pipeline.reset();
