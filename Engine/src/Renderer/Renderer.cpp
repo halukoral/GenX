@@ -9,6 +9,15 @@ void Renderer::InitVulkan()
 	m_Pipeline = std::make_unique<Pipeline>(m_Device.get(), m_SwapChain.get(), m_RenderPass.get());
 	m_Descriptor = std::make_unique<Descriptor>(m_Device.get());
 
+	imguiRenderer = std::make_unique<ImGuiRenderer>(
+		m_Device.get(), 
+		m_Window.get(), 
+		m_RenderPass.get(),
+		&m_CommandPool, 
+		2, // minImageCount
+		static_cast<uint32_t>(m_SwapChain->GetImages().size()) // imageCount
+	);
+	
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateVertexBuffer();
@@ -188,6 +197,8 @@ void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
+	imguiRenderer->Render(commandBuffer);
+	
 	vkCmdEndRenderPass(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -222,6 +233,8 @@ void Renderer::CreateSyncObjects()
 
 void Renderer::DrawFrame()
 {
+	imguiRenderer->NewFrame();
+	
 	vkWaitForFences(m_Device->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 	vkResetFences(m_Device->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
@@ -285,6 +298,7 @@ void Renderer::Cleanup()
 	vkDestroyBuffer(m_Device->GetLogicalDevice(), m_VertexBuffer, nullptr);
 	vkFreeMemory(m_Device->GetLogicalDevice(), m_VertexBufferMemory, nullptr);
 
+	imguiRenderer.reset();
 	m_Descriptor.reset();
 	m_Pipeline.reset();
 	m_RenderPass.reset();

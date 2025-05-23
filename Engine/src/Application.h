@@ -75,10 +75,6 @@ private:
 	void Init();
 	void Shutdown();
 
-	void InitImgui();
-	void CleanupImGui() const;
-	void CreateImGuiDescriptorPool();
-
 private:	
 	AppSpec m_Spec;
 	bool m_Running = false;

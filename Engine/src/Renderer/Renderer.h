@@ -4,6 +4,7 @@
 #include "Descriptor.h"
 #include "Device.h"
 #include "Image.h"
+#include "ImguiRenderer.h"
 #include "Pipeline.h"
 #include "RenderPass.h"
 #include "SwapChain.h"
@@ -55,7 +56,8 @@ private:
 	std::unique_ptr<RenderPass> m_RenderPass;
 	std::unique_ptr<Pipeline> m_Pipeline;
 	std::unique_ptr<Descriptor> m_Descriptor;
-
+	std::unique_ptr<ImGuiRenderer> imguiRenderer;
+	
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
 	VkCommandPool m_CommandPool;
