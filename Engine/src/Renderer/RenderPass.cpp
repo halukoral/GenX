@@ -7,7 +7,7 @@ RenderPass::RenderPass(Device* dev, SwapChain* swapChain): device(dev)
 
 RenderPass::~RenderPass()
 {
-	vkDestroyRenderPass(device->GetDevice(), renderPass, nullptr);
+	vkDestroyRenderPass(device->GetLogicalDevice(), renderPass, nullptr);
 }
 
 VkRenderPass RenderPass::GetRenderPass() const
@@ -51,7 +51,7 @@ void RenderPass::CreateRenderPass(SwapChain* swapChain)
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	if (vkCreateRenderPass(device->GetDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
+	if (vkCreateRenderPass(device->GetLogicalDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Render pass oluşturulamadı!");
 	}

@@ -9,7 +9,7 @@ Image::~Image()
 {
 	for (auto imageView : swapChainImageViews)
 	{
-		vkDestroyImageView(device->GetDevice(), imageView, nullptr);
+		vkDestroyImageView(device->GetLogicalDevice(), imageView, nullptr);
 	}
 }
 
@@ -33,7 +33,7 @@ void Image::CreateImageViews(SwapChain* swapChain)
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(device->GetDevice(), &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+		if (vkCreateImageView(device->GetLogicalDevice(), &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
 			throw std::runtime_error("Image view oluşturulamadı!");
 		}
 	}

@@ -7,7 +7,7 @@ SwapChain::SwapChain(Device* dev, Window* win): device(dev)
 
 SwapChain::~SwapChain()
 {
-	vkDestroySwapchainKHR(device->GetDevice(), swapChain, nullptr);
+	vkDestroySwapchainKHR(device->GetLogicalDevice(), swapChain, nullptr);
 }
 
 void SwapChain::CreateSwapChain(Window* window)
@@ -49,13 +49,13 @@ void SwapChain::CreateSwapChain(Window* window)
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	if (vkCreateSwapchainKHR(device->GetDevice(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+	if (vkCreateSwapchainKHR(device->GetLogicalDevice(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
 		throw std::runtime_error("Swap chain oluşturulamadı!");
 	}
 
-	vkGetSwapchainImagesKHR(device->GetDevice(), swapChain, &imageCount, nullptr);
+	vkGetSwapchainImagesKHR(device->GetLogicalDevice(), swapChain, &imageCount, nullptr);
 	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(device->GetDevice(), swapChain, &imageCount, swapChainImages.data());
+	vkGetSwapchainImagesKHR(device->GetLogicalDevice(), swapChain, &imageCount, swapChainImages.data());
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;

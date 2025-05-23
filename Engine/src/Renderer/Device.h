@@ -26,7 +26,8 @@ public:
 	Device(Window* win);
 	~Device();
 
-	VkDevice			GetDevice() const { return device; }
+	VkInstance			GetInstance() const { return instance; }
+	VkDevice			GetLogicalDevice() const { return device; }
 	VkPhysicalDevice	GetPhysicalDevice() const { return physicalDevice; }
 	VkQueue				GetGraphicsQueue() const { return graphicsQueue; }
 	VkQueue				GetPresentQueue() const { return presentQueue; }

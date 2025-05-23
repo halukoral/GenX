@@ -33,6 +33,8 @@ public:
 	void DrawFrame();
 
 	const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
+	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
+	VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
 	
 private:
 	void CreateFramebuffers();

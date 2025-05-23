@@ -7,8 +7,8 @@ Pipeline::Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass): d
 
 Pipeline::~Pipeline()
 {
-	vkDestroyPipeline(device->GetDevice(), graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(device->GetDevice(), pipelineLayout, nullptr);
+	vkDestroyPipeline(device->GetLogicalDevice(), graphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(device->GetLogicalDevice(), pipelineLayout, nullptr);
 }
 
 void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass)
@@ -115,7 +115,7 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 	pipelineLayoutInfo.setLayoutCount = 0;
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-	if (vkCreatePipelineLayout(device->GetDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+	if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Pipeline layout oluşturulamadı!");
 	}
@@ -135,13 +135,13 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	if (vkCreateGraphicsPipelines(device->GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+	if (vkCreateGraphicsPipelines(device->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Graphics pipeline oluşturulamadı!");
 	}
 
-	vkDestroyShaderModule(device->GetDevice(), fragShaderModule, nullptr);
-	vkDestroyShaderModule(device->GetDevice(), vertShaderModule, nullptr);
+	vkDestroyShaderModule(device->GetLogicalDevice(), fragShaderModule, nullptr);
+	vkDestroyShaderModule(device->GetLogicalDevice(), vertShaderModule, nullptr);
 }
 
 VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code) const
@@ -152,7 +152,7 @@ VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code) const
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(device->GetDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+	if (vkCreateShaderModule(device->GetLogicalDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Shader module oluşturulamadı!");
 	}

@@ -93,43 +93,43 @@ void Application::InitImgui()
 	CreateImGuiDescriptorPool();
 	
 	// Setup Dear ImGui context
-	// IMGUI_CHECKVERSION();
-	// ImGui::CreateContext();
-	// ImGuiIO& io = ImGui::GetIO(); (void)io;
-	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	//
-	// ImGui::StyleColorsDark();
-	// ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
-	//
-	// // Setup Platform/Renderer backends
-	// ImGui_ImplGlfw_InitForVulkan(m_Window->GetWindow(), true);
-	// ImGui_ImplVulkan_InitInfo init_info = {};
-	// init_info.Instance = m_Device->GetInstance();
-	// init_info.PhysicalDevice = m_Device->GetPhysicalDevice();
-	// init_info.Device = m_Device->GetLogicalDevice();
-	// init_info.QueueFamily = m_Device->FindQueueFamilies(m_Device->GetPhysicalDevice()).GraphicsFamily.value();
-	// init_info.Queue = m_Device->GetGraphicsQueue();
-	// //init_info.PipelineCache = YOUR_PIPELINE_CACHE;
-	// init_info.DescriptorPool = m_ImGuiDescriptorPool;
-	// init_info.Subpass = 0;
-	// init_info.RenderPass = m_Renderer->GetSwapChainRenderPass();
-	// init_info.MinImageCount = 2;
-	// init_info.ImageCount = 2;
-	// init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	// init_info.Allocator = nullptr;
-	// init_info.CheckVkResultFn = CheckVkResult;
-	// ImGui_ImplVulkan_Init(&init_info);	
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	
+	ImGui::StyleColorsDark();
+	ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
+	
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForVulkan(m_Window->GetWindow(), true);
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = m_Renderer->GetDevice()->GetInstance();
+	init_info.PhysicalDevice = m_Renderer->GetDevice()->GetPhysicalDevice();
+	init_info.Device = m_Renderer->GetDevice()->GetLogicalDevice();
+	init_info.QueueFamily = m_Renderer->GetDevice()->FindQueueFamilies(m_Renderer->GetDevice()->GetPhysicalDevice()).graphicsFamily;
+	init_info.Queue = m_Renderer->GetDevice()->GetGraphicsQueue();
+	//init_info.PipelineCache = YOUR_PIPELINE_CACHE;
+	init_info.DescriptorPool = m_ImGuiDescriptorPool;
+	init_info.Subpass = 0;
+	init_info.RenderPass = m_Renderer->GetSwapChainRenderPass()->GetRenderPass();
+	init_info.MinImageCount = 2;
+	init_info.ImageCount = 2;
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	init_info.Allocator = nullptr;
+	init_info.CheckVkResultFn = CheckVkResult;
+	ImGui_ImplVulkan_Init(&init_info);	
 }
 
 void Application::CleanupImGui() const
 {
-	// vkDeviceWaitIdle(m_Device->GetLogicalDevice());
-	// ImGui_ImplVulkan_Shutdown();
-	// ImGui_ImplGlfw_Shutdown();
-	// ImGui::DestroyContext();
-	// vkDestroyDescriptorPool(m_Device->GetLogicalDevice(), m_ImGuiDescriptorPool, nullptr);
+	vkDeviceWaitIdle(m_Renderer->GetDevice()->GetLogicalDevice());
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	vkDestroyDescriptorPool(m_Renderer->GetDevice()->GetLogicalDevice(), m_ImGuiDescriptorPool, nullptr);
 }
 
 void Application::Shutdown()
@@ -170,7 +170,7 @@ void Application::Run()
 			// ImGui::ShowDemoWindow();
 			//
 			// ImGui::Render();
-			// ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_Renderer->getCurrentCommandBuffer());
+			// ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_Renderer->GetCurrentCommandBuffer());
 
 		////////////////////////////////////
 
@@ -179,7 +179,7 @@ void Application::Run()
 		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
 		m_LastFrameTime = time;
 	}
-	vkDeviceWaitIdle(m_Renderer->GetDevice()->GetDevice());
+	vkDeviceWaitIdle(m_Renderer->GetDevice()->GetLogicalDevice());
 }
 
 void Application::Close()
@@ -216,8 +216,8 @@ void Application::CreateImGuiDescriptorPool()
 	pool_info.poolSizeCount = (uint32_t)std::size(pool_sizes);
 	pool_info.pPoolSizes    = pool_sizes;
 
-	// if (vkCreateDescriptorPool(m_Device->GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
-	// {
-	// 	throw std::runtime_error("failed to create ImGui descriptor pool!");
-	// }
+	if (vkCreateDescriptorPool(m_Renderer->GetDevice()->GetLogicalDevice(), &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create ImGui descriptor pool!");
+	}
 }
