@@ -4,12 +4,7 @@
 #include "Layer.h"
 #include <glm/glm.hpp>
 
-#include "Actor/CameraActor.h"
-#include "Actor/GameObject.h"
 #include "Event/ApplicationEvent.h"
-#include "Renderer/Descriptor.h"
-#include "Renderer/Device.h"
-#include "Renderer/Renderer.h"
 #include "Renderer/Window.h"
 
 class ApplicationLayer;
@@ -47,9 +42,7 @@ private:
 		}
 	};
 	
-public:
-	friend ApplicationLayer;
-	
+public:	
 	Application(AppSpec spec = AppSpec());
 	~Application();
 
@@ -75,7 +68,6 @@ public:
 	void			Close();
 	static float	GetTime();
 	GLFWwindow*		GetWindowHandle() const { return m_Window->GetWindow(); }
-	CameraActor*	GetCameraActor() { return &m_CameraActor; }
 
 private:
 	bool OnWindowClose(WindowCloseEvent& e);
@@ -87,12 +79,6 @@ private:
 	void CleanupImGui() const;
 	void CreateImGuiDescriptorPool();
 
-	void LoadGameObjects();
-
-	
-protected:
-	CameraActor m_CameraActor;
-
 private:	
 	AppSpec m_Spec;
 	bool m_Running = false;
@@ -103,39 +89,12 @@ private:
 
 	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 	
-	Ref<ApplicationLayer> m_Layer = nullptr;
 	std::vector<std::shared_ptr<Layer>> m_LayerStack;
 	std::function<void()> m_MenubarCallback;
 	
 	/* --------------------------------------------------------------------*/
 
 	std::shared_ptr<Window> m_Window = std::make_shared<Window>(m_Spec.Width, m_Spec.Height, m_Spec.Name);
-	std::shared_ptr<Device> m_Device = std::make_shared<Device>(m_Window);
-	std::shared_ptr<Renderer> m_Renderer = std::make_shared<Renderer>(m_Window, m_Device);
-	
-	// note: order of declarations matters
-	std::unique_ptr<DescriptorPool> m_GlobalPool{};
-	GameObject::Map m_GameObjects;
-	
+
 	VkDescriptorPool m_ImGuiDescriptorPool = VK_NULL_HANDLE;
-};
-
-// Implemented by CLIENT
-Application* CreateApplication(int argc, char** argv);
-
-class ApplicationLayer : public Layer
-{
-public:
-	void OnEvent(Event& e) override
-	{
-		if (cameraActor)
-		{
-			cameraActor->OnEvent(e);
-		}
-	}
-
-	void SetCamera(Application* app) { cameraActor = app->GetCameraActor(); }
-	
-private:
-	CameraActor* cameraActor = nullptr;	
 };

@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <functional>
-#include <gsl/gsl>
 #include <algorithm>
 #include <set>
 #include <optional>

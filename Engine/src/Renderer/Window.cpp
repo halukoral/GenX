@@ -4,7 +4,6 @@
 #include "Event/KeyEvent.h"
 #include "Event/MouseEvent.h"
 #include "Input/KeyCodes.h"
-#include "spdlog/spdlog.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int32_t width, int32_t height)
 {
@@ -99,7 +98,7 @@ void CharCallback(GLFWwindow* window, uint32_t keycode)
 
 void GlfwErrorCallback(int error, const char* description)
 {
-	spdlog::error ("Glfw Validation: {}", description);
+	//spdlog::error ("Glfw Validation: {}", description);
 }
 
 Window::Window(uint32_t w, uint32_t h, std::string name): width(w), height(h), windowName(name)
@@ -119,7 +118,7 @@ void Window::InitializeWindow()
 	glfwSetErrorCallback(GlfwErrorCallback);
 	if (!glfwInit())
 	{
-		spdlog::error("Failed to initialize GLFW!");
+		//spdlog::error("Failed to initialize GLFW!");
 		return;
 	}
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

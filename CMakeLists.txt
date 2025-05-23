@@ -30,14 +30,6 @@ set(VULKAN_SDK_LIB "${VULKAN_SDK}/Lib")
 add_subdirectory(Engine)
 add_subdirectory(Editor)
 
-# GSL
-FetchContent_Declare(GSL
-    GIT_REPOSITORY "https://github.com/microsoft/GSL"
-    GIT_TAG "v4.2.0"
-    GIT_SHALLOW ON
-)
-FetchContent_MakeAvailable(GSL)
-
 # GLFW
 FetchContent_Declare(glfw
 GIT_REPOSITORY "https://github.com/glfw/glfw.git"
@@ -109,23 +101,12 @@ target_link_libraries(Editor
         imguizmo
 )
 
-# spdlog
-FetchContent_Declare(spdlog
-    GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
-    GIT_TAG "v1.15.2"
-    GIT_SHALLOW ON
-)
-FetchContent_MakeAvailable(spdlog)
-
-
 target_link_libraries(Engine
     PUBLIC
-        Microsoft.GSL::GSL
         glm
     PRIVATE
         glfw
         imgui
-        spdlog
 )
 
 
