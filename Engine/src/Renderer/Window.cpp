@@ -101,7 +101,7 @@ void GlfwErrorCallback(int error, const char* description)
 	//spdlog::error ("Glfw Validation: {}", description);
 }
 
-Window::Window(uint32_t w, uint32_t h, std::string name): width(w), height(h), windowName(name)
+Window::Window(const uint32_t w, const uint32_t h, const std::string& name): width(w), height(h), windowName(name)
 {
 	InitializeWindow();
 }
@@ -159,7 +159,7 @@ void Window::DisableCursor() const
 
 void Window::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
-	auto window_ = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+	const auto window_ = static_cast<Window*>(glfwGetWindowUserPointer(window));
 	window_->framebufferResized = true;
 	window_->width = width;
 	window_->height = height;

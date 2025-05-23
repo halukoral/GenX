@@ -31,7 +31,7 @@ class Window
 public:
 	using EventCallbackFn = std::function<void(Event&)>;
 	
-	Window(uint32_t w, uint32_t h, std::string name);
+	Window(uint32_t w, uint32_t h, const std::string& name);
 	~Window();
 
 	Window(const Window &) = delete;
@@ -67,8 +67,8 @@ private:
 	static void FramebufferResizeCallback(GLFWwindow *window, int width, int height);
 
 private:
-	int width;
-	int height;
+	uint32_t width;
+	uint32_t height;
 	std::string windowName;
 	bool framebufferResized = false;
 	EventCallbackFn eventCallback;
