@@ -83,14 +83,9 @@ void Application::Init()
 	m_Window->SetEventCallback(GX_BIND(Application::OnEvent));
 	//m_Window->DisableCursor();
 	
-	InitVulkan();
+	m_Renderer->InitVulkan();
 
 	InitImgui();
-}
-
-bool Application::InitVulkan()
-{
-	return true;
 }
 
 void Application::InitImgui()
@@ -144,6 +139,8 @@ void Application::Shutdown()
 
 	m_LayerStack.clear();
 
+	m_Renderer->Cleanup();
+	
 	CleanupImGui();
 	
 	g_ApplicationRunning = false;
@@ -161,6 +158,7 @@ void Application::Run()
 		for (const auto& layer : m_LayerStack)
 			layer->OnUpdate(m_TimeStep);
 
+		m_Renderer->DrawFrame();
 		////////////////////////////////////
 		// Render
 
@@ -181,6 +179,7 @@ void Application::Run()
 		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
 		m_LastFrameTime = time;
 	}
+	vkDeviceWaitIdle(m_Renderer->GetDevice()->GetDevice());
 }
 
 void Application::Close()

@@ -47,8 +47,8 @@ public:
 	
 	void CreateWindowSurface(VkInstance instance, VkSurfaceKHR *surface) const;
 
-	int GetWidth() const { return width; }
-	int GetHeight() const { return height; }
+	uint32_t GetWidth() const { return width; }
+	uint32_t GetHeight() const { return height; }
 
 	VkExtent2D GetExtent() const
 	{
@@ -60,6 +60,10 @@ public:
 	void EnableCursor() const;
 	void DisableCursor() const;
 
+	void getFramebufferSize(int* width, int* height) const {
+		glfwGetFramebufferSize(m_Window, width, height);
+	}
+	
 protected:
 	WindowAttributes m_Data;
 	

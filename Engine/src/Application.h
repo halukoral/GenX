@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "Event/ApplicationEvent.h"
+#include "Renderer/Renderer.h"
 #include "Renderer/Window.h"
 
 class ApplicationLayer;
@@ -72,7 +73,6 @@ public:
 private:
 	bool OnWindowClose(WindowCloseEvent& e);
 	void Init();
-	bool InitVulkan();
 	void Shutdown();
 
 	void InitImgui();
@@ -95,6 +95,7 @@ private:
 	/* --------------------------------------------------------------------*/
 
 	std::shared_ptr<Window> m_Window = std::make_shared<Window>(m_Spec.Width, m_Spec.Height, m_Spec.Name);
-
+	std::unique_ptr<Renderer> m_Renderer = std::make_unique<Renderer>(m_Window);
+	
 	VkDescriptorPool m_ImGuiDescriptorPool = VK_NULL_HANDLE;
 };

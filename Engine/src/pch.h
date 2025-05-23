@@ -3,6 +3,7 @@
 #include <iostream>
 #include <functional>
 #include <algorithm>
+#include <array>
 #include <set>
 #include <optional>
 #include <filesystem>
