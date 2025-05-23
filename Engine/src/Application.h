@@ -21,13 +21,6 @@ struct AppSpec
 	uint32_t Height = 1440;
 };
 
-struct UniformBufferObject
-{
-	glm::mat4 Model;
-	glm::mat4 View;
-	glm::mat4 Projection;
-};
-
 class Application
 {
 private:
