@@ -78,7 +78,7 @@ std::array<VkVertexInputAttributeDescription, 4> Vertex3D::GetAttributeDescripti
 	return attributeDescriptions;
 }
 
-void Mesh::Cleanup(VkDevice device) const
+void Mesh::Cleanup(const VkDevice device) const
 {
 	if (indexBuffer != VK_NULL_HANDLE) {
 		vkDestroyBuffer(device, indexBuffer, nullptr);
@@ -92,29 +92,29 @@ void Mesh::Cleanup(VkDevice device) const
 
 Model::Model(const std::string& path)
 {
-	loadModel(path);
+	LoadModel(path);
 }
 
-void Model::cleanup(VkDevice device)
+void Model::Cleanup(const VkDevice device) const
 {
-	for (auto& mesh : meshes)
+	for (auto& mesh : m_Meshes)
 	{
 		mesh.Cleanup(device);
 	}
 }
 
-glm::mat4 Model::getModelMatrix()
+glm::mat4 Model::GetModelMatrix() const
 {
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, position);
-	model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::scale(model, scale);
+	model = glm::translate(model, m_Position);
+	model = glm::rotate(model, glm::radians(m_Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(m_Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(m_Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::scale(model, m_Scale);
 	return model;
 }
 
-Model Model::createCube()
+Model Model::CreateCube()
 {
 	Model model;
         
@@ -165,18 +165,18 @@ Model Model::createCube()
 		20, 21, 22, 22, 23, 20   // top
 	};
 
-	model.meshes.push_back(Mesh(vertices, indices));
+	model.m_Meshes.emplace_back(vertices, indices);
 	return model;
 }
 
-Model Model::loadFromFile(const std::string& path)
+Model Model::LoadFromFile(const std::string& path)
 {
 	Model model;
-	model.loadModel(path);
+	model.LoadModel(path);
 	return model;
 }
 
-void Model::loadModel(const std::string& path)
+void Model::LoadModel(const std::string& path)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -190,7 +190,7 @@ void Model::loadModel(const std::string& path)
 
     if (!warn.empty())
     {
-        std::cout << "TinyObjLoader warning: " << warn << std::endl;
+        std::cout << "TinyObjLoader warning: " << warn << '\n';
     }
 
     std::unordered_map<Vertex3D, uint32_t> uniqueVertices{};
@@ -203,7 +203,6 @@ void Model::loadModel(const std::string& path)
         {
             Vertex3D vertex{};
 
-            // Position
             vertex.pos =
             {
                 attrib.vertices[3 * index.vertex_index + 0],
@@ -211,7 +210,6 @@ void Model::loadModel(const std::string& path)
                 attrib.vertices[3 * index.vertex_index + 2]
             };
 
-            // Normal (eğer varsa)
             if (index.normal_index >= 0)
             {
                 vertex.normal =
@@ -223,16 +221,15 @@ void Model::loadModel(const std::string& path)
             }
         	else
         	{
-                vertex.normal = {0.0f, 0.0f, 1.0f}; // Varsayılan normal
+                vertex.normal = {0.0f, 0.0f, 1.0f};
             }
 
-            // Texture coordinate (eğer varsa)
             if (index.texcoord_index >= 0)
             {
                 vertex.texCoord =
                 {
                     attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // Y koordinatını ters çevir
+                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
                 };
             }
         	else
@@ -240,11 +237,9 @@ void Model::loadModel(const std::string& path)
                 vertex.texCoord = {0.0f, 0.0f};
             }
 
-            // Default color (model'de material yoksa)
             vertex.color = {0.7f, 0.7f, 0.7f};
 
-            // Vertex deduplication
-            if (uniqueVertices.count(vertex) == 0)
+            if (!uniqueVertices.contains(vertex))
             {
                 uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
                 vertices.push_back(vertex);
@@ -254,28 +249,24 @@ void Model::loadModel(const std::string& path)
         }
     }
 
-    // Normal hesaplama (eğer model'de normal yoksa)
-    calculateNormals(vertices, indices);
+    CalculateNormals(vertices, indices);
 
-    // Mesh oluştur
-    meshes.push_back(Mesh(vertices, indices));
+    m_Meshes.emplace_back(vertices, indices);
 
     std::cout << "Model loaded: " << vertices.size() << " vertices, " 
-              << indices.size() / 3 << " triangles" << std::endl;
+              << indices.size() / 3 << " triangles" << '\n';
 }
 
-void Model::calculateNormals(std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
+void Model::CalculateNormals(std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
 {
-	// Normal'ları sıfırla
 	for (auto& vertex : vertices)
 	{
 		if (glm::length(vertex.normal) < 0.1f)
-		{ // Eğer normal yoksa
+		{
 			vertex.normal = glm::vec3(0.0f);
 		}
 	}
 
-	// Face normal'larını hesapla ve vertex normal'larına ekle
 	for (size_t i = 0; i < indices.size(); i += 3)
 	{
 		uint32_t i0 = indices[i];
@@ -290,13 +281,11 @@ void Model::calculateNormals(std::vector<Vertex3D>& vertices, const std::vector<
 		glm::vec3 edge2 = v2 - v0;
 		glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
 
-		// Normal yoksa face normal'ı kullan
 		if (glm::length(vertices[i0].normal) < 0.1f) vertices[i0].normal += faceNormal;
 		if (glm::length(vertices[i1].normal) < 0.1f) vertices[i1].normal += faceNormal;
 		if (glm::length(vertices[i2].normal) < 0.1f) vertices[i2].normal += faceNormal;
 	}
 
-	// Normal'ları normalize et
 	for (auto& vertex : vertices)
 	{
 		if (glm::length(vertex.normal) > 0.1f)

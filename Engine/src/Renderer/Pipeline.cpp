@@ -1,8 +1,8 @@
 #include "Pipeline.h"
 
-Pipeline::Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass): device(dev)
+Pipeline::Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass, Descriptor* descriptor): device(dev)
 {
-	CreateGraphicsPipeline(swapChain, renderPass);
+	CreateGraphicsPipeline(swapChain, renderPass, descriptor);
 }
 
 Pipeline::~Pipeline()
@@ -11,7 +11,7 @@ Pipeline::~Pipeline()
 	vkDestroyPipelineLayout(device->GetLogicalDevice(), pipelineLayout, nullptr);
 }
 
-void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass)
+void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass, Descriptor* descriptor)
 {
 	auto vertShaderCode = ReadFile("../basic.vert.spv");
 	auto fragShaderCode = ReadFile("../basic.frag.spv");
@@ -112,9 +112,10 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0;
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
-
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &descriptor->GetDescriptorSetLayout();
+	
 	if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Pipeline layout oluşturulamadı!");

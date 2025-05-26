@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Descriptor.h"
 #include "pch.h"
 #include "Device.h"
 #include "RenderPass.h"
@@ -15,14 +16,14 @@ class Pipeline
     };
 
 public:
-    Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass);
+    Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass, Descriptor* descriptor);
     ~Pipeline();
 
     VkPipeline GetPipeline() const { return graphicsPipeline; }
     VkPipelineLayout GetPipelineLayout() const { return pipelineLayout; }
 
 private:
-    void CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass);
+    void CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass, Descriptor* descriptor);
     VkShaderModule CreateShaderModule(const std::vector<char>& code) const;
     static std::vector<char> ReadFile(const std::string& filename);
 

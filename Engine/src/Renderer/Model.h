@@ -79,6 +79,7 @@ class Mesh
 public:
     std::vector<Vertex3D> vertices;
     std::vector<uint32_t> indices;
+    
     VkBuffer vertexBuffer = VK_NULL_HANDLE;
     VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
     VkBuffer indexBuffer = VK_NULL_HANDLE;
@@ -92,25 +93,23 @@ public:
 class Model
 {
 public:
-    std::vector<Mesh> meshes;
-    std::string directory;
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    glm::vec3 scale = glm::vec3(1.0f);
+    std::vector<Mesh> m_Meshes;
+    std::string m_Directory;
+    glm::vec3 m_Position = glm::vec3(0.0f);
+    glm::vec3 m_Rotation = glm::vec3(0.0f);
+    glm::vec3 m_Scale = glm::vec3(1.0f);
 
     Model() = default;
-
     Model(const std::string& path);
 
-    void cleanup(VkDevice device);
+    void Cleanup(VkDevice device) const;
 
-    glm::mat4 getModelMatrix();
+    glm::mat4 GetModelMatrix() const;
 
-    static Model createCube();
-    static Model loadFromFile(const std::string& path);
+    static Model CreateCube();
+    static Model LoadFromFile(const std::string& path);
 
 private:
-    
-    void loadModel(const std::string& path);
-    void calculateNormals(std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices);
+    void LoadModel(const std::string& path);
+    void CalculateNormals(std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices);
 };
