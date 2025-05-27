@@ -8,6 +8,7 @@
 #include "Pipeline.h"
 #include "RenderPass.h"
 #include "SwapChain.h"
+#include "Texture.h"
 
 class Renderer
 {	
@@ -26,6 +27,7 @@ public:
 
 	// Model loading
 	void LoadModel(const std::string& path);
+	void LoadTexture(const std::string& texturePath);
 	
 private:
 	void CreateFramebuffers();
@@ -57,6 +59,7 @@ private:
 
 	std::unique_ptr<Camera> m_Camera;
 	std::unique_ptr<Model> m_Model;
+	std::unique_ptr<Texture> m_Texture;
 	
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 

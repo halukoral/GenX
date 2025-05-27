@@ -32,7 +32,8 @@ public:
 	VkQueue				GetGraphicsQueue() const { return graphicsQueue; }
 	VkQueue				GetPresentQueue() const { return presentQueue; }
 	VkSurfaceKHR		GetSurface() const { return surface; }
-
+	VkCommandPool		GetCommandPool() const { return m_CommandPool; }
+	
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
@@ -51,7 +52,8 @@ private:
 	VkQueue graphicsQueue;
 	VkQueue presentQueue;
 	VkSurfaceKHR surface;
-
+	VkCommandPool m_CommandPool;
+	
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	const std::vector<const char*> deviceExtensions = {	VK_KHR_SWAPCHAIN_EXTENSION_NAME	};
 };

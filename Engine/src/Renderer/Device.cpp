@@ -10,6 +10,7 @@ Device::Device(Window* win)
 
 Device::~Device()
 {
+	vkDestroyCommandPool(device, m_CommandPool, nullptr);
 	vkDestroyDevice(device, nullptr);
 	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyInstance(instance, nullptr);
@@ -183,4 +184,15 @@ void Device::CreateLogicalDevice()
 
 	vkGetDeviceQueue(device, indices.GraphicsFamily, 0, &graphicsQueue);
 	vkGetDeviceQueue(device, indices.PresentFamily, 0, &presentQueue);
+
+	// Command pool oluştur
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	poolInfo.queueFamilyIndex = indices.GraphicsFamily;
+
+	if (vkCreateCommandPool(device, &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Command pool oluşturulamadı!");
+	}
 }

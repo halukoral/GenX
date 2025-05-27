@@ -4,6 +4,8 @@
 #include "Device.h"
 #include "Model.h"
 
+class Texture;
+
 // for uniform buffer
 class Descriptor
 {
@@ -15,7 +17,8 @@ public:
     VkDescriptorSet& GetDescriptorSet(const int frameIndex) { return descriptorSets[frameIndex]; }
 
     void UpdateUniformBuffer(uint32_t currentFrame, const UniformBufferObject& ubo) const;
-
+	void UpdateTextureDescriptor(Texture* texture);
+	
 private:
     void CreateDescriptorSetLayout();
     void CreateUniformBuffers();

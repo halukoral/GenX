@@ -38,6 +38,16 @@ void Renderer::LoadModel(const std::string& path)
     CreateModelBuffers();
 }
 
+void Renderer::LoadTexture(const std::string& texturePath)
+{
+	m_Texture = std::make_unique<Texture>(m_Device.get(), texturePath);
+    
+	// Descriptor'ları texture ile güncelle
+	m_Descriptor->UpdateTextureDescriptor(m_Texture.get());
+    
+	std::cout << "Texture yüklendi: " << texturePath << std::endl;
+}
+
 void Renderer::CreateDepthResources()
 {
     VkFormat depthFormat = FindDepthFormat();
@@ -401,6 +411,7 @@ void Renderer::Cleanup()
 
 	m_Camera.reset();
 	m_Model.reset();
+	m_Texture.reset();
 	
 	imguiRenderer.reset();
 	m_Descriptor.reset();
