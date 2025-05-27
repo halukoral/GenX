@@ -9,7 +9,6 @@
 #include "RenderPass.h"
 #include "SwapChain.h"
 #include "Texture.h"
-#include "Input/InputHandler.h"
 
 class Renderer
 {	
@@ -21,8 +20,7 @@ public:
 	void Cleanup();
 
 	void DrawFrame();
-	void Update(float deltaTime);
-	
+
 	[[nodiscard]] const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
 	[[nodiscard]] VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
 	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
@@ -30,10 +28,6 @@ public:
 	// Model loading
 	void LoadModel(const std::string& path);
 	void LoadTexture(const std::string& texturePath);
-
-	// Camera kontrolleri - EKLENEN
-	Camera* GetCamera() const { return m_Camera.get(); }
-	InputHandler* GetInputHandler() const { return m_InputHandler.get(); }
 	
 private:
 	void CreateFramebuffers();
@@ -66,7 +60,6 @@ private:
 	std::unique_ptr<Camera> m_Camera;
 	std::unique_ptr<Model> m_Model;
 	std::unique_ptr<Texture> m_Texture;
-	std::unique_ptr<InputHandler> m_InputHandler;
 	
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
