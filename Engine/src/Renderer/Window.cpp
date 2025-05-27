@@ -1,9 +1,6 @@
 #include "Window.h"
 
 #include "Event/ApplicationEvent.h"
-#include "Event/KeyEvent.h"
-#include "Event/MouseEvent.h"
-#include "Input/KeyCodes.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int32_t width, int32_t height)
 {
@@ -22,79 +19,6 @@ void WindowCloseCallback(GLFWwindow* window)
 	data.EventCallback(event);
 }
 
-void MouseButtonCallback(GLFWwindow* window, int32_t button, int32_t action, int32_t mods)
-{
-	const WindowAttributes& data = *(WindowAttributes*)glfwGetWindowUserPointer(window);
-	
-	switch (action)
-	{
-		case GLFW_PRESS:
-		{
-			MouseButtonPressedEvent event((MouseButton)button);
-			data.EventCallback(event);
-			break;
-		}
-		case GLFW_RELEASE:
-		{
-			MouseButtonReleasedEvent event((MouseButton)button);
-			data.EventCallback(event);
-			break;
-		}
-	}	
-}
-
-void MouseCallback(GLFWwindow* window, double xPos, double yPos)
-{
-	WindowAttributes& data = *(WindowAttributes*)glfwGetWindowUserPointer(window);
-
-	MouseMovedEvent event((float)xPos, (float)yPos);
-	data.EventCallback(event);
-}
-
-void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
-{
-	WindowAttributes& data = *(WindowAttributes*)glfwGetWindowUserPointer(window);
-
-	MouseScrolledEvent event((float)xOffset, (float)yOffset);
-	data.EventCallback(event);	
-}
-
-void KeyCallback(GLFWwindow* window, int32_t key, int32_t scancode, int32_t action, int32_t mods)
-{
-	WindowAttributes& data = *(WindowAttributes*)glfwGetWindowUserPointer(window);
-	
-	switch (action)
-	{
-	case GLFW_PRESS:
-	{
-		KeyPressedEvent event((KeyCode)(KeyCode)key, 0);
-		data.EventCallback(event);
-		break;
-	}
-	case GLFW_RELEASE:
-	{
-		KeyReleasedEvent event((KeyCode)key);
-		data.EventCallback(event);
-		break;
-	}
-	case GLFW_REPEAT:
-	{
-		KeyPressedEvent event((KeyCode)key, true);
-		data.EventCallback(event);
-		break;
-	}
-	default:
-		break;
-	}	
-}
-
-void CharCallback(GLFWwindow* window, uint32_t keycode)
-{
-	WindowAttributes& data = *(WindowAttributes*)glfwGetWindowUserPointer(window);
-
-	KeyTypedEvent event((KeyCode)keycode);
-	data.EventCallback(event);
-}
 
 void GlfwErrorCallback(int error, const char* description)
 {
@@ -130,13 +54,6 @@ void Window::InitializeWindow()
 	glfwSetWindowSizeCallback(m_Window, FramebufferSizeCallback);
 	glfwSetWindowCloseCallback(m_Window, WindowCloseCallback);
 
-	glfwSetKeyCallback(m_Window, KeyCallback);
-	glfwSetCharCallback(m_Window, CharCallback);
-	
-	glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
-	glfwSetScrollCallback(m_Window, ScrollCallback);
-	glfwSetCursorPosCallback(m_Window, MouseCallback);
-	
 }
 
 void Window::CreateWindowSurface(const VkInstance instance, VkSurfaceKHR *surface) const

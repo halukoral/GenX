@@ -25,11 +25,13 @@ void Renderer::InitVulkan()
 	CreateSyncObjects();
 
 	m_Camera = std::make_unique<Camera>(
-		glm::vec3(0.0f, 0.0f, 5.0f),  // Camera position
+		glm::vec3(0.0f, 0.0f, 5.0f),  // Pozisyon
 		glm::vec3(0.0f, 1.0f, 0.0f),  // World up
-		-90.0f,                        // Yaw: -X 
-		0.0f                          // Pitch: horizontal
+		-90.0f,                        // Yaw
+		0.0f                          // Pitch
 	);
+    
+	m_InputHandler = std::make_unique<InputHandler>(m_Window->GetWindow(), m_Camera.get());
 }
 
 void Renderer::LoadModel(const std::string& path)
@@ -120,10 +122,10 @@ void Renderer::UpdateUniformBuffer(uint32_t currentFrame) const
     ubo.Model = m_Model->GetModelMatrix();
     
     // View matrix (camera)
-    ubo.View = m_Camera->GetViewMatrix();
+    ubo.View = m_Camera->getViewMatrix();
     
     // Projection matrix
-    ubo.Proj = m_Camera->GetProjectionMatrix((float)m_SwapChain->GetExtent().width / (float)m_SwapChain->GetExtent().height);
+    ubo.Proj = m_Camera->getProjectionMatrix((float)m_SwapChain->GetExtent().width / (float)m_SwapChain->GetExtent().height);
     ubo.Proj[1][1] *= -1; // GLM Y flip (for Vulkan)
 
     m_Descriptor->UpdateUniformBuffer(currentFrame, ubo);
@@ -383,6 +385,14 @@ void Renderer::DrawFrame()
 	m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Renderer::Update(float deltaTime)
+{
+	if (m_InputHandler)
+	{
+		m_InputHandler->Update(deltaTime);
+	}
+}
+
 void Renderer::Cleanup()
 {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -405,10 +415,12 @@ void Renderer::Cleanup()
 	vkFreeMemory(m_Device->GetLogicalDevice(), m_DepthImageMemory, nullptr);
 
 	// Model cleanup
-	if (m_Model) {
+	if (m_Model)
+	{
 		m_Model->Cleanup(m_Device->GetLogicalDevice());
 	}
 
+	m_InputHandler.reset();
 	m_Camera.reset();
 	m_Model.reset();
 	m_Texture.reset();

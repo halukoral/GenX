@@ -100,6 +100,11 @@ void Application::Run()
 	// Main loop
 	while (!glfwWindowShouldClose(m_Window->GetWindow()) && m_Running)
 	{
+		const float time = GetTime();
+		m_FrameTime = time - m_LastFrameTime;
+		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
+		m_LastFrameTime = time;
+		
 		glfwPollEvents();
 		
 		for (const auto& layer : m_LayerStack)
@@ -108,12 +113,8 @@ void Application::Run()
 		////////////////////////////////////
 		// Render
 		m_Renderer->DrawFrame();
+		m_Renderer->Update(m_TimeStep);
 		////////////////////////////////////
-
-		const float time = GetTime();
-		m_FrameTime = time - m_LastFrameTime;
-		m_TimeStep = glm::min<float>(m_FrameTime, 0.0333f);
-		m_LastFrameTime = time;
 	}
 	vkDeviceWaitIdle(m_Renderer->GetDevice()->GetLogicalDevice());
 }
