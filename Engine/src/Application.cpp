@@ -79,6 +79,7 @@ void Application::Init()
 	//m_Window->DisableCursor();
 	
 	m_Renderer->InitVulkan();
+	m_Renderer->LoadModel("../viking_room.obj");
 }
 
 void Application::Shutdown()

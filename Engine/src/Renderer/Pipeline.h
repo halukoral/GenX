@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Descriptor.h"
 #include "pch.h"
+#include "Descriptor.h"
 #include "Device.h"
 #include "RenderPass.h"
 #include "SwapChain.h"
@@ -9,12 +9,6 @@
 // Pipeline Class - Graphics pipeline yönetimi
 class Pipeline
 {
-    struct Vertex
-    {
-        float pos[2];
-        float color[3];
-    };
-
 public:
     Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass, Descriptor* descriptor);
     ~Pipeline();

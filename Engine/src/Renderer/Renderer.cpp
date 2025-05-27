@@ -17,13 +17,114 @@ void Renderer::InitVulkan()
 		2, // minImageCount
 		static_cast<uint32_t>(m_SwapChain->GetImages().size()) // imageCount
 	);
-	
+
+	CreateDepthResources(); // Depth buffer oluştur
 	CreateFramebuffers();
 	CreateCommandPool();
-	CreateVertexBuffer();
-	CreateIndexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
+
+	m_Camera = std::make_unique<Camera>(
+		glm::vec3(0.0f, 0.0f, 5.0f),  // Pozisyon: Z ekseni üzerinde 5 birim
+		glm::vec3(0.0f, 1.0f, 0.0f),  // World up
+		-90.0f,                        // Yaw: -X yönüne bak
+		0.0f                          // Pitch: yatay
+	);
+}
+
+void Renderer::LoadModel(const std::string& path)
+{
+    m_Model = std::make_unique<Model>(path);
+    CreateModelBuffers();
+
+	if (m_Model) {
+		std::cout << "Model loaded: " << m_Model->m_Meshes.size() << " meshes" << std::endl;
+		for (const auto& mesh : m_Model->m_Meshes) {
+			std::cout << "Vertices: " << mesh.vertices.size() << ", Indices: " << mesh.indices.size() << std::endl;
+		}
+	} else {
+		std::cout << "ERROR: Model not loaded!" << std::endl;
+	}
+}
+
+void Renderer::CreateDepthResources()
+{
+    VkFormat depthFormat = FindDepthFormat();
+    
+    CreateImage(m_SwapChain->GetExtent().width, m_SwapChain->GetExtent().height, depthFormat, 
+               VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+
+    m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+}
+
+void Renderer::CreateModelBuffers()
+{
+    if (!m_Model) return;
+    
+    for (auto& mesh : m_Model->m_Meshes) {
+        // Vertex buffer
+        VkDeviceSize vertexBufferSize = sizeof(mesh.vertices[0]) * mesh.vertices.size();
+        VkBuffer vertexStagingBuffer;
+        VkDeviceMemory vertexStagingBufferMemory;
+        
+        CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    vertexStagingBuffer, vertexStagingBufferMemory);
+
+        void* data;
+        vkMapMemory(m_Device->GetLogicalDevice(), vertexStagingBufferMemory, 0, vertexBufferSize, 0, &data);
+        memcpy(data, mesh.vertices.data(), (size_t) vertexBufferSize);
+        vkUnmapMemory(m_Device->GetLogicalDevice(), vertexStagingBufferMemory);
+
+        CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh.vertexBuffer, mesh.vertexBufferMemory);
+
+        CopyBuffer(vertexStagingBuffer, mesh.vertexBuffer, vertexBufferSize);
+
+        vkDestroyBuffer(m_Device->GetLogicalDevice(), vertexStagingBuffer, nullptr);
+        vkFreeMemory(m_Device->GetLogicalDevice(), vertexStagingBufferMemory, nullptr);
+
+        // Index buffer - benzer şekilde...
+        VkDeviceSize indexBufferSize = sizeof(mesh.indices[0]) * mesh.indices.size();
+        VkBuffer indexStagingBuffer;
+        VkDeviceMemory indexStagingBufferMemory;
+
+        CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    indexStagingBuffer, indexStagingBufferMemory);
+
+        vkMapMemory(m_Device->GetLogicalDevice(), indexStagingBufferMemory, 0, indexBufferSize, 0, &data);
+        memcpy(data, mesh.indices.data(), (size_t) indexBufferSize);
+        vkUnmapMemory(m_Device->GetLogicalDevice(), indexStagingBufferMemory);
+
+        CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh.indexBuffer, mesh.indexBufferMemory);
+
+        CopyBuffer(indexStagingBuffer, mesh.indexBuffer, indexBufferSize);
+
+        vkDestroyBuffer(m_Device->GetLogicalDevice(), indexStagingBuffer, nullptr);
+        vkFreeMemory(m_Device->GetLogicalDevice(), indexStagingBufferMemory, nullptr);
+    }
+}
+
+void Renderer::UpdateUniformBuffer(uint32_t currentFrame) const
+{
+    if (!m_Model || !m_Camera) return;
+    
+    UniformBufferObject ubo{};
+    
+    // Model matrix
+    ubo.model = m_Model->GetModelMatrix();
+    
+    // View matrix (camera)
+    ubo.view = m_Camera->getViewMatrix();
+    
+    // Projection matrix
+    ubo.proj = m_Camera->getProjectionMatrix((float)m_SwapChain->GetExtent().width / (float)m_SwapChain->GetExtent().height);
+    ubo.proj[1][1] *= -1; // GLM Y koordinatını ters çevir (Vulkan için)
+
+    m_Descriptor->UpdateUniformBuffer(currentFrame, ubo);
 }
 
 void Renderer::CreateFramebuffers()
@@ -32,16 +133,16 @@ void Renderer::CreateFramebuffers()
 
 	for (size_t i = 0; i < m_Image->GetImageViews().size(); i++)
 	{
-		VkImageView attachments[] =
-		{
-			m_Image->GetImageViews()[i]
+		std::array<VkImageView, 2> attachments = {
+			m_Image->GetImageViews()[i],
+			m_DepthImageView  // Depth image view ekle
 		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass = m_RenderPass->GetRenderPass();
-		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size()); // 2 attachment
+		framebufferInfo.pAttachments = attachments.data();
 		framebufferInfo.width = m_SwapChain->GetExtent().width;
 		framebufferInfo.height = m_SwapChain->GetExtent().height;
 		framebufferInfo.layers = 1;
@@ -66,48 +167,6 @@ void Renderer::CreateCommandPool()
 	{
 		throw std::runtime_error("Command pool creation failed!");
 	}
-}
-
-void Renderer::CreateVertexBuffer()
-{
-	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-	void* data;
-	vkMapMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, vertices.data(), (size_t) bufferSize);
-	vkUnmapMemory(m_Device->GetLogicalDevice(), stagingBufferMemory);
-
-	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VertexBuffer, m_VertexBufferMemory);
-
-	CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
-
-	vkDestroyBuffer(m_Device->GetLogicalDevice(), stagingBuffer, nullptr);
-	vkFreeMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, nullptr);
-}
-
-void Renderer::CreateIndexBuffer()
-{
-	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-	void* data;
-	vkMapMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, indices.data(), (size_t) bufferSize);
-	vkUnmapMemory(m_Device->GetLogicalDevice(), stagingBufferMemory);
-
-	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-	CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-	vkDestroyBuffer(m_Device->GetLogicalDevice(), stagingBuffer, nullptr);
-	vkFreeMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, nullptr);
 }
 
 void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
@@ -190,44 +249,53 @@ void Renderer::CreateCommandBuffers()
 
 void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const
 {
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Command buffer kaydı başlatılamadı!");
-	}
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("Command buffer kaydı başlatılamadı!");
+    }
 
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = m_RenderPass->GetRenderPass();
-	renderPassInfo.framebuffer = m_SwapChainFramebuffers[imageIndex];
-	renderPassInfo.renderArea.offset = {0, 0};
-	renderPassInfo.renderArea.extent = m_SwapChain->GetExtent();
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_RenderPass->GetRenderPass();
+    renderPassInfo.framebuffer = m_SwapChainFramebuffers[imageIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_SwapChain->GetExtent();
 
-	VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{0.2f, 0.3f, 0.3f, 1.0f}};
+    clearValues[1].depthStencil = {1.0f, 0};
 
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetPipeline());
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	VkBuffer vertexBuffers[] = {m_VertexBuffer};
-	VkDeviceSize offsets[] = {0};
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-	
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-	
-	imguiRenderer->Render(commandBuffer);
-	
-	vkCmdEndRenderPass(commandBuffer);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetPipeline());
 
-	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Command buffer kaydı tamamlanamadı!");
-	}
+    // Uniform buffer bind et
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline->GetPipelineLayout(), 
+                           0, 1, &m_Descriptor->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
+
+    // 3D Model render et
+    if (m_Model) {
+        for (const auto& mesh : m_Model->m_Meshes) {
+            VkBuffer vertexBuffers[] = {mesh.vertexBuffer};
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+        }
+    }
+    
+    imguiRenderer->Render(commandBuffer);
+    
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("Command buffer kaydı tamamlanamadı!");
+    }
 }
 
 void Renderer::CreateSyncObjects()
@@ -263,6 +331,11 @@ void Renderer::DrawFrame()
 
 	uint32_t imageIndex;
 	vkAcquireNextImageKHR(m_Device->GetLogicalDevice(), m_SwapChain->GetSwapChain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	// Uniform buffer'ı güncelle
+	UpdateUniformBuffer(m_CurrentFrame);
+    
+	vkResetFences(m_Device->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
 	vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0);
 	RecordCommandBuffer(m_CommandBuffers[m_CurrentFrame], imageIndex);
@@ -318,11 +391,18 @@ void Renderer::Cleanup()
 		vkDestroyFramebuffer(m_Device->GetLogicalDevice(), framebuffer, nullptr);
 	}
 
-	vkDestroyBuffer(m_Device->GetLogicalDevice(), m_VertexBuffer, nullptr);
-	vkFreeMemory(m_Device->GetLogicalDevice(), m_VertexBufferMemory, nullptr);
+	// Depth resources cleanup
+	vkDestroyImageView(m_Device->GetLogicalDevice(), m_DepthImageView, nullptr);
+	vkDestroyImage(m_Device->GetLogicalDevice(), m_DepthImage, nullptr);
+	vkFreeMemory(m_Device->GetLogicalDevice(), m_DepthImageMemory, nullptr);
 
-	vkDestroyBuffer(m_Device->GetLogicalDevice(), indexBuffer, nullptr);
-	vkFreeMemory(m_Device->GetLogicalDevice(), indexBufferMemory, nullptr);
+	// Model cleanup
+	if (m_Model) {
+		m_Model->Cleanup(m_Device->GetLogicalDevice());
+	}
+
+	m_Camera.reset();
+	m_Model.reset();
 	
 	imguiRenderer.reset();
 	m_Descriptor.reset();
@@ -332,4 +412,87 @@ void Renderer::Cleanup()
 	m_SwapChain.reset();
 	m_Device.reset();
 	m_Window.reset();
+}
+
+VkFormat Renderer::FindDepthFormat() const
+{
+    return FindSupportedFormat(
+        {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
+}
+
+VkFormat Renderer::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const
+{
+    for (VkFormat format : candidates) {
+        VkFormatProperties props;
+        vkGetPhysicalDeviceFormatProperties(m_Device->GetPhysicalDevice(), format, &props);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+            return format;
+        } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+            return format;
+        }
+    }
+
+    throw std::runtime_error("Uygun format bulunamadı!");
+}
+
+void Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 
+                          VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const
+{
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = width;
+    imageInfo.extent.height = height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = format;
+    imageInfo.tiling = tiling;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = usage;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateImage(m_Device->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS) {
+        throw std::runtime_error("Image oluşturulamadı!");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(m_Device->GetLogicalDevice(), image, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = m_Device->FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+    if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+        throw std::runtime_error("Image memory allocate edilemedi!");
+    }
+
+    vkBindImageMemory(m_Device->GetLogicalDevice(), image, imageMemory, 0);
+}
+
+VkImageView Renderer::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const
+{
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = format;
+    viewInfo.subresourceRange.aspectMask = aspectFlags;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    VkImageView imageView;
+    if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+        throw std::runtime_error("Image view oluşturulamadı!");
+    }
+
+    return imageView;
 }

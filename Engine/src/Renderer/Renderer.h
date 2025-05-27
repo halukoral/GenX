@@ -10,26 +10,7 @@
 #include "SwapChain.h"
 
 class Renderer
-{
-	struct Vertex
-	{
-		float pos[2];
-		float color[3];
-	};
-
-	const std::vector<Vertex> vertices =
-	{
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-	};
-
-	const std::vector<uint16_t> indices =
-	{
-		0, 1, 2, 2, 3, 0
-	};
-	
+{	
 public:
 	Renderer() = default;
 	Renderer(std::shared_ptr<Window> window) : m_Window(window) { }
@@ -42,18 +23,27 @@ public:
 	const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
 	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
 	VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
+
+	// Model loading
+	void LoadModel(const std::string& path);
 	
 private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
-	void CreateVertexBuffer();
-	void CreateIndexBuffer();
+	void CreateDepthResources(); // Depth buffer için
+	void CreateModelBuffers(); // Model buffer'ları için
 	
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 	void CreateCommandBuffers();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 	void CreateSyncObjects();
+	void UpdateUniformBuffer(uint32_t currentFrame) const;
+
+	VkFormat FindDepthFormat() const;
+	VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
+	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const;
+	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) const;
 
 private:
 	std::shared_ptr<Window> m_Window;
@@ -64,6 +54,9 @@ private:
 	std::unique_ptr<Pipeline> m_Pipeline;
 	std::unique_ptr<Descriptor> m_Descriptor;
 	std::unique_ptr<ImGuiRenderer> imguiRenderer;
+
+	std::unique_ptr<Camera> m_Camera;
+	std::unique_ptr<Model> m_Model;
 	
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
@@ -75,11 +68,10 @@ private:
 
 	size_t m_CurrentFrame = 0;
 
-	VkBuffer m_VertexBuffer;
-	VkDeviceMemory m_VertexBufferMemory;
-
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
+	// Depth buffer
+	VkImage m_DepthImage;
+	VkDeviceMemory m_DepthImageMemory;
+	VkImageView m_DepthImageView;
 	
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 };
