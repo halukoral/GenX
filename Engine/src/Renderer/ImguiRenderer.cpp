@@ -93,7 +93,7 @@ void ImGuiRenderer::InitImGui()
 	initInfo.Instance = m_Device->GetInstance();
 	initInfo.PhysicalDevice = m_Device->GetPhysicalDevice();
 	initInfo.Device = m_Device->GetLogicalDevice();
-	initInfo.QueueFamily = m_Device->FindQueueFamilies(m_Device->GetPhysicalDevice()).graphicsFamily;
+	initInfo.QueueFamily = m_Device->FindQueueFamilies(m_Device->GetPhysicalDevice()).GraphicsFamily;
 	initInfo.Queue = m_Device->GetGraphicsQueue();
 	initInfo.RenderPass = m_RenderPass->GetRenderPass();
 	initInfo.PipelineCache = VK_NULL_HANDLE;
@@ -145,7 +145,7 @@ void ImGuiRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer) const
 void ImGuiRenderer::CheckVkResult(VkResult err)
 {
 	if (err == 0) return;
-	std::cerr << "[vulkan] Error: VkResult = " << err << std::endl;
+	std::cerr << "[vulkan] Error: VkResult = " << err << '\n';
 	if (err < 0) abort();
 }
 

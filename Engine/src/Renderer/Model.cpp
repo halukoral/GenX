@@ -31,9 +31,9 @@ namespace std
 	{
 		size_t operator()(Vertex3D const& vertex) const
 		{
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				   (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-				   (hash<glm::vec2>()(vertex.texCoord) << 1);
+			return ((hash<glm::vec3>()(vertex.Pos) ^
+				   (hash<glm::vec3>()(vertex.Normal) << 1)) >> 1) ^
+				   (hash<glm::vec2>()(vertex.TexCoord) << 1);
 		}
 	};
 }
@@ -55,38 +55,38 @@ std::array<VkVertexInputAttributeDescription, 4> Vertex3D::GetAttributeDescripti
 	attributeDescriptions[0].binding = 0;
 	attributeDescriptions[0].location = 0;
 	attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[0].offset = offsetof(Vertex3D, pos);
+	attributeDescriptions[0].offset = offsetof(Vertex3D, Pos);
 
 	// Normal
 	attributeDescriptions[1].binding = 0;
 	attributeDescriptions[1].location = 1;
 	attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[1].offset = offsetof(Vertex3D, normal);
+	attributeDescriptions[1].offset = offsetof(Vertex3D, Normal);
 
 	// Texture Coordinates
 	attributeDescriptions[2].binding = 0;
 	attributeDescriptions[2].location = 2;
 	attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-	attributeDescriptions[2].offset = offsetof(Vertex3D, texCoord);
+	attributeDescriptions[2].offset = offsetof(Vertex3D, TexCoord);
 
 	// Color
 	attributeDescriptions[3].binding = 0;
 	attributeDescriptions[3].location = 3;
 	attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[3].offset = offsetof(Vertex3D, color);
+	attributeDescriptions[3].offset = offsetof(Vertex3D, Color);
 
 	return attributeDescriptions;
 }
 
 void Mesh::Cleanup(const VkDevice device) const
 {
-	if (indexBuffer != VK_NULL_HANDLE) {
-		vkDestroyBuffer(device, indexBuffer, nullptr);
-		vkFreeMemory(device, indexBufferMemory, nullptr);
+	if (IndexBuffer != VK_NULL_HANDLE) {
+		vkDestroyBuffer(device, IndexBuffer, nullptr);
+		vkFreeMemory(device, IndexBufferMemory, nullptr);
 	}
-	if (vertexBuffer != VK_NULL_HANDLE) {
-		vkDestroyBuffer(device, vertexBuffer, nullptr);
-		vkFreeMemory(device, vertexBufferMemory, nullptr);
+	if (VertexBuffer != VK_NULL_HANDLE) {
+		vkDestroyBuffer(device, VertexBuffer, nullptr);
+		vkFreeMemory(device, VertexBufferMemory, nullptr);
 	}
 }
 
@@ -97,7 +97,7 @@ Model::Model(const std::string& path)
 
 void Model::Cleanup(const VkDevice device) const
 {
-	for (auto& mesh : m_Meshes)
+	for (auto& mesh : Meshes)
 	{
 		mesh.Cleanup(device);
 	}
@@ -106,11 +106,11 @@ void Model::Cleanup(const VkDevice device) const
 glm::mat4 Model::GetModelMatrix() const
 {
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, m_Position);
-	model = glm::rotate(model, glm::radians(m_Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(m_Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(m_Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::scale(model, m_Scale);
+	model = glm::translate(model, Position);
+	model = glm::rotate(model, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::scale(model, Scale);
 	return model;
 }
 
@@ -165,7 +165,7 @@ Model Model::CreateCube()
 		20, 21, 22, 22, 23, 20   // top
 	};
 
-	model.m_Meshes.emplace_back(vertices, indices);
+	model.Meshes.emplace_back(vertices, indices);
 	return model;
 }
 
@@ -203,7 +203,7 @@ void Model::LoadModel(const std::string& path)
         {
             Vertex3D vertex{};
 
-            vertex.pos =
+            vertex.Pos =
             {
                 attrib.vertices[3 * index.vertex_index + 0],
                 attrib.vertices[3 * index.vertex_index + 1],
@@ -212,7 +212,7 @@ void Model::LoadModel(const std::string& path)
 
             if (index.normal_index >= 0)
             {
-                vertex.normal =
+                vertex.Normal =
                 {
                     attrib.normals[3 * index.normal_index + 0],
                     attrib.normals[3 * index.normal_index + 1],
@@ -221,12 +221,12 @@ void Model::LoadModel(const std::string& path)
             }
         	else
         	{
-                vertex.normal = {0.0f, 0.0f, 1.0f};
+                vertex.Normal = {0.0f, 0.0f, 1.0f};
             }
 
             if (index.texcoord_index >= 0)
             {
-                vertex.texCoord =
+                vertex.TexCoord =
                 {
                     attrib.texcoords[2 * index.texcoord_index + 0],
                     1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
@@ -234,10 +234,10 @@ void Model::LoadModel(const std::string& path)
             }
         	else
         	{
-                vertex.texCoord = {0.0f, 0.0f};
+                vertex.TexCoord = {0.0f, 0.0f};
             }
 
-            vertex.color = {0.7f, 0.7f, 0.7f};
+            vertex.Color = {0.7f, 0.7f, 0.7f};
 
             if (!uniqueVertices.contains(vertex))
             {
@@ -251,7 +251,7 @@ void Model::LoadModel(const std::string& path)
 
     CalculateNormals(vertices, indices);
 
-    m_Meshes.emplace_back(vertices, indices);
+    Meshes.emplace_back(vertices, indices);
 
     std::cout << "Model loaded: " << vertices.size() << " vertices, " 
               << indices.size() / 3 << " triangles" << '\n';
@@ -261,9 +261,9 @@ void Model::CalculateNormals(std::vector<Vertex3D>& vertices, const std::vector<
 {
 	for (auto& vertex : vertices)
 	{
-		if (glm::length(vertex.normal) < 0.1f)
+		if (glm::length(vertex.Normal) < 0.1f)
 		{
-			vertex.normal = glm::vec3(0.0f);
+			vertex.Normal = glm::vec3(0.0f);
 		}
 	}
 
@@ -273,24 +273,24 @@ void Model::CalculateNormals(std::vector<Vertex3D>& vertices, const std::vector<
 		uint32_t i1 = indices[i + 1];
 		uint32_t i2 = indices[i + 2];
 
-		glm::vec3 v0 = vertices[i0].pos;
-		glm::vec3 v1 = vertices[i1].pos;
-		glm::vec3 v2 = vertices[i2].pos;
+		glm::vec3 v0 = vertices[i0].Pos;
+		glm::vec3 v1 = vertices[i1].Pos;
+		glm::vec3 v2 = vertices[i2].Pos;
 
 		glm::vec3 edge1 = v1 - v0;
 		glm::vec3 edge2 = v2 - v0;
 		glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
 
-		if (glm::length(vertices[i0].normal) < 0.1f) vertices[i0].normal += faceNormal;
-		if (glm::length(vertices[i1].normal) < 0.1f) vertices[i1].normal += faceNormal;
-		if (glm::length(vertices[i2].normal) < 0.1f) vertices[i2].normal += faceNormal;
+		if (glm::length(vertices[i0].Normal) < 0.1f) vertices[i0].Normal += faceNormal;
+		if (glm::length(vertices[i1].Normal) < 0.1f) vertices[i1].Normal += faceNormal;
+		if (glm::length(vertices[i2].Normal) < 0.1f) vertices[i2].Normal += faceNormal;
 	}
 
 	for (auto& vertex : vertices)
 	{
-		if (glm::length(vertex.normal) > 0.1f)
+		if (glm::length(vertex.Normal) > 0.1f)
 		{
-			vertex.normal = glm::normalize(vertex.normal);
+			vertex.Normal = glm::normalize(vertex.Normal);
 		}
 	}
 }

@@ -33,9 +33,9 @@ void SwapChain::CreateSwapChain(Window* window)
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 	auto indices = device->FindQueueFamilies(device->GetPhysicalDevice());
-	uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
+	uint32_t queueFamilyIndices[] = {indices.GraphicsFamily, indices.PresentFamily};
 
-	if (indices.graphicsFamily != indices.presentFamily) {
+	if (indices.GraphicsFamily != indices.PresentFamily) {
 		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		createInfo.queueFamilyIndexCount = 2;
 		createInfo.pQueueFamilyIndices = queueFamilyIndices;

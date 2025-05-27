@@ -13,16 +13,16 @@ class Renderer
 {	
 public:
 	Renderer() = default;
-	Renderer(std::shared_ptr<Window> window) : m_Window(window) { }
+	Renderer(const std::shared_ptr<Window>& window) : m_Window(window) { }
 
 	void InitVulkan();
 	void Cleanup();
 
 	void DrawFrame();
 
-	const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
+	[[nodiscard]] const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
+	[[nodiscard]] VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
 	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
-	VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
 
 	// Model loading
 	void LoadModel(const std::string& path);
@@ -30,8 +30,8 @@ public:
 private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
-	void CreateDepthResources(); // Depth buffer için
-	void CreateModelBuffers(); // Model buffer'ları için
+	void CreateDepthResources();
+	void CreateModelBuffers();
 	
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;

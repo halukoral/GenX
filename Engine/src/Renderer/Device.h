@@ -13,12 +13,12 @@ class Device
 
 	struct QueueFamilyIndices
 	{
-		uint32_t graphicsFamily = UINT32_MAX;
-		uint32_t presentFamily = UINT32_MAX;
+		uint32_t GraphicsFamily = UINT32_MAX;
+		uint32_t PresentFamily = UINT32_MAX;
 
 		bool IsComplete() const
 		{
-			return graphicsFamily != UINT32_MAX && presentFamily != UINT32_MAX;
+			return GraphicsFamily != UINT32_MAX && PresentFamily != UINT32_MAX;
 		}
 	};
 
