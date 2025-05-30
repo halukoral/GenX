@@ -9,6 +9,7 @@
 #include "RenderPass.h"
 #include "SwapChain.h"
 #include "Texture.h"
+#include "Layers/CameraLayer.h"
 
 class Renderer
 {	
@@ -57,7 +58,7 @@ private:
 	std::unique_ptr<Descriptor> m_Descriptor;
 	std::unique_ptr<ImGuiRenderer> imguiRenderer;
 
-	std::unique_ptr<Camera> m_Camera;
+	CameraLayer* cameraLayer = nullptr;
 	std::unique_ptr<Model> m_Model;
 	std::unique_ptr<Texture> m_Texture;
 	

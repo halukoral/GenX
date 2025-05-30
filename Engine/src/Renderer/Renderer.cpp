@@ -24,12 +24,6 @@ void Renderer::InitVulkan()
 	CreateCommandBuffers();
 	CreateSyncObjects();
 
-	m_Camera = std::make_unique<Camera>(
-		glm::vec3(0.0f, 0.0f, 5.0f),  // Camera position
-		glm::vec3(0.0f, 1.0f, 0.0f),  // World up
-		-90.0f,                        // Yaw: -X 
-		0.0f                          // Pitch: horizontal
-	);
 }
 
 void Renderer::LoadModel(const std::string& path)
@@ -110,20 +104,15 @@ void Renderer::CreateModelBuffers() const
 
 void Renderer::UpdateUniformBuffer(const uint32_t currentFrame) const
 {
-    if (!m_Model || !m_Camera) return;
+    if (!m_Model || !cameraLayer) return;
     
-    UniformBufferObject ubo{};
+	const auto& cameraData = cameraLayer->GetCameraData();
     
-    // Model matrix
-    ubo.Model = m_Model->GetModelMatrix();
-    
-    // View matrix (camera)
-    ubo.View = m_Camera->GetViewMatrix();
-    
-    // Projection matrix
-    ubo.Proj = m_Camera->GetProjectionMatrix((float)m_SwapChain->GetExtent().width / (float)m_SwapChain->GetExtent().height);
-    ubo.Proj[1][1] *= -1; // GLM Y flip (for Vulkan)
-
+	UniformBufferObject ubo{};
+	ubo.Model = m_Model->GetModelMatrix();
+	ubo.View = cameraData.view;
+	ubo.Proj = cameraData.projection;
+	
     m_Descriptor->UpdateUniformBuffer(currentFrame, ubo);
 }
 
@@ -415,7 +404,6 @@ void Renderer::Cleanup()
 		m_Model->Cleanup(m_Device->GetLogicalDevice());
 	}
 
-	m_Camera.reset();
 	m_Model.reset();
 	m_Texture.reset();
 	
