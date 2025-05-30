@@ -1,18 +1,14 @@
 #include "Application.h"
 #include "Core.h"
+#include "Event/ApplicationEvent.h"
 
+#include <ranges>
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
-#include <ranges>
-
-#include "TimeStep.h"
-#include "Event/ApplicationEvent.h"
-
 extern bool g_ApplicationRunning;
 static Application* s_Instance = nullptr;
-
-static uint32_t                 g_MinImageCount = 2;
+static uint32_t g_MinImageCount = 2;
 
 static void CheckVkResult(const VkResult err)
 {
@@ -22,13 +18,6 @@ static void CheckVkResult(const VkResult err)
 	if (err < 0)
 		abort();
 }
-
-struct SimplePushConstantData
-{
-	glm::mat2 Transform{1.f};
-	glm::vec2 Offset;
-	alignas(16) glm::vec3 Color;
-};
 
 Application::Application(AppSpec spec) : m_Spec(std::move(spec))
 {
@@ -68,10 +57,12 @@ bool Application::OnWindowClose(WindowCloseEvent& e)
 }
 
 void Application::Init()
-{	
+{
+	LOG_INFO("Application starting!");
+	
 	if (!glfwVulkanSupported())
 	{
-		//spdlog::error("GLFW: Vulkan not supported!");
+		LOG_ERROR("GLFW: Vulkan not supported!");
 		return;
 	}
 
@@ -85,6 +76,8 @@ void Application::Init()
 
 void Application::Shutdown()
 {
+	LOG_INFO("Application shutdown!");
+	
 	for (const auto& layer : m_LayerStack)
 		layer->OnDetach();
 

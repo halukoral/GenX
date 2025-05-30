@@ -13,6 +13,7 @@
 #include <cstring>
 #include <unordered_map>
 
-#include "utils.h"
+#include "Logger.h"
+#include "Utils.h"
 
 #include <vulkan/vulkan_core.h>

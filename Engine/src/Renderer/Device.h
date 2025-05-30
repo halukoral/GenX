@@ -26,12 +26,12 @@ public:
 	Device(Window* win);
 	~Device();
 
-	VkInstance			GetInstance() const { return instance; }
-	VkDevice			GetLogicalDevice() const { return device; }
-	VkPhysicalDevice	GetPhysicalDevice() const { return physicalDevice; }
-	VkQueue				GetGraphicsQueue() const { return graphicsQueue; }
-	VkQueue				GetPresentQueue() const { return presentQueue; }
-	VkSurfaceKHR		GetSurface() const { return surface; }
+	VkInstance			GetInstance() const { return m_Instance; }
+	VkDevice			GetLogicalDevice() const { return m_Device; }
+	VkPhysicalDevice	GetPhysicalDevice() const { return m_PhysicalDevice; }
+	VkQueue				GetGraphicsQueue() const { return m_GraphicsQueue; }
+	VkQueue				GetPresentQueue() const { return m_PresentQueue; }
+	VkSurfaceKHR		GetSurface() const { return m_Surface; }
 	VkCommandPool		GetCommandPool() const { return m_CommandPool; }
 	
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
@@ -46,14 +46,14 @@ private:
 	void CreateLogicalDevice();
 
 private:
-	VkInstance instance;
-	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-	VkDevice device;
-	VkQueue graphicsQueue;
-	VkQueue presentQueue;
-	VkSurfaceKHR surface;
-	VkCommandPool m_CommandPool;
+	VkInstance m_Instance = VK_NULL_HANDLE;
+	VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
+	VkDevice m_Device = VK_NULL_HANDLE;
+	VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
+	VkQueue m_PresentQueue = VK_NULL_HANDLE;
+	VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+	VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 	
-	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
-	const std::vector<const char*> deviceExtensions = {	VK_KHR_SWAPCHAIN_EXTENSION_NAME	};
+	const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
+	const std::vector<const char*> m_DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };

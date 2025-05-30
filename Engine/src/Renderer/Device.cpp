@@ -10,10 +10,10 @@ Device::Device(Window* win)
 
 Device::~Device()
 {
-	vkDestroyCommandPool(device, m_CommandPool, nullptr);
-	vkDestroyDevice(device, nullptr);
-	vkDestroySurfaceKHR(instance, surface, nullptr);
-	vkDestroyInstance(instance, nullptr);
+	vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+	vkDestroyDevice(m_Device, nullptr);
+	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+	vkDestroyInstance(m_Instance, nullptr);
 }
 
 Device::QueueFamilyIndices Device::FindQueueFamilies(VkPhysicalDevice device) const
@@ -25,18 +25,20 @@ Device::QueueFamilyIndices Device::FindQueueFamilies(VkPhysicalDevice device) co
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 	int i = 0;
-	for (const auto& queueFamily : queueFamilies) {
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+	for (const auto& queueFamily : queueFamilies)
+	{
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			indices.GraphicsFamily = i;
-		}
+
 		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-		if (presentSupport) {
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &presentSupport);
+
+		if (presentSupport)
 			indices.PresentFamily = i;
-		}
-		if (indices.IsComplete()) {
+
+		if (indices.IsComplete())
 			break;
-		}
+
 		i++;
 	}
 	return indices;
@@ -45,15 +47,17 @@ Device::QueueFamilyIndices Device::FindQueueFamilies(VkPhysicalDevice device) co
 uint32_t Device::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+	vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
 
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		{
 			return i;
 		}
 	}
 
-	throw std::runtime_error("Uygun memory type bulunamadı!");
+	throw std::runtime_error("No suitable memory type found!");
 }
 
 void Device::CreateInstance()
@@ -75,45 +79,54 @@ void Device::CreateInstance()
 	createInfo.enabledExtensionCount = glfwExtensionCount;
 	createInfo.ppEnabledExtensionNames = glfwExtensions;
 
-	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
-	} else {
+	if (enableValidationLayers)
+	{
+		createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+		createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+	}
+	else
+	{
 		createInfo.enabledLayerCount = 0;
 	}
 
-	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-		throw std::runtime_error("Vulkan instance oluşturulamadı!");
+	if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Instance creation failed!");
 	}
 }
 
 void Device::CreateSurface(Window* window)
 {
-	if (glfwCreateWindowSurface(instance, window->GetWindow(), nullptr, &surface) != VK_SUCCESS) {
-		throw std::runtime_error("Window surface oluşturulamadı!");
+	if (glfwCreateWindowSurface(m_Instance, window->GetWindow(), nullptr, &m_Surface) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Window surface creation failed!");
 	}
 }
 
 void Device::PickPhysicalDevice()
 {
 	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+	vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 
-	if (deviceCount == 0) {
-		throw std::runtime_error("Vulkan destekleyen GPU bulunamadı!");
+	if (deviceCount == 0)
+	{
+		throw std::runtime_error("Vulkan supported GPU not found!");
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+	vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
 
-	for (const auto& device : devices) {
-		if (IsDeviceSuitable(device)) {
-			physicalDevice = device;
+	for (const auto& device : devices)
+	{
+		if (IsDeviceSuitable(device))
+		{
+			m_PhysicalDevice = device;
 			break;
 		}
 	}
 
-	if (physicalDevice == VK_NULL_HANDLE) {
+	if (m_PhysicalDevice == VK_NULL_HANDLE)
+	{
 		throw std::runtime_error("Uygun GPU bulunamadı!");
 	}
 }
@@ -132,8 +145,9 @@ bool Device::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
-	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-	for (const auto& extension : availableExtensions) {
+	std::set<std::string> requiredExtensions(m_DeviceExtensions.begin(), m_DeviceExtensions.end());
+	for (const auto& extension : availableExtensions)
+	{
 		requiredExtensions.erase(extension.extensionName);
 	}
 	return requiredExtensions.empty();
@@ -141,7 +155,7 @@ bool Device::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
 
 void Device::CreateLogicalDevice()
 {
-	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+	QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = {indices.GraphicsFamily, indices.PresentFamily};
@@ -164,26 +178,26 @@ void Device::CreateLogicalDevice()
 	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 	createInfo.pEnabledFeatures = &deviceFeatures;
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(m_DeviceExtensions.size());
+	createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
 
 	if (enableValidationLayers)
 	{
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
+		createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+		createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 	}
 	else
 	{
 		createInfo.enabledLayerCount = 0;
 	}
 
-	if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
+	if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Logical device oluşturulamadı!");
+		throw std::runtime_error("Logical device creation failed!");
 	}
 
-	vkGetDeviceQueue(device, indices.GraphicsFamily, 0, &graphicsQueue);
-	vkGetDeviceQueue(device, indices.PresentFamily, 0, &presentQueue);
+	vkGetDeviceQueue(m_Device, indices.GraphicsFamily, 0, &m_GraphicsQueue);
+	vkGetDeviceQueue(m_Device, indices.PresentFamily, 0, &m_PresentQueue);
 
 	// Command pool oluştur
 	VkCommandPoolCreateInfo poolInfo{};
@@ -191,8 +205,8 @@ void Device::CreateLogicalDevice()
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	poolInfo.queueFamilyIndex = indices.GraphicsFamily;
 
-	if (vkCreateCommandPool(device, &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
+	if (vkCreateCommandPool(m_Device, &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Command pool oluşturulamadı!");
+		throw std::runtime_error("Command pool creation failed!");
 	}
 }

@@ -5,15 +5,6 @@
 #define ENGINE_DIR "../"
 #endif
 
-#ifdef GX_DEBUG
-	#define GX_DEBUGBREAK() __debugbreak()
-	#define GX_ENABLE_ASSERTS
-	inline bool EnableValidationLayers = true;
-#else
-	#define GX_DEBUGBREAK()
-	inline bool EnableValidationLayers = false;
-#endif
-
 #define GX_EXPAND_MACRO(x) x
 #define GX_STRINGIFY_MACRO(x) #x
 
