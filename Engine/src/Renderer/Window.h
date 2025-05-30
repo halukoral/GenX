@@ -60,7 +60,8 @@ public:
 	void EnableCursor() const;
 	void DisableCursor() const;
 
-	void getFramebufferSize(int* width, int* height) const {
+	void getFramebufferSize(int* width, int* height) const
+	{
 		glfwGetFramebufferSize(m_Window, width, height);
 	}
 	

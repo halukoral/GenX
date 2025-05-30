@@ -62,7 +62,8 @@ public:
 	void			Close();
 	static float	GetTime();
 	GLFWwindow*		GetWindowHandle() const { return m_Window->GetWindow(); }
-
+	const std::shared_ptr<Window>& GetWindow() const { return m_Window; }
+	
 private:
 	bool OnWindowClose(WindowCloseEvent& e);
 	void Init();
