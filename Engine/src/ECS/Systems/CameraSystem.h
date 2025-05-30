@@ -18,7 +18,8 @@ private:
     ECS::World* world;
     
 public:
-    struct CameraData {
+    struct CameraData
+	{
         glm::mat4 view;
         glm::mat4 projection;
         glm::mat4 viewProjection;
@@ -30,20 +31,22 @@ public:
 
 	CameraSystem() = default;
 
-	void setWorld(ECS::World* w) { world = w; }
+	void SetWorld(ECS::World* w) { world = w; }
     
-    void update(float dt) override {
-        for (auto entity : entities) {
-            auto& transform = world->getComponent<TransformComponent>(entity);
-            auto& camera = world->getComponent<CameraComponent>(entity);
+    void Update(float dt) override
+	{
+        for (auto entity : Entities)
+        {
+            auto& transform = world->GetComponent<TransformComponent>(entity);
+            auto& camera = world->GetComponent<CameraComponent>(entity);
             
             if (!camera.isActive) continue;
             
             // Update aspect ratio if needed (handled by window resize event)
             
             // Calculate view matrix
-            glm::vec3 forward = transform.getForward();
-            glm::vec3 up = transform.getUp();
+            glm::vec3 forward = transform.GetForward();
+            glm::vec3 up = transform.GetUp();
             glm::mat4 view = glm::lookAt(
                 transform.position,
                 transform.position + forward,
@@ -52,11 +55,11 @@ public:
             
             // Store camera data for renderer
             currentCameraData.view = view;
-            currentCameraData.projection = camera.getProjectionMatrix();
-            currentCameraData.viewProjection = camera.getProjectionMatrix() * view;
+            currentCameraData.projection = camera.GetProjectionMatrix();
+            currentCameraData.viewProjection = camera.GetProjectionMatrix() * view;
             currentCameraData.position = transform.position;
             currentCameraData.forward = forward;
-            currentCameraData.right = transform.getRight();
+            currentCameraData.right = transform.GetRight();
             currentCameraData.up = up;
             
             // For Vulkan coordinate system (flip Y in projection)
@@ -64,11 +67,13 @@ public:
         }
     }
     
-    const CameraData& getCurrentCameraData() const { return currentCameraData; }
+    const CameraData& GetCurrentCameraData() const { return currentCameraData; }
     
-    void setAspectRatio(float aspect) {
-        for (auto entity : entities) {
-            auto& camera = world->getComponent<CameraComponent>(entity);
+    void SetAspectRatio(float aspect) const
+	{
+        for (auto entity : Entities)
+        {
+            auto& camera = world->GetComponent<CameraComponent>(entity);
             camera.aspectRatio = aspect;
         }
     }
@@ -85,14 +90,14 @@ private:
 public:
 	CameraControllerSystem() = default;
 
-	void setWorld(ECS::World* w) { world = w; }
+	void SetWorld(ECS::World* w) { world = w; }
 	
-    void update(float dt) override
+    void Update(float dt) override
 	{
-        for (auto entity : entities)
+        for (auto entity : Entities)
         {
-            auto& transform = world->getComponent<TransformComponent>(entity);
-            auto& controller = world->getComponent<CameraControllerComponent>(entity);
+            auto& transform = world->GetComponent<TransformComponent>(entity);
+            auto& controller = world->GetComponent<CameraControllerComponent>(entity);
             
             if (!controller.isControllable) continue;
             
@@ -107,10 +112,10 @@ public:
             }
             
             // Movement
-            if (Input::IsKeyDown(KeyCode::W)) movement += transform.getForward();
-            if (Input::IsKeyDown(KeyCode::S)) movement -= transform.getForward();
-            if (Input::IsKeyDown(KeyCode::A)) movement -= transform.getRight();
-            if (Input::IsKeyDown(KeyCode::D)) movement += transform.getRight();
+            if (Input::IsKeyDown(KeyCode::W)) movement += transform.GetForward();
+            if (Input::IsKeyDown(KeyCode::S)) movement -= transform.GetForward();
+            if (Input::IsKeyDown(KeyCode::A)) movement -= transform.GetRight();
+            if (Input::IsKeyDown(KeyCode::D)) movement += transform.GetRight();
             if (Input::IsKeyDown(KeyCode::Q)) movement -= glm::vec3(0, 1, 0);
             if (Input::IsKeyDown(KeyCode::E)) movement += glm::vec3(0, 1, 0);
             
@@ -146,27 +151,30 @@ public:
                 // Clamp pitch
                 euler.x = glm::clamp(euler.x, -controller.maxPitch, controller.maxPitch);
                 
-                transform.setEulerAngles(euler);
+                transform.SetEulerAngles(euler);
             }
         }
     }
     
-    void onEvent(Event& e)
+    void OnEvent(Event& e) const
 	{
         EventDispatcher dispatcher(e);
-        dispatcher.Dispatch<MouseMovedEvent>([this](MouseMovedEvent& e) {
-            return onMouseMoved(e);
+        dispatcher.Dispatch<MouseMovedEvent>([this](MouseMovedEvent& e)
+        {
+            return OnMouseMoved(e);
         });
     }
     
 private:
-    bool onMouseMoved(MouseMovedEvent& e) {
+	static bool OnMouseMoved(MouseMovedEvent& e)
+	{
         // Additional mouse handling if needed
         return false;
     }
 };
 
-class CameraManager {
+class CameraManager
+{
 private:
     ECS::World* world;
     CameraSystem* cameraSystem;
@@ -174,102 +182,119 @@ private:
     ECS::Entity activeCamera = 0;
     
 public:
-    CameraManager(ECS::World* ecsWorld) : world(ecsWorld) {
+    CameraManager(ECS::World* ecsWorld) : world(ecsWorld)
+	{
         // Register systems
-        cameraSystem = world->registerSystem<CameraSystem>().get();
-    	cameraSystem->setWorld(world);
-        controllerSystem = world->registerSystem<CameraControllerSystem>().get();
-    	controllerSystem->setWorld(world);
+        cameraSystem = world->RegisterSystem<CameraSystem>().get();
+    	cameraSystem->SetWorld(world);
+        controllerSystem = world->RegisterSystem<CameraControllerSystem>().get();
+    	controllerSystem->SetWorld(world);
     	
         // Set system signatures
         ECS::Signature cameraSignature;
-        cameraSignature.set(ECS::ComponentTypeCounter::getTypeID<TransformComponent>());
-        cameraSignature.set(ECS::ComponentTypeCounter::getTypeID<CameraComponent>());
-        world->setSystemSignature<CameraSystem>(cameraSignature);
+        cameraSignature.set(ECS::ComponentTypeCounter::GetTypeId<TransformComponent>());
+        cameraSignature.set(ECS::ComponentTypeCounter::GetTypeId<CameraComponent>());
+        world->SetSystemSignature<CameraSystem>(cameraSignature);
         
         ECS::Signature controllerSignature;
-        controllerSignature.set(ECS::ComponentTypeCounter::getTypeID<TransformComponent>());
-        controllerSignature.set(ECS::ComponentTypeCounter::getTypeID<CameraControllerComponent>());
-        world->setSystemSignature<CameraControllerSystem>(controllerSignature);
+        controllerSignature.set(ECS::ComponentTypeCounter::GetTypeId<TransformComponent>());
+        controllerSignature.set(ECS::ComponentTypeCounter::GetTypeId<CameraControllerComponent>());
+        world->SetSystemSignature<CameraControllerSystem>(controllerSignature);
     }
     
-    ECS::Entity createCamera(const glm::vec3& position, float fov = 45.0f, float aspect = 16.0f/9.0f) {
-        ECS::Entity camera = world->createEntity();
+    ECS::Entity CreateCamera(const glm::vec3& position, const float fov = 45.0f, const float aspect = 16.0f/9.0f)
+	{
+        const ECS::Entity camera = world->CreateEntity();
         
         // Add transform
-        world->addComponent(camera, TransformComponent(position));
+        world->AddComponent(camera, TransformComponent(position));
         
         // Add camera component
-        world->addComponent(camera, CameraComponent(fov, aspect));
+        world->AddComponent(camera, CameraComponent(fov, aspect));
         
         // Set as active if first camera
-        if (activeCamera == 0) {
+        if (activeCamera == 0)
+        {
             activeCamera = camera;
         }
         
         return camera;
     }
     
-    ECS::Entity createFPSCamera(const glm::vec3& position, float fov = 60.0f, float aspect = 16.0f/9.0f) {
-        ECS::Entity camera = createCamera(position, fov, aspect);
+    ECS::Entity CreateFpsCamera(const glm::vec3& position, const float fov = 60.0f, const float aspect = 16.0f/9.0f)
+	{
+        const ECS::Entity camera = CreateCamera(position, fov, aspect);
         
         // Add controller component
-        world->addComponent(camera, CameraControllerComponent());
+        world->AddComponent(camera, CameraControllerComponent());
         
         return camera;
     }
     
-    void setActiveCamera(ECS::Entity camera) {
-        if (world->hasComponent<CameraComponent>(camera)) {
+    void SetActiveCamera(ECS::Entity camera)
+	{
+        if (world->HasComponent<CameraComponent>(camera))
+        {
             // Deactivate previous camera
-            if (activeCamera != 0 && world->hasComponent<CameraComponent>(activeCamera)) {
-                world->getComponent<CameraComponent>(activeCamera).isActive = false;
+            if (activeCamera != 0 && world->HasComponent<CameraComponent>(activeCamera))
+            {
+                world->GetComponent<CameraComponent>(activeCamera).isActive = false;
             }
             
             // Activate new camera
             activeCamera = camera;
-            world->getComponent<CameraComponent>(camera).isActive = true;
+            world->GetComponent<CameraComponent>(camera).isActive = true;
         }
     }
     
-    ECS::Entity getActiveCamera() const { return activeCamera; }
+    ECS::Entity GetActiveCamera() const { return activeCamera; }
     
-    const CameraSystem::CameraData& getCameraData() const {
-        return cameraSystem->getCurrentCameraData();
+    const CameraSystem::CameraData& GetCameraData() const
+	{
+        return cameraSystem->GetCurrentCameraData();
     }
     
-    void update(float dt) {
-        world->update(dt);
+    void Update(float dt) const
+	{
+        world->Update(dt);
     }
     
-    void onEvent(Event& e) {
-        controllerSystem->onEvent(e);
+    void OnEvent(Event& e) const
+	{
+        controllerSystem->OnEvent(e);
         
         // Handle window resize
         EventDispatcher dispatcher(e);
-        dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) {
+        dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& e)
+        {
             float aspect = static_cast<float>(e.GetWidth()) / static_cast<float>(e.GetHeight());
-            cameraSystem->setAspectRatio(aspect);
+            cameraSystem->SetAspectRatio(aspect);
             return false;
         });
     }
     
     // Utility functions
-    void setCameraPosition(ECS::Entity camera, const glm::vec3& position) {
-        if (world->hasComponent<TransformComponent>(camera)) {
-            world->getComponent<TransformComponent>(camera).position = position;
+    void SetCameraPosition(const ECS::Entity camera, const glm::vec3& position) const
+	{
+        if (world->HasComponent<TransformComponent>(camera))
+        {
+            world->GetComponent<TransformComponent>(camera).position = position;
         }
     }
     
-    void setCameraRotation(ECS::Entity camera, const glm::vec3& eulerAngles) {
-        if (world->hasComponent<TransformComponent>(camera)) {
-            world->getComponent<TransformComponent>(camera).setEulerAngles(eulerAngles);
+    void SetCameraRotation(const ECS::Entity camera, const glm::vec3& eulerAngles) const
+	{
+        if (world->HasComponent<TransformComponent>(camera))
+        {
+            world->GetComponent<TransformComponent>(camera).SetEulerAngles(eulerAngles);
         }
     }
     
-    void enableCameraControl(ECS::Entity camera, bool enable) {
-        if (world->hasComponent<CameraControllerComponent>(camera)) {
-            world->getComponent<CameraControllerComponent>(camera).isControllable = enable;
+    void EnableCameraControl(const ECS::Entity camera, const bool enable) const
+	{
+        if (world->HasComponent<CameraControllerComponent>(camera))
+        {
+            world->GetComponent<CameraControllerComponent>(camera).isControllable = enable;
         }
     }
 };

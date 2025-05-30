@@ -25,7 +25,7 @@ struct CameraComponent : public ECS::Component
 	CameraComponent(float fieldOfView, float aspect, float near = 0.1f, float far = 100.0f)
 		: fov(fieldOfView), aspectRatio(aspect), nearPlane(near), farPlane(far) {}
     
-	glm::mat4 getProjectionMatrix() const
+	glm::mat4 GetProjectionMatrix() const
 	{
 		if (type == PERSPECTIVE)
 		{

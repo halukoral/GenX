@@ -18,33 +18,33 @@ struct TransformComponent : public ECS::Component
 	TransformComponent(const glm::vec3& pos) : position(pos) {}
 	TransformComponent(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scl)
 		: position(pos), eulerAngles(rot), scale(scl) {
-		updateRotationFromEuler();
+		UpdateRotationFromEuler();
 	}
     
-	void updateRotationFromEuler() {
+	void UpdateRotationFromEuler() {
 		rotation = glm::quat(glm::radians(eulerAngles));
 	}
     
-	void setEulerAngles(const glm::vec3& angles) {
+	void SetEulerAngles(const glm::vec3& angles) {
 		eulerAngles = angles;
-		updateRotationFromEuler();
+		UpdateRotationFromEuler();
 	}
     
-	glm::mat4 getTransformMatrix() const {
+	glm::mat4 GetTransformMatrix() const {
 		return glm::translate(glm::mat4(1.0f), position) *
 			   glm::mat4_cast(rotation) *
 			   glm::scale(glm::mat4(1.0f), scale);
 	}
     
-	glm::vec3 getForward() const {
+	glm::vec3 GetForward() const {
 		return rotation * glm::vec3(0.0f, 0.0f, -1.0f);
 	}
     
-	glm::vec3 getRight() const {
+	glm::vec3 GetRight() const {
 		return rotation * glm::vec3(1.0f, 0.0f, 0.0f);
 	}
     
-	glm::vec3 getUp() const {
+	glm::vec3 GetUp() const {
 		return rotation * glm::vec3(0.0f, 1.0f, 0.0f);
 	}
 };

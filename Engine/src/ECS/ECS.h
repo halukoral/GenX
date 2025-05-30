@@ -6,8 +6,10 @@
 #include <bitset>
 #include <queue>
 #include <algorithm>
+#include <ranges>
 
-namespace ECS {
+namespace ECS
+{
 
 // Configuration
 constexpr size_t MAX_COMPONENTS = 64;
@@ -31,7 +33,7 @@ private:
     inline static ComponentType counter = 0;
 public:
     template<typename T>
-    static ComponentType getTypeID()
+    static ComponentType GetTypeId()
 	{
         static ComponentType typeID = counter++;
         return typeID;
@@ -43,7 +45,7 @@ class IComponentArray
 {
 public:
     virtual ~IComponentArray() = default;
-    virtual void entityDestroyed(Entity entity) = 0;
+    virtual void EntityDestroyed(Entity entity) = 0;
 };
 
 // Typed Component Array
@@ -57,9 +59,9 @@ private:
     size_t size = 0;
 
 public:
-    void add(Entity entity, T component)
+    void Add(const Entity entity, T component)
 	{
-        if (entityToIndex.find(entity) != entityToIndex.end())
+        if (entityToIndex.contains(entity))
         {
             // Update existing component
             components[entityToIndex[entity]] = component;
@@ -73,9 +75,9 @@ public:
         size++;
     }
     
-    void remove(Entity entity)
+    void Remove(const Entity entity)
 	{
-        if (entityToIndex.find(entity) == entityToIndex.end()) return;
+        if (!entityToIndex.contains(entity)) return;
         
         size_t removedIndex = entityToIndex[entity];
         size_t lastIndex = size - 1;
@@ -95,19 +97,19 @@ public:
         size--;
     }
     
-    T& get(Entity entity)
+    T& Get(const Entity entity)
 	{
         return components[entityToIndex[entity]];
     }
     
-    bool has(Entity entity)
+    bool Has(const Entity entity) const
 	{
-        return entityToIndex.find(entity) != entityToIndex.end();
+        return entityToIndex.contains(entity);
     }
     
-    void entityDestroyed(Entity entity) override
+    void EntityDestroyed(const Entity entity) override
 	{
-        remove(entity);
+        Remove(entity);
     }
 };
 
@@ -115,9 +117,9 @@ public:
 class System
 {
 public:
-    std::vector<Entity> entities;
+    std::vector<Entity> Entities;
     
-    virtual void update(float dt) = 0;
+    virtual void Update(float dt) = 0;
     virtual ~System() = default;
 };
 
@@ -128,10 +130,10 @@ private:
     std::unordered_map<std::type_index, std::shared_ptr<IComponentArray>> componentArrays;
     
     template<typename T>
-    std::shared_ptr<ComponentArray<T>> getComponentArray()
+    std::shared_ptr<ComponentArray<T>> GetComponentArray()
 	{
         auto typeIndex = std::type_index(typeid(T));
-        if (componentArrays.find(typeIndex) == componentArrays.end())
+        if (!componentArrays.contains(typeIndex))
         {
             componentArrays[typeIndex] = std::make_shared<ComponentArray<T>>();
         }
@@ -140,34 +142,34 @@ private:
     
 public:
     template<typename T>
-    void addComponent(Entity entity, T component)
+    void AddComponent(Entity entity, T component)
 	{
-        getComponentArray<T>()->add(entity, component);
+        GetComponentArray<T>()->Add(entity, component);
     }
     
     template<typename T>
-    void removeComponent(Entity entity)
+    void RemoveComponent(Entity entity)
 	{
-        getComponentArray<T>()->remove(entity);
+        GetComponentArray<T>()->Remove(entity);
     }
     
     template<typename T>
-    T& getComponent(Entity entity)
+    T& GetComponent(Entity entity)
 	{
-        return getComponentArray<T>()->get(entity);
+        return GetComponentArray<T>()->Get(entity);
     }
     
     template<typename T>
-    bool hasComponent(Entity entity)
+    bool HasComponent(Entity entity)
 	{
-        return getComponentArray<T>()->has(entity);
+        return GetComponentArray<T>()->Has(entity);
     }
     
-    void entityDestroyed(Entity entity)
+    void EntityDestroyed(Entity entity)
 	{
-        for (auto& [type, array] : componentArrays)
+        for (const auto& array : componentArrays | std::views::values)
         {
-            array->entityDestroyed(entity);
+            array->EntityDestroyed(entity);
         }
     }
 };
@@ -188,27 +190,27 @@ public:
         }
     }
     
-    Entity createEntity()
+    Entity CreateEntity()
 	{
-        Entity id = availableEntities.front();
+        const Entity id = availableEntities.front();
         availableEntities.pop();
         entityCount++;
         return id;
     }
     
-    void destroyEntity(Entity entity)
+    void DestroyEntity(const Entity entity)
 	{
         signatures[entity].reset();
         availableEntities.push(entity);
         entityCount--;
     }
     
-    void setSignature(Entity entity, Signature signature)
+    void SetSignature(const Entity entity, const Signature signature)
 	{
         signatures[entity] = signature;
     }
     
-    Signature getSignature(Entity entity)
+    Signature GetSignature(const Entity entity)
 	{
         return signatures[entity];
     }
@@ -223,7 +225,7 @@ private:
     
 public:
     template<typename T>
-    std::shared_ptr<T> registerSystem()
+    std::shared_ptr<T> RegisterSystem()
 	{
         auto system = std::make_shared<T>();
         systems[std::type_index(typeid(T))] = system;
@@ -231,32 +233,32 @@ public:
     }
     
     template<typename T>
-    void setSignature(Signature signature)
+    void SetSignature(const Signature signature)
 	{
         systemSignatures[std::type_index(typeid(T))] = signature;
     }
     
-    void entityDestroyed(Entity entity)
+    void EntityDestroyed(const Entity entity)
 	{
-        for (auto& [type, system] : systems)
+        for (const auto& system : systems | std::views::values)
         {
-            auto& entities = system->entities;
-            entities.erase(std::remove(entities.begin(), entities.end(), entity), entities.end());
+            auto& entities = system->Entities;
+            std::erase(entities, entity);
         }
     }
     
-    void entitySignatureChanged(Entity entity, Signature entitySignature)
+    void EntitySignatureChanged(const Entity entity, const Signature entitySignature)
 	{
         for (auto& [type, system] : systems)
         {
             auto& systemSignature = systemSignatures[type];
-            auto& systemEntities = system->entities;
+            auto& systemEntities = system->Entities;
             
             // Check if entity signature matches system signature
             if ((entitySignature & systemSignature) == systemSignature)
             {
                 // Add entity if not already in system
-                if (std::find(systemEntities.begin(), systemEntities.end(), entity) == systemEntities.end())
+                if (std::ranges::find(systemEntities, entity) == systemEntities.end())
                 {
                     systemEntities.push_back(entity);
                 }
@@ -264,16 +266,16 @@ public:
         	else
         	{
                 // Remove entity if in system
-                systemEntities.erase(std::remove(systemEntities.begin(), systemEntities.end(), entity), systemEntities.end());
+                std::erase(systemEntities, entity);
             }
         }
     }
     
-    void update(float dt)
+    void Update(const float dt)
 	{
-        for (auto& [type, system] : systems)
+        for (const auto& system : systems | std::views::values)
         {
-            system->update(dt);
+            system->Update(dt);
         }
     }
 };
@@ -287,78 +289,79 @@ private:
     std::unique_ptr<SystemManager> systemManager;
     
 public:
-    World() {
+    World()
+	{
         componentManager = std::make_unique<ComponentManager>();
         entityManager = std::make_unique<EntityManager>();
         systemManager = std::make_unique<SystemManager>();
     }
     
     // Entity methods
-    Entity createEntity()
+    Entity CreateEntity() const
 	{
-        return entityManager->createEntity();
+        return entityManager->CreateEntity();
     }
     
-    void destroyEntity(Entity entity)
+    void DestroyEntity(const Entity entity) const
 	{
-        entityManager->destroyEntity(entity);
-        componentManager->entityDestroyed(entity);
-        systemManager->entityDestroyed(entity);
+        entityManager->DestroyEntity(entity);
+        componentManager->EntityDestroyed(entity);
+        systemManager->EntityDestroyed(entity);
     }
     
     // Component methods
     template<typename T>
-    void addComponent(Entity entity, T component)
+    void AddComponent(const Entity entity, T component)
 	{
-        componentManager->addComponent<T>(entity, component);
+        componentManager->AddComponent<T>(entity, component);
         
-        auto signature = entityManager->getSignature(entity);
-        signature.set(ComponentTypeCounter::getTypeID<T>(), true);
-        entityManager->setSignature(entity, signature);
+        auto signature = entityManager->GetSignature(entity);
+        signature.set(ComponentTypeCounter::GetTypeId<T>(), true);
+        entityManager->SetSignature(entity, signature);
         
-        systemManager->entitySignatureChanged(entity, signature);
+        systemManager->EntitySignatureChanged(entity, signature);
     }
     
     template<typename T>
-    void removeComponent(Entity entity)
+    void RemoveComponent(const Entity entity) const
 	{
-        componentManager->removeComponent<T>(entity);
+        componentManager->RemoveComponent<T>(entity);
         
-        auto signature = entityManager->getSignature(entity);
-        signature.set(ComponentTypeCounter::getTypeID<T>(), false);
-        entityManager->setSignature(entity, signature);
+        auto signature = entityManager->GetSignature(entity);
+        signature.set(ComponentTypeCounter::GetTypeId<T>(), false);
+        entityManager->SetSignature(entity, signature);
         
-        systemManager->entitySignatureChanged(entity, signature);
+        systemManager->EntitySignatureChanged(entity, signature);
     }
     
     template<typename T>
-    T& getComponent(Entity entity)
+    T& GetComponent(const Entity entity)
 	{
-        return componentManager->getComponent<T>(entity);
+        return componentManager->GetComponent<T>(entity);
     }
     
     template<typename T>
-    bool hasComponent(Entity entity)
+    bool HasComponent(const Entity entity) const
 	{
-        return componentManager->hasComponent<T>(entity);
+        return componentManager->HasComponent<T>(entity);
     }
     
     // System methods
     template<typename T>
-    std::shared_ptr<T> registerSystem()
+    std::shared_ptr<T> RegisterSystem()
 	{
-        return systemManager->registerSystem<T>();
+        return systemManager->RegisterSystem<T>();
     }
     
     template<typename T>
-    void setSystemSignature(Signature signature)
+    void SetSystemSignature(const Signature signature) const
 	{
-        systemManager->setSignature<T>(signature);
+        systemManager->SetSignature<T>(signature);
     }
     
-    void update(float dt)
+    void Update(const float dt) const
 	{
-        systemManager->update(dt);
+        systemManager->Update(dt);
     }
 };
 

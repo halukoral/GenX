@@ -29,55 +29,6 @@ struct UniformBufferObject
     glm::mat4 Proj;
 };
 
-// Camera Class
-class Camera
-{
-public:
-    Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 3.0f), 
-           glm::vec3 worldUpVec = glm::vec3(0.0f, 1.0f, 0.0f),
-           float yawAngle = -90.0f, float pitchAngle = 0.0f) 
-        : position(pos), worldUp(worldUpVec), yaw(yawAngle), pitch(pitchAngle), zoom(45.0f) {
-        UpdateCameraVectors();
-    }
-
-    glm::mat4 GetViewMatrix() const
-	{
-        return glm::lookAt(position, position + front, up);
-    }
-
-    glm::mat4 GetProjectionMatrix(float aspect) const
-	{
-        return glm::perspective(glm::radians(zoom), aspect, 0.1f, 100.0f);
-    }
-
-    glm::vec3 GetPosition() const { return position; }
-    float GetZoom() const { return zoom; }
-
-private:
-    void UpdateCameraVectors()
-	{
-        glm::vec3 newFront;
-        newFront.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        newFront.y = sin(glm::radians(pitch));
-        newFront.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        front = glm::normalize(newFront);
-
-        right = glm::normalize(glm::cross(front, worldUp));
-        up = glm::normalize(glm::cross(right, front));
-    }
-
-private:
-	glm::vec3 position;
-	glm::vec3 front;
-	glm::vec3 up;
-	glm::vec3 right;
-	glm::vec3 worldUp;
-    
-	float yaw;
-	float pitch;
-	float zoom;
-};
-
 class Mesh
 {
 public:

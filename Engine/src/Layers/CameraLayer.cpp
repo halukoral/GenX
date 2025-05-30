@@ -11,8 +11,8 @@ CameraLayer::CameraLayer()
 void CameraLayer::OnAttach()
 {
 	// Create default camera
-	auto camera = cameraManager->createFPSCamera(glm::vec3(0.0f, 5.0f, 0.0f));
-	cameraManager->setActiveCamera(camera);
+	auto camera = cameraManager->CreateFpsCamera(glm::vec3(0.0f, 0.0f, 0.0f));
+	cameraManager->SetActiveCamera(camera);
         
 	// Set initial aspect ratio from window
 	auto& app = Application::Get();
@@ -22,7 +22,7 @@ void CameraLayer::OnAttach()
         
 	if (auto* world = ecsWorld.get())
 	{
-		world->getComponent<CameraComponent>(camera).aspectRatio = aspect;
+		world->GetComponent<CameraComponent>(camera).aspectRatio = aspect;
 	}
 }
 
@@ -34,15 +34,15 @@ void CameraLayer::OnDetach()
 
 void CameraLayer::OnUpdate(float ts)
 {
-	cameraManager->update(ts);
+	cameraManager->Update(ts);
 }
 
 void CameraLayer::OnEvent(Event& event)
 {
-	cameraManager->onEvent(event);
+	cameraManager->OnEvent(event);
 }
 
 const CameraSystem::CameraData& CameraLayer::GetCameraData() const
 {
-	return cameraManager->getCameraData();
+	return cameraManager->GetCameraData();
 }
