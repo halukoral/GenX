@@ -18,7 +18,7 @@ void Renderer::InitVulkan()
 		static_cast<uint32_t>(m_SwapChain->GetImages().size()) // imageCount
 	);
 
-	CreateDepthResources(); // Depth buffer oluştur
+	CreateDepthResources(); // Create Depth buffer
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateCommandBuffers();
@@ -41,11 +41,9 @@ void Renderer::LoadModel(const std::string& path)
 void Renderer::LoadTexture(const std::string& texturePath)
 {
 	m_Texture = std::make_unique<Texture>(m_Device.get(), texturePath);
-    
-	// Descriptor'ları texture ile güncelle
 	m_Descriptor->UpdateTextureDescriptor(m_Texture.get());
-    
-	std::cout << "Texture yüklendi: " << texturePath << std::endl;
+
+	LOG_INFO("Texture loaded: {}", texturePath);
 }
 
 void Renderer::CreateDepthResources()
@@ -59,7 +57,7 @@ void Renderer::CreateDepthResources()
     m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
-void Renderer::CreateModelBuffers()
+void Renderer::CreateModelBuffers() const
 {
     if (!m_Model) return;
     
@@ -110,7 +108,7 @@ void Renderer::CreateModelBuffers()
     }
 }
 
-void Renderer::UpdateUniformBuffer(uint32_t currentFrame) const
+void Renderer::UpdateUniformBuffer(const uint32_t currentFrame) const
 {
     if (!m_Model || !m_Camera) return;
     
@@ -154,6 +152,7 @@ void Renderer::CreateFramebuffers()
 		{
 			throw std::runtime_error("Framebuffer creation failed!");
 		}
+		LOG_INFO("Framebuffer created successfully for image index: {}", i);
 	}
 }
 
@@ -170,6 +169,7 @@ void Renderer::CreateCommandPool()
 	{
 		throw std::runtime_error("Command pool creation failed!");
 	}
+	LOG_INFO("Command pool created successfully!");
 }
 
 void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
@@ -183,8 +183,9 @@ void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemor
 
 	if (vkCreateBuffer(m_Device->GetLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Buffer oluşturulamadı!");
+		throw std::runtime_error("Buffer couldn't created!");
 	}
+	LOG_INFO("Buffer created successfully!");
 
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(m_Device->GetLogicalDevice(), buffer, &memRequirements);
@@ -196,9 +197,10 @@ void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemor
 
 	if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Buffer memory allocate edilemedi!");
+		throw std::runtime_error("Buffer memory couldn't allocated!");
 	}
-
+	LOG_INFO("Buffer memory allocated successfully!");
+	
 	vkBindBufferMemory(m_Device->GetLogicalDevice(), buffer, bufferMemory, 0);
 }
 
@@ -248,8 +250,9 @@ void Renderer::CreateCommandBuffers()
 
 	if (vkAllocateCommandBuffers(m_Device->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Command buffer allocate edilemedi!");
+		throw std::runtime_error("Command buffer couldn't allocated!");
 	}
+	LOG_INFO("Command buffers allocated successfully!");
 }
 
 void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const
@@ -259,7 +262,7 @@ void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
     {
-        throw std::runtime_error("Command buffer kaydı başlatılamadı!");
+        throw std::runtime_error("Command buffer couldn't start recording!");
     }
 
     VkRenderPassBeginInfo renderPassInfo{};
@@ -301,8 +304,9 @@ void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
     
     vkCmdEndRenderPass(commandBuffer);
 
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("Command buffer kaydı tamamlanamadı!");
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Command buffer couldn't finish recording!");
     }
 }
 
@@ -325,8 +329,9 @@ void Renderer::CreateSyncObjects()
 			vkCreateSemaphore(m_Device->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS ||
 			vkCreateFence(m_Device->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("Sync object oluşturulamadı!");
+			throw std::runtime_error("Sync object couldn't created!");
 		}
+		LOG_INFO("Sync objects created successfully for frame: {}", i);
 	}
 }
 
@@ -365,7 +370,7 @@ void Renderer::DrawFrame()
 
 	if (vkQueueSubmit(m_Device->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Draw command buffer submit edilemedi!");
+		throw std::runtime_error("Draw command buffer couldn't submitted!");
 	}
 
 	VkPresentInfoKHR presentInfo{};
@@ -405,7 +410,8 @@ void Renderer::Cleanup()
 	vkFreeMemory(m_Device->GetLogicalDevice(), m_DepthImageMemory, nullptr);
 
 	// Model cleanup
-	if (m_Model) {
+	if (m_Model)
+	{
 		m_Model->Cleanup(m_Device->GetLogicalDevice());
 	}
 
@@ -449,7 +455,7 @@ VkFormat Renderer::FindSupportedFormat(const std::vector<VkFormat>& candidates, 
         }
     }
 
-    throw std::runtime_error("Uygun format bulunamadı!");
+    throw std::runtime_error("No suitable format found!");
 }
 
 void Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, 
@@ -472,8 +478,9 @@ void Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkI
 
     if (vkCreateImage(m_Device->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
     {
-        throw std::runtime_error("Image oluşturulamadı!");
+        throw std::runtime_error("Image couldn't created!");
     }
+	LOG_INFO("Image created successfully!");
 
     VkMemoryRequirements memRequirements;
     vkGetImageMemoryRequirements(m_Device->GetLogicalDevice(), image, &memRequirements);
@@ -485,8 +492,9 @@ void Renderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkI
 
     if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
     {
-        throw std::runtime_error("Image memory allocate edilemedi!");
+        throw std::runtime_error("Image memory couldn't allocated!");
     }
+	LOG_INFO("Image memory allocated successfully!");
 
     vkBindImageMemory(m_Device->GetLogicalDevice(), image, imageMemory, 0);
 }
@@ -507,8 +515,9 @@ VkImageView Renderer::CreateImageView(VkImage image, VkFormat format, VkImageAsp
     VkImageView imageView;
     if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
     {
-        throw std::runtime_error("Image view oluşturulamadı!");
+        throw std::runtime_error("Image view couldn't created!");
     }
+	LOG_INFO("Image view created successfully!");
 
     return imageView;
 }

@@ -17,7 +17,8 @@ void Image::CreateImageViews(SwapChain* swapChain)
 {
 	swapChainImageViews.resize(swapChain->GetImages().size());
 
-	for (size_t i = 0; i < swapChain->GetImages().size(); i++) {
+	for (size_t i = 0; i < swapChain->GetImages().size(); i++)
+	{
 		VkImageViewCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = swapChain->GetImages()[i];
@@ -33,8 +34,10 @@ void Image::CreateImageViews(SwapChain* swapChain)
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(device->GetLogicalDevice(), &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
-			throw std::runtime_error("Image view oluşturulamadı!");
+		if (vkCreateImageView(device->GetLogicalDevice(), &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Image view creation failed!");
 		}
+		LOG_INFO("Image view created successfully for image index: {}", i);
 	}
 }

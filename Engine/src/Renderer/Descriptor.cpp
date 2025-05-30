@@ -22,14 +22,14 @@ void Descriptor::UpdateUniformBuffer(uint32_t currentFrame, const UniformBufferO
 
 void Descriptor::UpdateTextureDescriptor(Texture* texture)
 {
-	for (size_t i = 0; i < maxFramesInFlight; i++) {
+	for (size_t i = 0; i < maxFramesInFlight; i++)
+	{
 		// Uniform buffer descriptor
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UniformBufferObject);
 
-		// Texture descriptor - EKLENEN
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		imageInfo.imageView = texture->GetImageView();
@@ -85,20 +85,22 @@ void Descriptor::CreateDescriptorSetLayout()
 	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 	layoutInfo.pBindings = bindings.data();
 
-	if (vkCreateDescriptorSetLayout(device->GetLogicalDevice(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Descriptor set layout oluşturulamadı!");
+	if (vkCreateDescriptorSetLayout(device->GetLogicalDevice(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Descriptor set layout creation failed!");
 	}
+	LOG_INFO("Descriptor set layout created successfully!");
 }
 
 void Descriptor::CreateUniformBuffers()
 {
-	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
 	uniformBuffers.resize(maxFramesInFlight);
 	uniformBuffersMemory.resize(maxFramesInFlight);
 	uniformBuffersMapped.resize(maxFramesInFlight);
 
-	for (size_t i = 0; i < maxFramesInFlight; i++) {
+	for (size_t i = 0; i < maxFramesInFlight; i++)
+	{
+		const VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
 					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
 					uniformBuffers[i], uniformBuffersMemory[i]);
@@ -115,7 +117,6 @@ void Descriptor::CreateDescriptorPool()
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	poolSizes[0].descriptorCount = static_cast<uint32_t>(maxFramesInFlight);
     
-	// Image sampler pool - EKLENEN
 	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	poolSizes[1].descriptorCount = static_cast<uint32_t>(maxFramesInFlight);
 
@@ -125,9 +126,11 @@ void Descriptor::CreateDescriptorPool()
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = static_cast<uint32_t>(maxFramesInFlight);
 
-	if (vkCreateDescriptorPool(device->GetLogicalDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-		throw std::runtime_error("Descriptor pool oluşturulamadı!");
+	if (vkCreateDescriptorPool(device->GetLogicalDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Descriptor pool creation failed!");
 	}
+	LOG_INFO("Descriptor pool created successfully!");
 }
 
 void Descriptor::CreateDescriptorSets()
@@ -140,9 +143,11 @@ void Descriptor::CreateDescriptorSets()
 	allocInfo.pSetLayouts = layouts.data();
 
 	descriptorSets.resize(maxFramesInFlight);
-	if (vkAllocateDescriptorSets(device->GetLogicalDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-		throw std::runtime_error("Descriptor set allocate edilemedi!");
+	if (vkAllocateDescriptorSets(device->GetLogicalDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Descriptor set couldn't allocated!");
 	}
+	LOG_INFO("Descriptor sets allocated successfully!");
 
 	for (size_t i = 0; i < maxFramesInFlight; i++) {
 		VkDescriptorBufferInfo bufferInfo{};
@@ -172,9 +177,11 @@ void Descriptor::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMem
 	bufferInfo.usage = usage;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(device->GetLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-		throw std::runtime_error("Buffer oluşturulamadı!");
+	if (vkCreateBuffer(device->GetLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Buffer couldn't created!");
 	}
+	LOG_INFO("Buffer created successfully!");
 
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(device->GetLogicalDevice(), buffer, &memRequirements);
@@ -184,27 +191,33 @@ void Descriptor::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMem
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = device->FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-	if (vkAllocateMemory(device->GetLogicalDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("Buffer memory allocate edilemedi!");
+	if (vkAllocateMemory(device->GetLogicalDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Buffer memory couldn't allocated!");
 	}
-
+	LOG_INFO("Buffer memory allocated successfully!");
+	
 	vkBindBufferMemory(device->GetLogicalDevice(), buffer, bufferMemory, 0);
 }
 
 void Descriptor::Cleanup() const
 {
-	for (size_t i = 0; i < maxFramesInFlight; i++) {
-		if (uniformBuffers[i] != VK_NULL_HANDLE) {
+	for (size_t i = 0; i < maxFramesInFlight; i++)
+	{
+		if (uniformBuffers[i] != VK_NULL_HANDLE)
+		{
 			vkDestroyBuffer(device->GetLogicalDevice(), uniformBuffers[i], nullptr);
 			vkFreeMemory(device->GetLogicalDevice(), uniformBuffersMemory[i], nullptr);
 		}
 	}
 
-	if (descriptorPool != VK_NULL_HANDLE) {
+	if (descriptorPool != VK_NULL_HANDLE)
+	{
 		vkDestroyDescriptorPool(device->GetLogicalDevice(), descriptorPool, nullptr);
 	}
 
-	if (descriptorSetLayout != VK_NULL_HANDLE) {
+	if (descriptorSetLayout != VK_NULL_HANDLE)
+	{
 		vkDestroyDescriptorSetLayout(device->GetLogicalDevice(), descriptorSetLayout, nullptr);
 	}
 }

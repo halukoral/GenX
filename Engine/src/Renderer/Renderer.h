@@ -33,7 +33,7 @@ private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
 	void CreateDepthResources();
-	void CreateModelBuffers();
+	void CreateModelBuffers() const;
 	
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;

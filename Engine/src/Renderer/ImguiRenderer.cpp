@@ -22,18 +22,15 @@ void ImGuiRenderer::NewFrame()
 	ImGui::NewFrame();
 }
 
-void ImGuiRenderer::Render(VkCommandBuffer commandBuffer)
+void ImGuiRenderer::Render(const VkCommandBuffer commandBuffer)
 {
 	// Custom window da ekleyebiliriz
 	ImGui::Begin("Vulkan Triangle Info");
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 
 				1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::Text("Vulkan Renderer");
-	ImGui::Text("Triangle vertices: 3");
-	if (ImGui::Button("Reset Camera"))
-	{
+	//if (ImGui::Button("Reset Camera"))
 		// Gelecekte kamera reset fonksiyonu
-	}
 	ImGui::End();
 
 	// Render
@@ -73,20 +70,19 @@ void ImGuiRenderer::InitImGui()
 
 	if (vkCreateDescriptorPool(m_Device->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS)
 	{
-		throw std::runtime_error("ImGui descriptor pool oluşturulamadı!");
+		throw std::runtime_error("ImGui descriptor pool couldn't created!");
 	}
 
-	// ImGui context oluştur
+	// ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-	// Style ayarla
 	ImGui::StyleColorsDark();
 
-	// Platform/Renderer backends kurulum
+	// Platform/Renderer backends setup
 	ImGui_ImplGlfw_InitForVulkan(m_Window->GetWindow(), true);
         
 	ImGui_ImplVulkan_InitInfo initInfo{};

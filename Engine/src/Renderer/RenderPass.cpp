@@ -69,7 +69,8 @@ void RenderPass::CreateRenderPass(SwapChain* swapChain)
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(device->GetLogicalDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-        throw std::runtime_error("Render pass oluşturulamadı!");
+    if (vkCreateRenderPass(device->GetLogicalDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Render pass couldn't created!");
     }
 }

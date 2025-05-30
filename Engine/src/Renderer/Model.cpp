@@ -80,11 +80,13 @@ std::array<VkVertexInputAttributeDescription, 4> Vertex3D::GetAttributeDescripti
 
 void Mesh::Cleanup(const VkDevice device) const
 {
-	if (IndexBuffer != VK_NULL_HANDLE) {
+	if (IndexBuffer != VK_NULL_HANDLE)
+	{
 		vkDestroyBuffer(device, IndexBuffer, nullptr);
 		vkFreeMemory(device, IndexBufferMemory, nullptr);
 	}
-	if (VertexBuffer != VK_NULL_HANDLE) {
+	if (VertexBuffer != VK_NULL_HANDLE)
+	{
 		vkDestroyBuffer(device, VertexBuffer, nullptr);
 		vkFreeMemory(device, VertexBufferMemory, nullptr);
 	}
@@ -118,7 +120,8 @@ Model Model::CreateCube()
 {
 	Model model;
         
-	std::vector<Vertex3D> vertices = {
+	std::vector<Vertex3D> vertices =
+	{
 		// Front face
 		{{-0.5f, -0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
 		{{ 0.5f, -0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
@@ -156,7 +159,8 @@ Model Model::CreateCube()
 		{{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, {0.5f, 0.9f, 0.4f}}
 	};
 
-	std::vector<uint32_t> indices = {
+	std::vector<uint32_t> indices =
+	{
 		0,  1,  2,  2,  3,  0,   // front
 		4,  5,  6,  6,  7,  4,   // back
 		8,  9,  10, 10, 11, 8,   // left
@@ -253,8 +257,7 @@ void Model::LoadModel(const std::string& path)
 
     Meshes.emplace_back(vertices, indices);
 
-    std::cout << "Model loaded: " << vertices.size() << " vertices, " 
-              << indices.size() / 3 << " triangles" << '\n';
+	LOG_INFO("Model loaded: {} vertices, {} triangles", vertices.size(), indices.size() / 3);
 }
 
 void Model::CalculateNormals(std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)

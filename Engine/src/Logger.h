@@ -83,8 +83,16 @@ private:
 
         if (logToConsole)
         {
-        	const std::string color = getColorForLevel(level);
-        	std::cout << color << logEntry << Colors::RESET << '\n';
+        	if (enableColors)
+        	{
+        		const std::string color = getColorForLevel(level);
+        		std::cout << color << logEntry << Colors::RESET << '\n';
+        	}
+        	else
+        	{
+        		std::cout << logEntry << '\n';
+        	}
+        	std::cout.flush();
         }
 
         if (logToFile && logFile.is_open())
@@ -94,7 +102,8 @@ private:
         }
     }
 
-	std::string getColorForLevel(LogLevel level) {
+	std::string getColorForLevel(const LogLevel level) const
+	{
     	if (!enableColors) return "";
         
     	switch (level) {
@@ -111,7 +120,6 @@ public:
            const std::string& filename = "app.log", bool colors = true) 
         : currentLevel(level), logToConsole(console), logToFile(file), enableColors(colors)
 	{
-        
         if (logToFile)
         {
             logFile.open(filename, std::ios::app);
@@ -208,53 +216,40 @@ public:
     }
 
 private:
-    // Simple string formatting helper
-    template<typename... Args>
-    std::string formatString(const std::string& format, Args... args)
+	template<typename T>
+	std::string formatString(std::string format, T&& value)
 	{
-        std::stringstream ss;
-        formatHelper(ss, format, args...);
-        return ss.str();
-    }
+		size_t pos = format.find("{}");
+		if (pos != std::string::npos) {
+			std::stringstream ss;
+			ss << value;
+			format.replace(pos, 2, ss.str());
+		}
+		return format;
+	}
 
-    template<typename T>
-    void formatHelper(std::stringstream& ss, const std::string& format, T&& t)
+	template<typename T, typename... Args>
+	std::string formatString(std::string format, T&& value, Args&&... args)
 	{
-        size_t pos = format.find("{}");
-        if (pos != std::string::npos)
-        {
-            ss << format.substr(0, pos) << t << format.substr(pos + 2);
-        }
-    	else
-    	{
-            ss << format;
-        }
-    }
-
-    template<typename T, typename... Args>
-    void formatHelper(std::stringstream& ss, const std::string& format, T&& t, Args&&... args)
-	{
-        size_t pos = format.find("{}");
-        if (pos != std::string::npos)
-        {
-            ss << format.substr(0, pos) << t;
-            formatHelper(ss, format.substr(pos + 2), args...);
-        }
-    	else
-    	{
-            ss << format;
-        }
-    }
+		size_t pos = format.find("{}");
+		if (pos != std::string::npos) {
+			std::stringstream ss;
+			ss << value;
+			format.replace(pos, 2, ss.str());
+			return formatString(format, args...);
+		}
+		return format;
+	}
 };
 
 // Global logger instance (optional convenience)
 extern Logger globalLogger;
 
 // Convenience macros (optional)
-#define LOG_DEBUG(msg) globalLogger.debug(msg)
-#define LOG_INFO(msg) globalLogger.info(msg)
-#define LOG_WARN(msg) globalLogger.warn(msg)
-#define LOG_ERROR(msg) globalLogger.error(msg)
+#define LOG_DEBUG(msg, ...) globalLogger.debug(msg, ##__VA_ARGS__)
+#define LOG_INFO(msg, ...) globalLogger.info(msg, ##__VA_ARGS__)
+#define LOG_WARN(msg, ...) globalLogger.warn(msg, ##__VA_ARGS__)
+#define LOG_ERROR(msg, ...) globalLogger.error(msg, ##__VA_ARGS__)
 
 // Ex:
 // LOG_INFO("This is a info message");

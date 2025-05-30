@@ -59,6 +59,9 @@ bool Application::OnWindowClose(WindowCloseEvent& e)
 void Application::Init()
 {
 	LOG_INFO("Application starting!");
+	int userId = 123;
+	std::string username = "john_doe";
+	LOG_INFO("User {} logged in with ID: {}", username, userId);
 	
 	if (!glfwVulkanSupported())
 	{

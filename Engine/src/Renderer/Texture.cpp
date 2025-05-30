@@ -24,11 +24,12 @@ void Texture::CreateTextureImage(const std::string& imagePath)
     stbi_uc* pixels = stbi_load(imagePath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
-    if (!pixels) {
-        throw std::runtime_error("Texture dosyası yüklenemedi: " + imagePath);
+    if (!pixels)
+    {
+        throw std::runtime_error("Texture couldn't loaded: " + imagePath);
     }
 
-    std::cout << "Texture yüklendi: " << imagePath << " (" << texWidth << "x" << texHeight << ")" << std::endl;
+	LOG_INFO("Texture loading: {}", imagePath);
 
     // Staging buffer oluştur
     VkBuffer stagingBuffer;
@@ -44,23 +45,18 @@ void Texture::CreateTextureImage(const std::string& imagePath)
 
     stbi_image_free(pixels);
 
-    // Texture image oluştur
     CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_TextureImage, m_TextureImageMemory);
 
-    // Image layout'u transfer için hazırla
     TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, 
                          VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     
-    // Buffer'dan image'e kopyala
     CopyBufferToImage(stagingBuffer, m_TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
     
-    // Shader'da kullanım için layout'u değiştir
     TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, 
                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    // Staging buffer'ı temizle
     vkDestroyBuffer(m_Device->GetLogicalDevice(), stagingBuffer, nullptr);
     vkFreeMemory(m_Device->GetLogicalDevice(), stagingBufferMemory, nullptr);
 }
@@ -80,6 +76,8 @@ void Texture::CreateTextureSampler()
     samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.anisotropyEnable = VK_TRUE;
+	samplerInfo.maxAnisotropy = 16.0f;
+
     
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(m_Device->GetPhysicalDevice(), &properties);
@@ -94,8 +92,9 @@ void Texture::CreateTextureSampler()
     samplerInfo.minLod = 0.0f;
     samplerInfo.maxLod = 0.0f;
 
-    if (vkCreateSampler(m_Device->GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS) {
-        throw std::runtime_error("Texture sampler oluşturulamadı!");
+    if (vkCreateSampler(m_Device->GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Texture sampler couldn't created!");
     }
 }
 
@@ -118,8 +117,9 @@ void Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkIm
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateImage(m_Device->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS) {
-        throw std::runtime_error("Image oluşturulamadı!");
+    if (vkCreateImage(m_Device->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Image couldn't created!");
     }
 
     VkMemoryRequirements memRequirements;
@@ -130,14 +130,15 @@ void Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkIm
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = m_Device->FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-        throw std::runtime_error("Image memory allocate edilemedi!");
+    if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Image memory couldn't allocated!");
     }
 
     vkBindImageMemory(m_Device->GetLogicalDevice(), image, imageMemory, 0);
 }
 
-VkImageView Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+VkImageView Texture::CreateImageView(const VkImage image, const VkFormat format, const VkImageAspectFlags aspectFlags) const
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -151,16 +152,18 @@ VkImageView Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspe
     viewInfo.subresourceRange.layerCount = 1;
 
     VkImageView imageView;
-    if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-        throw std::runtime_error("Image view oluşturulamadı!");
+    if (vkCreateImageView(m_Device->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Image view couldn't created!");
     }
+	LOG_INFO("Image view created!");
 
     return imageView;
 }
 
-void Texture::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+void Texture::TransitionImageLayout(const VkImage image, VkFormat format, const VkImageLayout oldLayout, const VkImageLayout newLayout) const
 {
-    VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+    const VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -178,20 +181,25 @@ void Texture::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayou
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
 
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    {
         barrier.srcAccessMask = 0;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
         sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+    }
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
         sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    } else {
-        throw std::invalid_argument("Desteklenmeyen layout transition!");
+    }
+	else
+	{
+        throw std::invalid_argument("Unsupported layout transition!");
     }
 
     vkCmdPipelineBarrier(
@@ -206,9 +214,9 @@ void Texture::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayou
     EndSingleTimeCommands(commandBuffer);
 }
 
-void Texture::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void Texture::CopyBufferToImage(const VkBuffer buffer, const VkImage image, const uint32_t width, const uint32_t height) const
 {
-    VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+    const VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -226,7 +234,7 @@ void Texture::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, 
     EndSingleTimeCommands(commandBuffer);
 }
 
-VkCommandBuffer Texture::BeginSingleTimeCommands()
+VkCommandBuffer Texture::BeginSingleTimeCommands() const
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -246,7 +254,7 @@ VkCommandBuffer Texture::BeginSingleTimeCommands()
     return commandBuffer;
 }
 
-void Texture::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+void Texture::EndSingleTimeCommands(const VkCommandBuffer commandBuffer) const
 {
     vkEndCommandBuffer(commandBuffer);
 
@@ -261,9 +269,8 @@ void Texture::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
     vkFreeCommandBuffers(m_Device->GetLogicalDevice(), m_Device->GetCommandPool(), 1, &commandBuffer);
 }
 
-// Helper function - bu Device sınıfına eklenmelidir
 void Texture::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-                          VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+                          VkBuffer& buffer, VkDeviceMemory& bufferMemory) const
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -271,8 +278,9 @@ void Texture::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemory
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(m_Device->GetLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-        throw std::runtime_error("Buffer oluşturulamadı!");
+    if (vkCreateBuffer(m_Device->GetLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Buffer couldn't created!");
     }
 
     VkMemoryRequirements memRequirements;
@@ -283,8 +291,9 @@ void Texture::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemory
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = m_Device->FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-        throw std::runtime_error("Buffer memory allocate edilemedi!");
+    if (vkAllocateMemory(m_Device->GetLogicalDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Buffer memory couldn't allocated!");
     }
 
     vkBindBufferMemory(m_Device->GetLogicalDevice(), buffer, bufferMemory, 0);

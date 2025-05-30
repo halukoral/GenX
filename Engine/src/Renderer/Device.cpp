@@ -175,9 +175,18 @@ void Device::CreateLogicalDevice()
 	}
 
 	VkPhysicalDeviceFeatures deviceFeatures{};
-
+	vkGetPhysicalDeviceFeatures(m_PhysicalDevice, &deviceFeatures);
+	
+	// Enable samplerAnisotropy if supported
+	VkPhysicalDeviceFeatures enabledFeatures{};
+	if (deviceFeatures.samplerAnisotropy)
+	{
+		enabledFeatures.samplerAnisotropy = VK_TRUE;
+	}
+	
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.pEnabledFeatures = &enabledFeatures;
 	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 	createInfo.pEnabledFeatures = &deviceFeatures;

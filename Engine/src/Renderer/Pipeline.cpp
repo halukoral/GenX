@@ -116,9 +116,11 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
     pipelineLayoutInfo.pSetLayouts = &descriptor->GetDescriptorSetLayout();
     pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-    if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-        throw std::runtime_error("Pipeline layout oluşturulamadı!");
+    if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Pipeline layout creation failed!");
     }
+	LOG_INFO("Pipeline layout created successfully!");
 
     // Pipeline create...
     VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -139,8 +141,9 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 
     if (vkCreateGraphicsPipelines(device->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
     {
-        throw std::runtime_error("Graphics pipeline oluşturulamadı!");
+        throw std::runtime_error("Graphics pipeline creation failed!");
     }
+	LOG_INFO("Graphics pipeline created successfully!");
 
     vkDestroyShaderModule(device->GetLogicalDevice(), fragShaderModule, nullptr);
     vkDestroyShaderModule(device->GetLogicalDevice(), vertShaderModule, nullptr);
@@ -156,8 +159,9 @@ VkShaderModule Pipeline::CreateShaderModule(const std::vector<char>& code) const
 	VkShaderModule shaderModule;
 	if (vkCreateShaderModule(device->GetLogicalDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
 	{
-		throw std::runtime_error("Shader module oluşturulamadı!");
+		throw std::runtime_error("Shader module creation failed!");
 	}
+	LOG_INFO("Shader module created successfully!");
 
 	return shaderModule;
 }
@@ -168,9 +172,9 @@ std::vector<char> Pipeline::ReadFile(const std::string& filename)
 
 	if (!file.is_open())
 	{
-		throw std::runtime_error("Dosya açılamadı: " + filename);
+		throw std::runtime_error("File couldn't open: " + filename);
 	}
-
+	
 	size_t fileSize = (size_t) file.tellg();
 	std::vector<char> buffer(fileSize);
 
