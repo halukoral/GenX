@@ -115,7 +115,8 @@ public:
             if (Input::IsKeyDown(KeyCode::E)) movement += glm::vec3(0, 1, 0);
             
             // Normalize and apply movement
-            if (glm::length(movement) > 0.0f) {
+            if (glm::length(movement) > 0.0f)
+            {
                 movement = glm::normalize(movement) * speed * dt;
                 transform.position += movement;
             }
@@ -123,7 +124,8 @@ public:
             // Mouse look
             glm::vec2 mousePos = Input::GetMousePosition();
             
-            if (controller.firstMouse) {
+            if (controller.firstMouse)
+            {
                 controller.lastMousePos = mousePos;
                 controller.firstMouse = false;
             }
@@ -132,7 +134,8 @@ public:
             controller.lastMousePos = mousePos;
             
             // Only rotate if right mouse button is held
-            if (Input::IsMouseButtonDown(MouseButton::Right)) {
+            if (Input::IsMouseButtonDown(MouseButton::Right))
+            {
                 delta *= controller.mouseSensitivity;
                 
                 // Update euler angles
@@ -148,7 +151,8 @@ public:
         }
     }
     
-    void onEvent(Event& e) {
+    void onEvent(Event& e)
+	{
         EventDispatcher dispatcher(e);
         dispatcher.Dispatch<MouseMovedEvent>([this](MouseMovedEvent& e) {
             return onMouseMoved(e);

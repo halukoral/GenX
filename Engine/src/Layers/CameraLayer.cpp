@@ -11,7 +11,7 @@ CameraLayer::CameraLayer()
 void CameraLayer::OnAttach()
 {
 	// Create default camera
-	auto camera = cameraManager->createFPSCamera(glm::vec3(0.0f, 0.0f, 5.0f));
+	auto camera = cameraManager->createFPSCamera(glm::vec3(0.0f, 5.0f, 0.0f));
 	cameraManager->setActiveCamera(camera);
         
 	// Set initial aspect ratio from window

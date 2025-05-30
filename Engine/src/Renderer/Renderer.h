@@ -58,7 +58,7 @@ private:
 	std::unique_ptr<Descriptor> m_Descriptor;
 	std::unique_ptr<ImGuiRenderer> imguiRenderer;
 
-	CameraLayer* cameraLayer = nullptr;
+	std::shared_ptr<CameraLayer> m_CameraLayer;
 	std::unique_ptr<Model> m_Model;
 	std::unique_ptr<Texture> m_Texture;
 	

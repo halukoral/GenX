@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include "Application.h"
+
 void Renderer::InitVulkan()
 {
 	m_Device = std::make_unique<Device>(m_Window.get());
@@ -24,6 +26,8 @@ void Renderer::InitVulkan()
 	CreateCommandBuffers();
 	CreateSyncObjects();
 
+	m_CameraLayer = std::make_shared<CameraLayer>();
+	Application::Get().PushLayer(m_CameraLayer);
 }
 
 void Renderer::LoadModel(const std::string& path)
@@ -104,9 +108,9 @@ void Renderer::CreateModelBuffers() const
 
 void Renderer::UpdateUniformBuffer(const uint32_t currentFrame) const
 {
-    if (!m_Model || !cameraLayer) return;
+    if (!m_Model || !m_CameraLayer) return;
     
-	const auto& cameraData = cameraLayer->GetCameraData();
+	const auto& cameraData = m_CameraLayer->GetCameraData();
     
 	UniformBufferObject ubo{};
 	ubo.Model = m_Model->GetModelMatrix();
@@ -378,7 +382,7 @@ void Renderer::DrawFrame()
 }
 
 void Renderer::Cleanup()
-{
+{	
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
 		vkDestroySemaphore(m_Device->GetLogicalDevice(), m_RenderFinishedSemaphores[i], nullptr);
