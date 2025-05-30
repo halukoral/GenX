@@ -93,6 +93,7 @@ void Device::CreateInstance()
 	{
 		throw std::runtime_error("Instance creation failed!");
 	}
+	LOG_INFO("Instance created successfully!");
 }
 
 void Device::CreateSurface(Window* window)
@@ -101,6 +102,7 @@ void Device::CreateSurface(Window* window)
 	{
 		throw std::runtime_error("Window surface creation failed!");
 	}
+	LOG_INFO("Window surface created successfully!");
 }
 
 void Device::PickPhysicalDevice()
@@ -127,8 +129,9 @@ void Device::PickPhysicalDevice()
 
 	if (m_PhysicalDevice == VK_NULL_HANDLE)
 	{
-		throw std::runtime_error("Uygun GPU bulunamadı!");
+		throw std::runtime_error("No suitable GPU found!");
 	}
+	LOG_INFO("GPU found and selected successfully!");
 }
 
 bool Device::IsDeviceSuitable(VkPhysicalDevice device)
@@ -209,4 +212,5 @@ void Device::CreateLogicalDevice()
 	{
 		throw std::runtime_error("Command pool creation failed!");
 	}
+	LOG_INFO("Command pool created successfully!");
 }

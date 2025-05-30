@@ -19,12 +19,31 @@ public:
         ERROR = 3
     };
 
+	struct Colors {
+		static const std::string RESET;
+		static const std::string RED;
+		static const std::string GREEN;
+		static const std::string YELLOW;
+		static const std::string BLUE;
+		static const std::string MAGENTA;
+		static const std::string CYAN;
+		static const std::string WHITE;
+		static const std::string BRIGHT_RED;
+		static const std::string BRIGHT_GREEN;
+		static const std::string BRIGHT_YELLOW;
+		static const std::string BRIGHT_BLUE;
+		static const std::string BRIGHT_MAGENTA;
+		static const std::string BRIGHT_CYAN;
+		static const std::string BRIGHT_WHITE;
+	};
+
 private:
 	
     LogLevel currentLevel;
     std::ofstream logFile;
     bool logToConsole;
     bool logToFile;
+	bool enableColors;
     std::mutex logMutex;
 
     std::string getCurrentTimestamp()
@@ -44,11 +63,11 @@ private:
 	{
         switch (level)
     	{
-            case DEBUG: return "DEBUG:";
-            case INFO:  return "INFO:";
-            case WARN:  return "WARN:";
-            case ERROR: return "ERROR:";
-            default:    return "UNKNOWN:";
+            case DEBUG: return "DEBUG";
+            case INFO:  return "INFO ";
+            case WARN:  return "WARN ";
+            case ERROR: return "ERROR";
+            default:    return "UNKNOWN";
         }
     }
 
@@ -64,7 +83,8 @@ private:
 
         if (logToConsole)
         {
-            std::cout << logEntry << '\n';
+        	const std::string color = getColorForLevel(level);
+        	std::cout << color << logEntry << Colors::RESET << '\n';
         }
 
         if (logToFile && logFile.is_open())
@@ -74,10 +94,22 @@ private:
         }
     }
 
+	std::string getColorForLevel(LogLevel level) {
+    	if (!enableColors) return "";
+        
+    	switch (level) {
+    	case DEBUG: return Colors::CYAN;
+    	case INFO:  return Colors::GREEN;
+    	case WARN:  return Colors::YELLOW;
+    	case ERROR: return Colors::BRIGHT_RED;
+    	default:    return Colors::WHITE;
+    	}
+    }
+	
 public:
     Logger(const LogLevel level = INFO, const bool console = true, const bool file = false, 
-           const std::string& filename = "app.log") 
-        : currentLevel(level), logToConsole(console), logToFile(file)
+           const std::string& filename = "app.log", bool colors = true) 
+        : currentLevel(level), logToConsole(console), logToFile(file), enableColors(colors)
 	{
         
         if (logToFile)
