@@ -11,6 +11,8 @@
 #include "Texture.h"
 #include "Layers/CameraLayer.h"
 
+class ModelLayer;
+
 class Renderer
 {	
 public:
@@ -22,10 +24,12 @@ public:
 
 	void DrawFrame();
 
-	[[nodiscard]] const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
+	[[nodiscard]] Device* GetDevice() const { return m_Device.get(); }
 	[[nodiscard]] VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
-	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
 
+	ModelLayer* GetModelLayer() const { return m_ModelLayer.get(); }
+	Descriptor* GetDescriptor() const { return m_Descriptor.get(); }
+	
 	// Model loading
 	void LoadModel(const std::string& path);
 	void LoadTexture(const std::string& texturePath);
@@ -59,6 +63,7 @@ private:
 	std::unique_ptr<ImGuiRenderer> imguiRenderer;
 
 	std::shared_ptr<CameraLayer> m_CameraLayer;
+	std::shared_ptr<ModelLayer> m_ModelLayer;
 	std::unique_ptr<Model> m_Model;
 	std::unique_ptr<Texture> m_Texture;
 	
