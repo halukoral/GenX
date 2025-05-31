@@ -1,7 +1,6 @@
 #include "Renderer.h"
 
 #include "Application.h"
-#include "Layers/ModelLayer.h"
 
 void Renderer::InitVulkan()
 {
@@ -29,15 +28,6 @@ void Renderer::InitVulkan()
 
 	m_CameraLayer = std::make_shared<CameraLayer>();
 	Application::Get().PushLayer(m_CameraLayer);
-
-	m_ModelLayer = std::make_shared<ModelLayer>();
-	m_ModelLayer->SetDevice(m_Device.get());
-	m_ModelLayer->SetDescriptor(m_Descriptor.get());
-	m_ModelLayer->SetRenderPipeline(m_Pipeline->GetPipeline(), m_Pipeline->GetPipelineLayout());
-	Application::Get().PushLayer(m_ModelLayer);
-    
-	// Create some models
-	auto viking = m_ModelLayer->CreateModel("../viking_room.obj", glm::vec3(0, 0, 0));
 }
 
 void Renderer::LoadModel(const std::string& path)
@@ -291,21 +281,17 @@ void Renderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
                            0, 1, &m_Descriptor->GetDescriptorSet(m_CurrentFrame), 0, nullptr);
 
     // Render 3D model
-	if (m_ModelLayer && m_CameraLayer)
-	{
-		auto& cameraData = m_CameraLayer->GetCameraData();
-        
-		LOG_DEBUG("Rendering models - Camera pos: ({}, {}, {})", 
-				 cameraData.position.x, cameraData.position.y, cameraData.position.z);
-        
-		m_ModelLayer->Render(commandBuffer, 
-						   cameraData.position,
-						   cameraData.view, 
-						   cameraData.projection,
-						   m_CurrentFrame);
-	} else {
-		LOG_WARN("ModelLayer or CameraLayer is null!");
-	}
+    if (m_Model)
+    {
+        for (const auto& mesh : m_Model->Meshes)
+        {
+            const VkBuffer vertexBuffers[] = {mesh.VertexBuffer};
+			constexpr VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(commandBuffer, mesh.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.Indices.size()), 1, 0, 0, 0);
+        }
+    }
     
     imguiRenderer->Render(commandBuffer);
     

@@ -63,12 +63,6 @@ public:
 	static float	GetTime();
 	GLFWwindow*		GetWindowHandle() const { return m_Window->GetWindow(); }
 	const std::shared_ptr<Window>& GetWindow() const { return m_Window; }
-	const Renderer* GetRenderer() const { return m_Renderer.get(); }
-
-	ModelLayer* GetModelLayer() const
-	{ 
-		return m_Renderer ? m_Renderer->GetModelLayer() : nullptr; 
-	}
 	
 private:
 	bool OnWindowClose(WindowCloseEvent& e);
