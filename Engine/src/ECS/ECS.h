@@ -59,7 +59,7 @@ private:
     size_t size = 0;
 
 public:
-    void Add(const Entity entity, T component)
+    void Add(const Entity entity, const T& component)
 	{
         if (entityToIndex.contains(entity))
         {
@@ -86,7 +86,7 @@ public:
         components[removedIndex] = components[lastIndex];
         
         // Update maps
-        Entity lastEntity = indexToEntity[lastIndex];
+        const Entity lastEntity = indexToEntity[lastIndex];
         entityToIndex[lastEntity] = removedIndex;
         indexToEntity[removedIndex] = lastEntity;
         
@@ -132,7 +132,7 @@ private:
     template<typename T>
     std::shared_ptr<ComponentArray<T>> GetComponentArray()
 	{
-        auto typeIndex = std::type_index(typeid(T));
+        const auto typeIndex = std::type_index(typeid(T));
         if (!componentArrays.contains(typeIndex))
         {
             componentArrays[typeIndex] = std::make_shared<ComponentArray<T>>();
@@ -142,7 +142,7 @@ private:
     
 public:
     template<typename T>
-    void AddComponent(Entity entity, T component)
+    void AddComponent(Entity entity, const T& component)
 	{
         GetComponentArray<T>()->Add(entity, component);
     }
@@ -311,7 +311,7 @@ public:
     
     // Component methods
     template<typename T>
-    void AddComponent(const Entity entity, T component)
+    void AddComponent(const Entity entity, const T& component)
 	{
         componentManager->AddComponent<T>(entity, component);
         
@@ -341,7 +341,7 @@ public:
     }
     
     template<typename T>
-    bool HasComponent(const Entity entity) const
+	[[nodiscard]] bool HasComponent(const Entity entity) const
 	{
         return componentManager->HasComponent<T>(entity);
     }
