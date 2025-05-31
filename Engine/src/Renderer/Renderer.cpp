@@ -38,6 +38,7 @@ void Renderer::InitVulkan()
     
 	// Create some models
 	auto viking = m_ModelLayer->CreateModel("../viking_room.obj", glm::vec3(0, 0, 0));
+	LoadTexture("../viking_room.png");
 }
 
 void Renderer::LoadModel(const std::string& path)
