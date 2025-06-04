@@ -39,13 +39,14 @@ void PhysicsLayer::OnAttach()
     physicsManager->SetMaterial(ground, 0.8f, 0.3f); // High friction, some bounce
     
     // Add trigger callback for demo
-    physicsManager->AddTriggerCallback([this](const CollisionInfo& collision) {
-        LOG_INFO("Trigger collision between entities {} and {}", 
-                collision.entityA, collision.entityB);
-    });
+    // physicsManager->AddTriggerCallback([this](const CollisionInfo& collision)
+    // {
+    //     LOG_INFO("Trigger collision between entities {} and {}", collision.entityA, collision.entityB);
+    // });
     
     // Create demo scene if enabled
-    if (demoMode) {
+    if (demoMode)
+    {
         CreatePhysicsDemo();
     }
     
@@ -128,7 +129,8 @@ ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position,
     physicsManager->SetMaterial(entity, 0.6f, 0.4f); // Medium friction and bounce
     
     // Add visual representation using primitive model
-    if (modelLayer && cubeModel) {
+    if (modelLayer && cubeModel)
+    {
         // Create model component with our primitive cube
         ModelComponent modelComp;
         modelComp.modelData = cubeModel;
@@ -145,10 +147,12 @@ ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position,
         }
         
         LOG_DEBUG("Created physics box with visual at ({}, {}, {})", position.x, position.y, position.z);
-    } else {
+    }
+	else
+	{
         LOG_WARN("ModelLayer or cube model not available - physics box will be invisible");
     }
-    
+
     return entity;
 }
 
@@ -213,7 +217,8 @@ void PhysicsLayer::CreatePhysicsDemo()
                                                 glm::vec3(0.4f, 0.4f, 0.4f));
     
     // Add visuals to box stack
-    for (auto entity : boxStack) {
+    for (auto entity : boxStack)
+    {
         AddVisualToPhysicsEntity(entity, "box");
     }
     demoEntities.insert(demoEntities.end(), boxStack.begin(), boxStack.end());
@@ -225,7 +230,8 @@ void PhysicsLayer::CreatePhysicsDemo()
                                               15, 0.3f);
     
     // Add visuals to ball pit
-    for (auto entity : ballPit) {
+    for (auto entity : ballPit)
+    {
         AddVisualToPhysicsEntity(entity, "sphere");
     }
     demoEntities.insert(demoEntities.end(), ballPit.begin(), ballPit.end());
@@ -252,7 +258,8 @@ void PhysicsLayer::CreatePhysicsDemo()
     physicsManager->SetTrigger(trigger, true);
     
     // Make trigger zone visible (if you want to see it)
-    if (modelLayer && cubeModel) {
+    if (modelLayer && cubeModel)
+    {
         ModelComponent modelComp;
         modelComp.modelData = cubeModel;
         modelComp.isLoaded = true;
