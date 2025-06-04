@@ -10,10 +10,15 @@ layout(location = 3) in vec3 fragWorldPos;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    // Texture'dan renk al
     vec4 texColor = texture(texSampler, fragTexCoord);
 
-    // Basit ışıklandırma
+    vec3 baseColor;
+    if (texColor.a < 0.01) {
+        baseColor = fragColor;
+    } else {
+        baseColor = texColor.rgb;
+    }
+
     vec3 lightPos = vec3(2.0, 2.0, 2.0);
     vec3 lightColor = vec3(1.0, 1.0, 1.0);
 
@@ -26,10 +31,7 @@ void main() {
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
-    // Final color = texture * lighting
-    vec3 result = (ambient + diffuse) * texColor.rgb;
-    outColor = vec4(result, texColor.a);
-
-    // Debug: Texture coordinate'leri görmek için (geçici)
-    // outColor = vec4(fragTexCoord, 0.0, 1.0);
+    // Final color = base color * lighting
+    vec3 result = (ambient + diffuse) * baseColor;
+    outColor = vec4(result, 1.0);
 }

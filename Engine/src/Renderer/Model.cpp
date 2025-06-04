@@ -241,7 +241,7 @@ void Model::LoadModel(const std::string& path)
                 vertex.TexCoord = {0.0f, 0.0f};
             }
 
-            vertex.Color = {0.7f, 0.7f, 0.7f};
+        	vertex.Color = {1.0f, 1.0f, 1.0f};
 
             if (!uniqueVertices.contains(vertex))
             {

@@ -76,34 +76,10 @@ target_include_directories(imgui PUBLIC
 
 target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
 
-# imguizmo
-FetchContent_Declare(imguizmo
-    GIT_REPOSITORY "https://github.com/CedricGuillemet/ImGuizmo.git"
-    GIT_TAG "1.83"
-    GIT_SHALLOW ON
-)
-FetchContent_GetProperties(imguizmo)
-if(NOT imguizmo_POPULATED)
-    FetchContent_Populate(imguizmo)
-endif()
-
-add_library(imguizmo STATIC
-    ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
-    ${imguizmo_SOURCE_DIR}/ImGuizmo.h
-)
-
-target_include_directories(imguizmo PUBLIC
-    ${imguizmo_SOURCE_DIR}
-)
-
-target_compile_definitions(imguizmo PUBLIC IMGUI_DEFINE_MATH_OPERATORS)
-target_link_libraries(imguizmo PUBLIC imgui glfw Vulkan::Vulkan)
-
 target_link_libraries(Editor
     PRIVATE
         glm
         imgui
-        imguizmo
 )
 
 target_link_libraries(Engine
