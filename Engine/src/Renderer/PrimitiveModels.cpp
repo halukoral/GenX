@@ -47,12 +47,23 @@ std::shared_ptr<Model> PrimitiveModels::CreateCube(float size, Device* device)
 
 	// Define indices for cube faces
 	std::vector<uint32_t> indices = {
-		0,  1,  2,  2,  3,  0,   // front
-		4,  5,  6,  6,  7,  4,   // back
-		8,  9,  10, 10, 11, 8,   // left
-		12, 13, 14, 14, 15, 12,  // right
-		16, 17, 18, 18, 19, 16,  // bottom
-		20, 21, 22, 22, 23, 20   // top
+		// Front face (+Z) - CCW when viewed from front
+		0,  1,  2,  2,  3,  0,   
+    
+		// Back face (-Z) - CCW when viewed from back  
+		5,  4,  7,  7,  6,  5,   // Ters sırada
+    
+		// Left face (-X) - CCW when viewed from left
+		8,  11, 10,  10, 9,  8,  // Ters sırada
+    
+		// Right face (+X) - CCW when viewed from right
+		13, 12, 15,  15, 14, 13, // Ters sırada
+    
+		// Bottom face (-Y) - CCW when viewed from bottom
+		16, 19, 18,  18, 17, 16, // Ters sırada
+    
+		// Top face (+Y) - CCW when viewed from top
+		21, 20, 23,  23, 22, 21  // Ters sırada
 	};
 
 	model->Meshes.emplace_back(vertices, indices);
