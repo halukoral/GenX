@@ -34,7 +34,7 @@ public:
             auto& modelComp = world->GetComponent<ModelComponent>(entity);
             
             // Start loading if not loaded and not currently loading
-            if (!modelComp.isLoaded && !modelComp.modelPath.empty()) {
+            if (!modelComp.IsLoaded && !modelComp.ModelPath.empty()) {
                 StartLoadingModel(entity, modelComp);
             }
             
@@ -44,12 +44,12 @@ public:
     }
     
     void StartLoadingModel(ECS::Entity entity, ModelComponent& modelComp) {
-        const std::string& path = modelComp.modelPath;
+        const std::string& path = modelComp.ModelPath;
         
         // Check cache first
         if (modelCache.contains(path)) {
-            modelComp.modelData = modelCache[path];
-            modelComp.isLoaded = true;
+            modelComp.ModelData = modelCache[path];
+            modelComp.IsLoaded = true;
             CreateModelBuffers(modelComp);
             return;
         }
@@ -71,7 +71,7 @@ public:
     }
     
     void CheckLoadingCompletion(ECS::Entity entity, ModelComponent& modelComp) {
-        const std::string& path = modelComp.modelPath;
+        const std::string& path = modelComp.ModelPath;
         
         if (loadingModels.contains(path)) {
             auto& future = loadingModels[path];
@@ -82,8 +82,8 @@ public:
                 
                 if (model) {
                     modelCache[path] = model;
-                    modelComp.modelData = model;
-                    modelComp.isLoaded = true;
+                    modelComp.ModelData = model;
+                    modelComp.IsLoaded = true;
                     CreateModelBuffers(modelComp);
                     
                     // Update bounding box if entity has BoundingComponent
@@ -100,12 +100,12 @@ public:
     }
     
     void CreateModelBuffers(ModelComponent& modelComp) {
-        if (!modelComp.modelData || !device) return;
+        if (!modelComp.ModelData || !device) return;
         
-        for (auto& mesh : modelComp.modelData->Meshes) {
+        for (auto& mesh : modelComp.ModelData->Meshes) {
             CreateMeshBuffers(mesh);
         }
-        modelComp.isDirty = false;
+        modelComp.IsDirty = false;
     }
     
     void CreateMeshBuffers(Mesh& mesh) {
@@ -136,8 +136,8 @@ public:
             }
         }
         
-        bounds.center = (minPos + maxPos) * 0.5f;
-        bounds.extents = maxPos - minPos;
+        bounds.Center = (minPos + maxPos) * 0.5f;
+        bounds.Extents = maxPos - minPos;
         bounds.UpdateBounds();
     }
     
@@ -310,12 +310,12 @@ private:
                                  const glm::mat4& viewMatrix, const glm::mat4& projMatrix) {
 	    auto& modelComp = world->GetComponent<ModelComponent>(cmd.entity);
 	    
-	    if (!modelComp.modelData) {
+	    if (!modelComp.ModelData) {
 	        LOG_ERROR("Entity {} has null modelData", cmd.entity);
 	        return;
 	    }
 	    
-	    LOG_DEBUG("Rendering entity {} with {} meshes", cmd.entity, modelComp.modelData->Meshes.size());
+	    LOG_DEBUG("Rendering entity {} with {} meshes", cmd.entity, modelComp.ModelData->Meshes.size());
 	    
 	    // Uniform buffer'ı güncelle (sadece view ve projection)
 	    UniformBufferObject ubo{};
@@ -341,8 +341,8 @@ private:
 	                       sizeof(PushConstantData), &pushData);
 	    
 	    // Mesh'leri render et
-	    for (size_t i = 0; i < modelComp.modelData->Meshes.size(); ++i) {
-	        const auto& mesh = modelComp.modelData->Meshes[i];
+	    for (size_t i = 0; i < modelComp.ModelData->Meshes.size(); ++i) {
+	        const auto& mesh = modelComp.ModelData->Meshes[i];
 	        
 	        if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
 	            LOG_ERROR("Entity {} mesh {} has null buffers", cmd.entity, i);
@@ -384,7 +384,7 @@ private:
 	        auto& transform = world->GetComponent<TransformComponent>(entity);
 	        
 	        LOG_DEBUG("Entity {} - ModelPath: '{}', IsLoaded: {}, ModelData: {}", 
-	                 entity, modelComp.modelPath, modelComp.isLoaded, (void*)modelComp.modelData.get());
+	                 entity, modelComp.ModelPath, modelComp.IsLoaded, (void*)modelComp.ModelData.get());
 	        
 	        // Skip if not ready
 	        if (!modelComp.IsReadyForRender()) {
@@ -392,11 +392,11 @@ private:
 	            continue;
 	        }
 	        
-	        LOG_DEBUG("Entity {} model has {} meshes", entity, modelComp.modelData->Meshes.size());
+	        LOG_DEBUG("Entity {} model has {} meshes", entity, modelComp.ModelData->Meshes.size());
 	        
 	        // Check each mesh buffer status
-	        for (size_t i = 0; i < modelComp.modelData->Meshes.size(); ++i) {
-	            const auto& mesh = modelComp.modelData->Meshes[i];
+	        for (size_t i = 0; i < modelComp.ModelData->Meshes.size(); ++i) {
+	            const auto& mesh = modelComp.ModelData->Meshes[i];
 	            LOG_DEBUG("Mesh {} - VertexBuffer: {}, IndexBuffer: {}, Vertices: {}, Indices: {}", 
 	                     i, (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer, 
 	                     mesh.Vertices.size(), mesh.Indices.size());
@@ -405,8 +405,8 @@ private:
 	        // Visibility check
 	        if (world->HasComponent<RenderableComponent>(entity)) {
 	            auto& renderable = world->GetComponent<RenderableComponent>(entity);
-	            LOG_DEBUG("Entity {} visibility: {}", entity, renderable.isVisible);
-	            if (!renderable.isVisible) continue;
+	            LOG_DEBUG("Entity {} visibility: {}", entity, renderable.IsVisible);
+	            if (!renderable.IsVisible) continue;
 	        }
 	        
 	        // Create render command

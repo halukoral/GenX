@@ -220,9 +220,9 @@ ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position, const glm:
         
         // Create model component with our primitive cube
         ModelComponent modelComp;
-        modelComp.modelData = cubeModel;
-        modelComp.isLoaded = true;
-        modelComp.modelPath = "primitive_cube"; // For debugging
+        modelComp.ModelData = cubeModel;
+        modelComp.IsLoaded = true;
+        modelComp.ModelPath = "primitive_cube"; // For debugging
         
         LOG_DEBUG("Adding ModelComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, modelComp);
@@ -293,9 +293,9 @@ ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,float ra
         
         // Create model component with our primitive sphere
         ModelComponent modelComp;
-        modelComp.modelData = sphereModel;
-        modelComp.isLoaded = true;
-        modelComp.modelPath = "primitive_sphere"; // For debugging
+        modelComp.ModelData = sphereModel;
+        modelComp.IsLoaded = true;
+        modelComp.ModelPath = "primitive_sphere"; // For debugging
         
         LOG_DEBUG("Adding ModelComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, modelComp);
@@ -402,8 +402,8 @@ void PhysicsLayer::CreatePhysicsDemo()
     if (modelLayer && cubeModel)
     {
         ModelComponent modelComp;
-        modelComp.modelData = cubeModel;
-        modelComp.isLoaded = true;
+        modelComp.ModelData = cubeModel;
+        modelComp.IsLoaded = true;
         sharedWorld->AddComponent(trigger, modelComp);
         
         sharedWorld->AddComponent(trigger, RenderableComponent(true));
@@ -448,9 +448,9 @@ void PhysicsLayer::AddVisualToPhysicsEntity(const ECS::Entity entity, const std:
             LOG_DEBUG("Adding cube visual to entity {}", entity);
             
             ModelComponent modelComp;
-            modelComp.modelData = cubeModel;
-            modelComp.isLoaded = true;
-            modelComp.modelPath = "primitive_cube_util"; // For debugging
+            modelComp.ModelData = cubeModel;
+            modelComp.IsLoaded = true;
+            modelComp.ModelPath = "primitive_cube_util"; // For debugging
             sharedWorld->AddComponent(entity, modelComp);
             
             sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange
@@ -478,9 +478,9 @@ void PhysicsLayer::AddVisualToPhysicsEntity(const ECS::Entity entity, const std:
             LOG_DEBUG("Adding sphere visual to entity {}", entity);
             
             ModelComponent modelComp;
-            modelComp.modelData = sphereModel;
-            modelComp.isLoaded = true;
-            modelComp.modelPath = "primitive_sphere_util"; // For debugging
+            modelComp.ModelData = sphereModel;
+            modelComp.IsLoaded = true;
+            modelComp.ModelPath = "primitive_sphere_util"; // For debugging
             sharedWorld->AddComponent(entity, modelComp);
             
             sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green

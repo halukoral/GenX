@@ -103,7 +103,7 @@ public:
     // Set model visibility
     void SetModelVisibility(ECS::Entity entity, bool visible) {
         if (world->HasComponent<RenderableComponent>(entity)) {
-            world->GetComponent<RenderableComponent>(entity).isVisible = visible;
+            world->GetComponent<RenderableComponent>(entity).IsVisible = visible;
         }
     }
     
@@ -141,14 +141,14 @@ public:
         
         // Transform all 8 corners of the bounding box
         std::vector<glm::vec3> corners = {
-            bounds.min,
-            glm::vec3(bounds.max.x, bounds.min.y, bounds.min.z),
-            glm::vec3(bounds.min.x, bounds.max.y, bounds.min.z),
-            glm::vec3(bounds.max.x, bounds.max.y, bounds.min.z),
-            glm::vec3(bounds.min.x, bounds.min.y, bounds.max.z),
-            glm::vec3(bounds.max.x, bounds.min.y, bounds.max.z),
-            glm::vec3(bounds.min.x, bounds.max.y, bounds.max.z),
-            bounds.max
+            bounds.Min,
+            glm::vec3(bounds.Max.x, bounds.Min.y, bounds.Min.z),
+            glm::vec3(bounds.Min.x, bounds.Max.y, bounds.Min.z),
+            glm::vec3(bounds.Max.x, bounds.Max.y, bounds.Min.z),
+            glm::vec3(bounds.Min.x, bounds.Min.y, bounds.Max.z),
+            glm::vec3(bounds.Max.x, bounds.Min.y, bounds.Max.z),
+            glm::vec3(bounds.Min.x, bounds.Max.y, bounds.Max.z),
+            bounds.Max
         };
         
         glm::vec3 worldMin(FLT_MAX);
@@ -162,8 +162,8 @@ public:
         }
         
         BoundingComponent worldBounds;
-        worldBounds.center = (worldMin + worldMax) * 0.5f;
-        worldBounds.extents = worldMax - worldMin;
+        worldBounds.Center = (worldMin + worldMax) * 0.5f;
+        worldBounds.Extents = worldMax - worldMin;
         worldBounds.UpdateBounds();
         
         return worldBounds;
@@ -172,7 +172,7 @@ public:
     // Check if model is loaded
     bool IsModelLoaded(ECS::Entity entity) {
         if (world->HasComponent<ModelComponent>(entity)) {
-            return world->GetComponent<ModelComponent>(entity).isLoaded;
+            return world->GetComponent<ModelComponent>(entity).IsLoaded;
         }
         return false;
     }
@@ -251,11 +251,11 @@ public:
             stats.totalEntities++;
             
             auto& modelComp = world->GetComponent<ModelComponent>(entity);
-            if (modelComp.isLoaded) {
+            if (modelComp.IsLoaded) {
                 stats.loadedModels++;
                 
-                if (modelComp.modelData) {
-                    for (const auto& mesh : modelComp.modelData->Meshes) {
+                if (modelComp.ModelData) {
+                    for (const auto& mesh : modelComp.ModelData->Meshes) {
                         stats.totalTriangles += mesh.Indices.size() / 3;
                     }
                 }
@@ -263,7 +263,7 @@ public:
             
             if (world->HasComponent<RenderableComponent>(entity)) {
                 auto& renderable = world->GetComponent<RenderableComponent>(entity);
-                if (renderable.isVisible) {
+                if (renderable.IsVisible) {
                     stats.visibleModels++;
                 }
             }
@@ -276,9 +276,9 @@ public:
     void DestroyModelEntity(ECS::Entity entity) {
         if (world->HasComponent<ModelComponent>(entity)) {
             auto& modelComp = world->GetComponent<ModelComponent>(entity);
-            if (modelComp.modelData) {
+            if (modelComp.ModelData) {
                 // Cleanup GPU resources
-                modelComp.modelData->Cleanup(device->GetLogicalDevice());
+                modelComp.ModelData->Cleanup(device->GetLogicalDevice());
             }
         }
         world->DestroyEntity(entity);
