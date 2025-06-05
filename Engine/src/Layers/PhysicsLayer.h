@@ -1,3 +1,4 @@
+// PhysicsLayer.h
 #pragma once
 
 #include "Layer.h"
@@ -6,13 +7,15 @@
 #include "ECS/Components/ModelComponent.h"
 #include "Layers/ModelLayer.h"
 #include "Renderer/PrimitiveModels.h"
-#include "Renderer/Device.h"  // EKLENEN - Device için gerekli
 #include <memory>
 #include <vector>
 
 class PhysicsLayer : public Layer
 {
 private:
+    // Kendi ECS World'ümüzü kaldırıyoruz!
+    // std::unique_ptr<ECS::World> ecsWorld; // BUNU KALDIR
+    
     std::unique_ptr<PhysicsManager> physicsManager;
     ModelLayer* modelLayer = nullptr; // Reference to model layer
     ECS::World* sharedWorld = nullptr; // ModelLayer'ın world'ünü kullanacağız
@@ -26,6 +29,7 @@ private:
     std::shared_ptr<Model> sphereModel = nullptr;
     
 public:
+    PhysicsLayer();
     ~PhysicsLayer() override = default;
     
     void OnAttach() override;
@@ -47,11 +51,11 @@ public:
     // Utility functions
     ECS::Entity CreatePhysicsBox(const glm::vec3& position, 
                                 const glm::vec3& size = glm::vec3(0.5f),
-                                float mass = 1.0f) const;
+                                float mass = 1.0f);
     
     ECS::Entity CreatePhysicsSphere(const glm::vec3& position,
                                    float radius = 0.5f,
-                                   float mass = 1.0f) const;
+                                   float mass = 1.0f);
     
     void AddExplosion(const glm::vec3& position, float force = 10.0f, float radius = 5.0f);
     

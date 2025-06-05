@@ -5,6 +5,10 @@
 #include "Input/Input.h"
 #include <random>
 
+PhysicsLayer::PhysicsLayer()
+{
+    // Artık kendi world'ümüzü oluşturmuyoruz!
+}
 
 void PhysicsLayer::OnAttach()
 {
@@ -14,72 +18,22 @@ void PhysicsLayer::OnAttach()
     auto& app = Application::Get();
     modelLayer = app.GetModelLayer();
     
-    if (!modelLayer)
-    {
+    if (!modelLayer) {
         LOG_ERROR("ModelLayer not found! Physics system cannot work.");
         return;
     }
     
-    LOG_INFO("ModelLayer found: {}", (void*)modelLayer);
-    
+    // ModelLayer'ın ECS World'ünü kullan
     sharedWorld = modelLayer->GetModelManager()->GetWorld();
     
-    if (!sharedWorld)
-    {
+    if (!sharedWorld) {
         LOG_ERROR("Shared ECS World not found!");
         return;
     }
     
-    LOG_INFO("Shared world found: {}", (void*)sharedWorld);
-    
-    auto renderer = app.GetRenderer();
-    if (!renderer)
-    {
-        LOG_ERROR("Renderer not found!");
-        return;
-    }
-    
-    Device* device = renderer->GetDevice();
-    if (!device)
-    {
-        LOG_ERROR("Device not found!");
-        return;
-    }
-    
-    LOG_INFO("Device found: {}", (void*)device);
-    
-    // Create primitive models for physics visualization WITH DEVICE
-    LOG_INFO("Creating primitive models with device...");
-    
-    try {
-        cubeModel = PrimitiveModels::CreateCube(0.5f, device);
-        LOG_INFO("Cube model created - Meshes: {}", cubeModel ? cubeModel->Meshes.size() : 0);
-        
-        if (cubeModel && !cubeModel->Meshes.empty())
-        {
-            const auto& mesh = cubeModel->Meshes[0];
-            LOG_INFO("Cube mesh - Vertices: {}, Indices: {}, VB: {}, IB: {}", 
-                    mesh.Vertices.size(), mesh.Indices.size(), 
-                    (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-        }
-        
-        sphereModel = PrimitiveModels::CreateSphere(0.5f, 32, 12, device);
-        LOG_INFO("Sphere model created - Meshes: {}", sphereModel ? sphereModel->Meshes.size() : 0);
-        
-        if (sphereModel && !sphereModel->Meshes.empty())
-        {
-            const auto& mesh = sphereModel->Meshes[0];
-            LOG_INFO("Sphere mesh - Vertices: {}, Indices: {}, VB: {}, IB: {}", 
-                    mesh.Vertices.size(), mesh.Indices.size(), 
-                    (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-        }
-        
-    }
-	catch (const std::exception& e)
-    {
-        LOG_ERROR("Failed to create primitive models: {}", e.what());
-        return;
-    }
+    // Create primitive models for physics visualization
+    cubeModel = PrimitiveModels::CreateCube(0.5f);
+    sphereModel = PrimitiveModels::CreateSphere(0.5f, 12, 8);
     
     LOG_INFO("Created primitive models for physics visualization");
     
@@ -87,8 +41,7 @@ void PhysicsLayer::OnAttach()
     physicsManager = std::make_unique<PhysicsManager>(sharedWorld);
     
     // Set up physics world
-	//physicsManager->SetGravity(glm::vec3(0.0f, -9.81f, 0.0f));
-    physicsManager->SetGravity(glm::vec3(0.0f, 0.0f, 0.0f));
+    physicsManager->SetGravity(glm::vec3(0.0f, -9.81f, 0.0f));
     
     // Create ground plane (invisible, just physics)
     auto ground = physicsManager->CreateGroundPlane(glm::vec3(0, -2, 0));
@@ -137,35 +90,28 @@ void PhysicsLayer::OnEvent(Event& event)
         if (e.GetKeyCode() == KeyCode::P) {
             // Toggle physics demo
             demoMode = !demoMode;
-            if (demoMode)
-            {
+            if (demoMode) {
                 CreatePhysicsDemo();
-            }
-        	else
-        	{
+            } else {
                 ClearDemo();
             }
             return true;
         }
         
-        if (demoMode)
-        {
-            if (e.GetKeyCode() == KeyCode::Space)
-            {
+        if (demoMode) {
+            if (e.GetKeyCode() == KeyCode::Space) {
                 // Add random objects
                 AddRandomPhysicsObjects();
                 return true;
             }
             
-            if (e.GetKeyCode() == KeyCode::B)
-            {
+            if (e.GetKeyCode() == KeyCode::B) {
                 // Add explosion at center
                 AddExplosion(glm::vec3(0, 5, 0), 15.0f, 8.0f);
                 return true;
             }
             
-            if (e.GetKeyCode() == KeyCode::C)
-            {
+            if (e.GetKeyCode() == KeyCode::C) {
                 // Clear demo objects
                 ClearDemo();
                 return true;
@@ -176,146 +122,72 @@ void PhysicsLayer::OnEvent(Event& event)
     });
 }
 
-ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position, const glm::vec3& size, float mass) const
+ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position, 
+                                          const glm::vec3& size, float mass)
 {
-    LOG_DEBUG("=== CreatePhysicsBox START ===");
-    LOG_DEBUG("Position: ({}, {}, {}), Size: ({}, {}, {}), Mass: {}", 
-             position.x, position.y, position.z, size.x, size.y, size.z, mass);
-    
-    if (!physicsManager || !sharedWorld)
-    {
-        LOG_ERROR("PhysicsManager or SharedWorld is null!");
-        return 0;
-    }
+    if (!physicsManager || !sharedWorld) return 0;
     
     auto entity = physicsManager->CreateBoxEntity(position, size, mass);
     physicsManager->SetMaterial(entity, 0.6f, 0.4f); // Medium friction and bounce
     
-    LOG_DEBUG("Physics entity created: {}", entity);
-    
     // Add visual representation using primitive model
     if (modelLayer && cubeModel)
     {
-        LOG_DEBUG("Adding visual representation to entity {}", entity);
-        
-        // Buffer kontrolü ekle
-        if (!cubeModel->Meshes.empty())
-        {
-            const auto& mesh = cubeModel->Meshes[0];
-            if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE)
-            {
-                LOG_ERROR("Cube model buffers are null! VB: {}, IB: {}", 
-                         (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-                return entity; // Physics entity'yi döndür ama visual ekleme
-            }
-            
-            LOG_DEBUG("Cube buffers OK - VB: {}, IB: {}", 
-                     (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-        }
-        
         // Create model component with our primitive cube
         ModelComponent modelComp;
         modelComp.modelData = cubeModel;
         modelComp.isLoaded = true;
-        modelComp.modelPath = "primitive_cube"; // For debugging
-        
-        LOG_DEBUG("Adding ModelComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, modelComp);
         
-        LOG_DEBUG("Adding RenderableComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, RenderableComponent(true));
-        
-        LOG_DEBUG("Adding MaterialComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange-ish color
         
         // Scale the visual to match physics collider
         if (sharedWorld->HasComponent<TransformComponent>(entity)) {
             auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
             transform.scale = size * 2.0f; // Physics size is half-extents, visual needs full size
-            
-            LOG_DEBUG("Entity {} transform - Pos: ({}, {}, {}), Scale: ({}, {}, {})", 
-                     entity, transform.position.x, transform.position.y, transform.position.z,
-                     transform.scale.x, transform.scale.y, transform.scale.z);
         }
         
-        LOG_INFO("Created physics box with visual at ({}, {}, {})", position.x, position.y, position.z);
+        LOG_DEBUG("Created physics box with visual at ({}, {}, {})", position.x, position.y, position.z);
     }
     else
     {
-        LOG_ERROR("ModelLayer or cube model not available - modelLayer={}, cubeModel={}", 
-                 (void*)modelLayer, (void*)cubeModel.get());
+        LOG_WARN("ModelLayer or cube model not available - physics box will be invisible");
     }
 
-    LOG_DEBUG("=== CreatePhysicsBox END ===");
     return entity;
 }
 
-ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,float radius, float mass) const
+ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,
+                                             float radius, float mass)
 {
-    LOG_DEBUG("=== CreatePhysicsSphere START ===");
-    LOG_DEBUG("Position: ({}, {}, {}), Radius: {}, Mass: {}", 
-             position.x, position.y, position.z, radius, mass);
-    
-    if (!physicsManager || !sharedWorld)
-    {
-        LOG_ERROR("PhysicsManager or SharedWorld is null!");
-        return 0;
-    }
+    if (!physicsManager || !sharedWorld) return 0;
     
     auto entity = physicsManager->CreateSphereEntity(position, radius, mass);
     physicsManager->SetMaterial(entity, 0.4f, 0.7f); // Low friction, high bounce
     
-    LOG_DEBUG("Physics entity created: {}", entity);
-    
     // Add visual representation using primitive model
     if (modelLayer && sphereModel) {
-        LOG_DEBUG("Adding visual representation to entity {}", entity);
-        
-        // Buffer kontrolü ekle
-        if (!sphereModel->Meshes.empty()) {
-            const auto& mesh = sphereModel->Meshes[0];
-            if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
-                LOG_ERROR("Sphere model buffers are null! VB: {}, IB: {}", 
-                         (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-                return entity; // Physics entity'yi döndür ama visual ekleme
-            }
-            
-            LOG_DEBUG("Sphere buffers OK - VB: {}, IB: {}", 
-                     (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-        }
-        
         // Create model component with our primitive sphere
         ModelComponent modelComp;
         modelComp.modelData = sphereModel;
         modelComp.isLoaded = true;
-        modelComp.modelPath = "primitive_sphere"; // For debugging
-        
-        LOG_DEBUG("Adding ModelComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, modelComp);
         
-        LOG_DEBUG("Adding RenderableComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, RenderableComponent(true));
-        
-        LOG_DEBUG("Adding MaterialComponent to entity {}", entity);
         sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green-ish color
         
         // Scale the visual to match physics collider
         if (sharedWorld->HasComponent<TransformComponent>(entity)) {
             auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
             transform.scale = glm::vec3(radius * 2.0f); // Diameter
-            
-            LOG_DEBUG("Entity {} transform - Pos: ({}, {}, {}), Scale: ({}, {}, {})", 
-                     entity, transform.position.x, transform.position.y, transform.position.z,
-                     transform.scale.x, transform.scale.y, transform.scale.z);
         }
         
-        LOG_INFO("Created physics sphere with visual at ({}, {}, {})", position.x, position.y, position.z);
+        LOG_DEBUG("Created physics sphere with visual at ({}, {}, {})", position.x, position.y, position.z);
     } else {
-        LOG_ERROR("ModelLayer or sphere model not available - modelLayer={}, sphereModel={}", 
-                 (void*)modelLayer, (void*)sphereModel.get());
+        LOG_WARN("ModelLayer or sphere model not available - physics sphere will be invisible");
     }
     
-    LOG_DEBUG("=== CreatePhysicsSphere END ===");
     return entity;
 }
 
@@ -419,23 +291,14 @@ void PhysicsLayer::CreatePhysicsDemo()
 // Helper function to add visual components to existing physics entities
 void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::string& type)
 {
-    LOG_DEBUG("=== AddVisualToPhysicsEntity START ===");
-    LOG_DEBUG("Entity: {}, Type: {}", entity, type);
-    
-    if (!modelLayer || !sharedWorld->HasComponent<TransformComponent>(entity)) {
-        LOG_ERROR("ModelLayer is null or entity missing TransformComponent");
-        return;
-    }
+    if (!modelLayer || !sharedWorld->HasComponent<TransformComponent>(entity)) return;
     
     // Add appropriate model
     if (type == "box" || type == "cube") {
         if (cubeModel) {
-            LOG_DEBUG("Adding cube visual to entity {}", entity);
-            
             ModelComponent modelComp;
             modelComp.modelData = cubeModel;
             modelComp.isLoaded = true;
-            modelComp.modelPath = "primitive_cube_util"; // For debugging
             sharedWorld->AddComponent(entity, modelComp);
             
             sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange
@@ -445,22 +308,14 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
                 auto& collider = sharedWorld->GetComponent<BoxColliderComponent>(entity);
                 auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
                 transform.scale = collider.size * 2.0f; // Half-extents to full size
-                
-                LOG_DEBUG("Box entity {} scaled to ({}, {}, {})", 
-                         entity, transform.scale.x, transform.scale.y, transform.scale.z);
             }
-        } else {
-            LOG_ERROR("Cube model is null!");
         }
     }
     else if (type == "sphere") {
         if (sphereModel) {
-            LOG_DEBUG("Adding sphere visual to entity {}", entity);
-            
             ModelComponent modelComp;
             modelComp.modelData = sphereModel;
             modelComp.isLoaded = true;
-            modelComp.modelPath = "primitive_sphere_util"; // For debugging
             sharedWorld->AddComponent(entity, modelComp);
             
             sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green
@@ -470,17 +325,11 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
                 auto& collider = sharedWorld->GetComponent<SphereColliderComponent>(entity);
                 auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
                 transform.scale = glm::vec3(collider.radius * 2.0f); // Radius to diameter
-                
-                LOG_DEBUG("Sphere entity {} scaled to ({}, {}, {})", 
-                         entity, transform.scale.x, transform.scale.y, transform.scale.z);
             }
-        } else {
-            LOG_ERROR("Sphere model is null!");
         }
     }
     
     sharedWorld->AddComponent(entity, RenderableComponent(true));
-    LOG_DEBUG("=== AddVisualToPhysicsEntity END ===");
 }
 
 void PhysicsLayer::ClearDemo()

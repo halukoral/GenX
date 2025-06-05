@@ -43,7 +43,7 @@ void Renderer::InitVulkan()
 
 	m_PhysicsLayer = std::make_shared<PhysicsLayer>();
 	m_PhysicsLayer->SetModelLayer(m_ModelLayer.get());
-	m_PhysicsLayer->EnableDemo(false);
+	m_PhysicsLayer->EnableDemo(true); // Demo için
 	Application::Get().PushLayer(m_PhysicsLayer);
 }
 
