@@ -13,12 +13,9 @@
 class PhysicsLayer : public Layer
 {
 private:
-    // Kendi ECS World'ümüzü kaldırıyoruz!
-    // std::unique_ptr<ECS::World> ecsWorld; // BUNU KALDIR
-    
+    std::unique_ptr<ECS::World> ecsWorld;
     std::unique_ptr<PhysicsManager> physicsManager;
     ModelLayer* modelLayer = nullptr; // Reference to model layer
-    ECS::World* sharedWorld = nullptr; // ModelLayer'ın world'ünü kullanacağız
     
     // Demo entities for testing
     std::vector<ECS::Entity> demoEntities;
@@ -39,6 +36,7 @@ public:
     
     // Public interface for other systems
     PhysicsManager* GetPhysicsManager() const { return physicsManager.get(); }
+    ECS::World* GetECSWorld() const { return ecsWorld.get(); }
     
     // Model layer integration
     void SetModelLayer(ModelLayer* layer) { modelLayer = layer; }

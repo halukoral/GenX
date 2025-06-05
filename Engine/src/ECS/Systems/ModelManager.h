@@ -45,9 +45,7 @@ public:
     }
     
     ~ModelManager() = default;
-
-	ECS::World* GetWorld() const { return world; }
-	
+    
     // Create a simple model entity with transform
     ECS::Entity CreateModelEntity(const std::string& modelPath, 
                                  const glm::vec3& position = glm::vec3(0.0f),
