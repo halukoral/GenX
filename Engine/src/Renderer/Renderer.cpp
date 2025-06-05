@@ -2,7 +2,6 @@
 
 #include "Application.h"
 #include "Layers/ModelLayer.h"
-#include "Layers/PhysicsLayer.h"
 
 void Renderer::InitVulkan()
 {
@@ -38,13 +37,9 @@ void Renderer::InitVulkan()
 	Application::Get().PushLayer(m_ModelLayer);
     
 	// Create some models
-	//auto viking = m_ModelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 2));
+	auto viking = m_ModelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 2));
 	//LoadTexture("../viking_room.png");
 
-	m_PhysicsLayer = std::make_shared<PhysicsLayer>();
-	m_PhysicsLayer->SetModelLayer(m_ModelLayer.get());
-	m_PhysicsLayer->EnableDemo(false);
-	Application::Get().PushLayer(m_PhysicsLayer);
 }
 
 void Renderer::LoadTexture(const std::string& texturePath)
