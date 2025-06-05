@@ -9,7 +9,7 @@
 struct CameraComponent : public ECS::Component
 {
 	float fov = 45.0f;
-	float nearPlane = 0.1f;
+	float nearPlane = 0.01f;
 	float farPlane = 100.0f;
 	float aspectRatio = 16.0f / 9.0f;
 	bool isActive = true;
