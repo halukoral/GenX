@@ -2,7 +2,6 @@
 
 #include "Application.h"
 #include "Layers/ModelLayer.h"
-#include "Layers/PhysicsLayer.h"
 
 void Renderer::InitVulkan()
 {
@@ -40,28 +39,6 @@ void Renderer::InitVulkan()
 	// Create some models
 	auto viking = m_ModelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 0));
 	//LoadTexture("../viking_room.png");
-
-	m_PhysicsLayer = std::make_shared<PhysicsLayer>();
-	m_PhysicsLayer->SetModelLayer(m_ModelLayer.get());
-	m_PhysicsLayer->EnableDemo(true); // Demo için
-	Application::Get().PushLayer(m_PhysicsLayer);
-
-	// Fizik manager'a erişim
-	auto* physics = m_PhysicsLayer->GetPhysicsManager();
-
-	// Zıplayan top (otomatik yeşil küre)
-	auto ball = physics->CreateSphereEntity(glm::vec3(0, 10, 0), 0.5f);
-	physics->SetMaterial(ball, 0.2f, 0.9f); // Az sürtünme, çok zıplama
-
-	// Duvar (otomatik turuncu kutu)
-	auto wall = physics->CreateBoxEntity(glm::vec3(5, 2, 0), 
-									   glm::vec3(0.1f, 2.0f, 2.0f), 
-									   1.0f, true); // static
-
-	// Kuvvet uygula
-	physics->AddImpulse(ball, glm::vec3(5, 0, 0)); // İtki ver
-	physics->AddForce(wall, glm::vec3(0, 100, 0));  // Kuvvet ekle
-
 }
 
 void Renderer::LoadModel(const std::string& path)

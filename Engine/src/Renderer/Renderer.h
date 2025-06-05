@@ -10,7 +10,6 @@
 #include "SwapChain.h"
 #include "Texture.h"
 #include "Layers/CameraLayer.h"
-#include "Layers/PhysicsLayer.h"
 
 class ModelLayer;
 
@@ -65,7 +64,6 @@ private:
 
 	std::shared_ptr<CameraLayer> m_CameraLayer;
 	std::shared_ptr<ModelLayer> m_ModelLayer;
-	std::shared_ptr<PhysicsLayer> m_PhysicsLayer;
 	std::unique_ptr<Model> m_Model;
 	std::unique_ptr<Texture> m_Texture;
 	
