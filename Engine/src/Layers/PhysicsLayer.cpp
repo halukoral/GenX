@@ -7,7 +7,7 @@
 
 PhysicsLayer::PhysicsLayer()
 {
-    ecsWorld = std::make_unique<ECS::World>();
+    // Artık kendi world'ümüzü oluşturmuyoruz!
 }
 
 void PhysicsLayer::OnAttach()
@@ -19,7 +19,16 @@ void PhysicsLayer::OnAttach()
     modelLayer = app.GetModelLayer();
     
     if (!modelLayer) {
-        LOG_ERROR("ModelLayer not found! Physics objects will not be visible.");
+        LOG_ERROR("ModelLayer not found! Physics system cannot work.");
+        return;
+    }
+    
+    // ModelLayer'ın ECS World'ünü kullan
+    sharedWorld = modelLayer->GetModelManager()->GetWorld();
+    
+    if (!sharedWorld) {
+        LOG_ERROR("Shared ECS World not found!");
+        return;
     }
     
     // Create primitive models for physics visualization
@@ -28,8 +37,8 @@ void PhysicsLayer::OnAttach()
     
     LOG_INFO("Created primitive models for physics visualization");
     
-    // Create physics manager
-    physicsManager = std::make_unique<PhysicsManager>(ecsWorld.get());
+    // Create physics manager with SHARED world
+    physicsManager = std::make_unique<PhysicsManager>(sharedWorld);
     
     // Set up physics world
     physicsManager->SetGravity(glm::vec3(0.0f, -9.81f, 0.0f));
@@ -37,12 +46,6 @@ void PhysicsLayer::OnAttach()
     // Create ground plane (invisible, just physics)
     auto ground = physicsManager->CreateGroundPlane(glm::vec3(0, -2, 0));
     physicsManager->SetMaterial(ground, 0.8f, 0.3f); // High friction, some bounce
-    
-    // Add trigger callback for demo
-    // physicsManager->AddTriggerCallback([this](const CollisionInfo& collision)
-    // {
-    //     LOG_INFO("Trigger collision between entities {} and {}", collision.entityA, collision.entityB);
-    // });
     
     // Create demo scene if enabled
     if (demoMode)
@@ -63,9 +66,8 @@ void PhysicsLayer::OnDetach()
         physicsManager.reset();
     }
     
-    if (ecsWorld) {
-        ecsWorld.reset();
-    }
+    // World'ü silmiyoruz çünkü ModelLayer'a ait
+    sharedWorld = nullptr;
 }
 
 void PhysicsLayer::OnUpdate(float ts)
@@ -123,7 +125,7 @@ void PhysicsLayer::OnEvent(Event& event)
 ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position, 
                                           const glm::vec3& size, float mass)
 {
-    if (!physicsManager) return 0;
+    if (!physicsManager || !sharedWorld) return 0;
     
     auto entity = physicsManager->CreateBoxEntity(position, size, mass);
     physicsManager->SetMaterial(entity, 0.6f, 0.4f); // Medium friction and bounce
@@ -135,21 +137,21 @@ ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position,
         ModelComponent modelComp;
         modelComp.modelData = cubeModel;
         modelComp.isLoaded = true;
-        ecsWorld->AddComponent(entity, modelComp);
+        sharedWorld->AddComponent(entity, modelComp);
         
-        ecsWorld->AddComponent(entity, RenderableComponent(true));
-        ecsWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange-ish color
+        sharedWorld->AddComponent(entity, RenderableComponent(true));
+        sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange-ish color
         
         // Scale the visual to match physics collider
-        if (ecsWorld->HasComponent<TransformComponent>(entity)) {
-            auto& transform = ecsWorld->GetComponent<TransformComponent>(entity);
+        if (sharedWorld->HasComponent<TransformComponent>(entity)) {
+            auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
             transform.scale = size * 2.0f; // Physics size is half-extents, visual needs full size
         }
         
         LOG_DEBUG("Created physics box with visual at ({}, {}, {})", position.x, position.y, position.z);
     }
-	else
-	{
+    else
+    {
         LOG_WARN("ModelLayer or cube model not available - physics box will be invisible");
     }
 
@@ -159,7 +161,7 @@ ECS::Entity PhysicsLayer::CreatePhysicsBox(const glm::vec3& position,
 ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,
                                              float radius, float mass)
 {
-    if (!physicsManager) return 0;
+    if (!physicsManager || !sharedWorld) return 0;
     
     auto entity = physicsManager->CreateSphereEntity(position, radius, mass);
     physicsManager->SetMaterial(entity, 0.4f, 0.7f); // Low friction, high bounce
@@ -170,14 +172,14 @@ ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,
         ModelComponent modelComp;
         modelComp.modelData = sphereModel;
         modelComp.isLoaded = true;
-        ecsWorld->AddComponent(entity, modelComp);
+        sharedWorld->AddComponent(entity, modelComp);
         
-        ecsWorld->AddComponent(entity, RenderableComponent(true));
-        ecsWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green-ish color
+        sharedWorld->AddComponent(entity, RenderableComponent(true));
+        sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green-ish color
         
         // Scale the visual to match physics collider
-        if (ecsWorld->HasComponent<TransformComponent>(entity)) {
-            auto& transform = ecsWorld->GetComponent<TransformComponent>(entity);
+        if (sharedWorld->HasComponent<TransformComponent>(entity)) {
+            auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
             transform.scale = glm::vec3(radius * 2.0f); // Diameter
         }
         
@@ -201,7 +203,7 @@ void PhysicsLayer::AddExplosion(const glm::vec3& position, float force, float ra
 
 void PhysicsLayer::CreatePhysicsDemo()
 {
-    if (!physicsManager) return;
+    if (!physicsManager || !sharedWorld) return;
     
     LOG_INFO("Creating physics demo scene...");
     
@@ -263,13 +265,13 @@ void PhysicsLayer::CreatePhysicsDemo()
         ModelComponent modelComp;
         modelComp.modelData = cubeModel;
         modelComp.isLoaded = true;
-        ecsWorld->AddComponent(trigger, modelComp);
+        sharedWorld->AddComponent(trigger, modelComp);
         
-        ecsWorld->AddComponent(trigger, RenderableComponent(true));
-        ecsWorld->AddComponent(trigger, MaterialComponent(glm::vec3(1.0f, 1.0f, 0.0f))); // Yellow trigger zone
+        sharedWorld->AddComponent(trigger, RenderableComponent(true));
+        sharedWorld->AddComponent(trigger, MaterialComponent(glm::vec3(1.0f, 1.0f, 0.0f))); // Yellow trigger zone
         
-        if (ecsWorld->HasComponent<TransformComponent>(trigger)) {
-            auto& transform = ecsWorld->GetComponent<TransformComponent>(trigger);
+        if (sharedWorld->HasComponent<TransformComponent>(trigger)) {
+            auto& transform = sharedWorld->GetComponent<TransformComponent>(trigger);
             transform.scale = glm::vec3(3.0f, 1.0f, 3.0f); // Scale to match trigger size
         }
     }
@@ -289,7 +291,7 @@ void PhysicsLayer::CreatePhysicsDemo()
 // Helper function to add visual components to existing physics entities
 void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::string& type)
 {
-    if (!modelLayer || !ecsWorld->HasComponent<TransformComponent>(entity)) return;
+    if (!modelLayer || !sharedWorld->HasComponent<TransformComponent>(entity)) return;
     
     // Add appropriate model
     if (type == "box" || type == "cube") {
@@ -297,14 +299,14 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
             ModelComponent modelComp;
             modelComp.modelData = cubeModel;
             modelComp.isLoaded = true;
-            ecsWorld->AddComponent(entity, modelComp);
+            sharedWorld->AddComponent(entity, modelComp);
             
-            ecsWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange
+            sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange
             
             // Scale to match box collider
-            if (ecsWorld->HasComponent<BoxColliderComponent>(entity)) {
-                auto& collider = ecsWorld->GetComponent<BoxColliderComponent>(entity);
-                auto& transform = ecsWorld->GetComponent<TransformComponent>(entity);
+            if (sharedWorld->HasComponent<BoxColliderComponent>(entity)) {
+                auto& collider = sharedWorld->GetComponent<BoxColliderComponent>(entity);
+                auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
                 transform.scale = collider.size * 2.0f; // Half-extents to full size
             }
         }
@@ -314,28 +316,28 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
             ModelComponent modelComp;
             modelComp.modelData = sphereModel;
             modelComp.isLoaded = true;
-            ecsWorld->AddComponent(entity, modelComp);
+            sharedWorld->AddComponent(entity, modelComp);
             
-            ecsWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green
+            sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green
             
             // Scale to match sphere collider
-            if (ecsWorld->HasComponent<SphereColliderComponent>(entity)) {
-                auto& collider = ecsWorld->GetComponent<SphereColliderComponent>(entity);
-                auto& transform = ecsWorld->GetComponent<TransformComponent>(entity);
+            if (sharedWorld->HasComponent<SphereColliderComponent>(entity)) {
+                auto& collider = sharedWorld->GetComponent<SphereColliderComponent>(entity);
+                auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
                 transform.scale = glm::vec3(collider.radius * 2.0f); // Radius to diameter
             }
         }
     }
     
-    ecsWorld->AddComponent(entity, RenderableComponent(true));
+    sharedWorld->AddComponent(entity, RenderableComponent(true));
 }
 
 void PhysicsLayer::ClearDemo()
 {
-    if (!ecsWorld) return;
+    if (!sharedWorld) return;
     
     for (auto entity : demoEntities) {
-        ecsWorld->DestroyEntity(entity);
+        sharedWorld->DestroyEntity(entity);
     }
     demoEntities.clear();
     
@@ -344,7 +346,7 @@ void PhysicsLayer::ClearDemo()
 
 void PhysicsLayer::AddRandomPhysicsObjects()
 {
-    if (!physicsManager) return;
+    if (!physicsManager || !sharedWorld) return;
     
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -385,73 +387,3 @@ void PhysicsLayer::HandleDemoInput()
         physicsManager->SetGravity(glm::vec3(0.0f, -9.81f, 0.0f));
     }
 }
-
-// Demo Physics Integration Example
-/*
-UPDATED: No External Models Required!
-The physics system now automatically creates primitive models (cubes and spheres) 
-for visualization, so you don't need external .obj files.
-
-Usage in your main application:
-
-1. Add PhysicsLayer to your application AFTER ModelLayer:
-   - In Application::Init() or Renderer::InitVulkan():
-   
-   // First ensure ModelLayer exists (should already be there)
-   if (!m_ModelLayer) {
-       m_ModelLayer = std::make_shared<ModelLayer>();
-       Application::Get().PushLayer(m_ModelLayer);
-   }
-   
-   // Then create PhysicsLayer and link to ModelLayer
-   auto physicsLayer = std::make_shared<PhysicsLayer>();
-   physicsLayer->SetModelLayer(m_ModelLayer.get());
-   physicsLayer->EnableDemo(true); // Enable demo mode
-   Application::Get().PushLayer(physicsLayer);
-
-2. Demo Controls:
-   - P: Toggle physics demo on/off
-   - Space: Add random objects (cubes and spheres)
-   - B: Create explosion at center (fun!)
-   - C: Clear all demo objects
-   - G/H: Increase/Decrease gravity
-   - R: Reset gravity to normal
-
-3. Creating physics objects in your game:
-   
-   auto* physics = GetPhysicsLayer()->GetPhysicsManager();
-   
-   // Create a bouncing ball (automatically rendered as green sphere)
-   auto ball = physics->CreateSphereEntity(glm::vec3(0, 10, 0), 0.5f, 1.0f);
-   physics->SetMaterial(ball, 0.2f, 0.9f); // Low friction, high bounce
-   
-   // Create a static wall (automatically rendered as orange box)
-   auto wall = physics->CreateBoxEntity(glm::vec3(5, 2, 0), 
-                                       glm::vec3(0.1f, 2.0f, 2.0f), 
-                                       1.0f, true);
-   
-   // Apply forces
-   physics->AddForce(ball, glm::vec3(100, 0, 0)); // Push right
-   physics->AddImpulse(ball, glm::vec3(0, 5, 0)); // Jump
-
-4. Visual Customization:
-   Change colors by modifying the MaterialComponent:
-   
-   // Change color of physics object to red
-   if (ecsWorld->HasComponent<MaterialComponent>(entity)) {
-       auto& material = ecsWorld->GetComponent<MaterialComponent>(entity);
-       material.albedo = glm::vec3(1.0f, 0.0f, 0.0f); // Red color
-   }
-
-5. The system automatically creates:
-   - Orange boxes for box physics objects
-   - Green spheres for sphere physics objects  
-   - Yellow boxes for trigger zones
-   - Invisible ground planes
-
-6. Performance tip:
-   The physics system runs at a fixed 60Hz timestep for stability,
-   while rendering runs at your display's refresh rate.
-
-Enjoy experimenting with physics! 🎮
-*/
