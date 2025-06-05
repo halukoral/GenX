@@ -268,96 +268,163 @@ public:
     void Render(VkCommandBuffer commandBuffer, const glm::vec3& cameraPos, 
                 const glm::mat4& viewMatrix, const glm::mat4& projMatrix) {
         
-        if (!pipeline || !pipelineLayout || !descriptor) {
-            LOG_ERROR("Pipeline, layout or descriptor is null!");
-            return;
-        }
-        
-        // Collect render commands
-        CollectRenderCommands(cameraPos);
-        
-        if (renderQueue.empty()) {
-            return; // Render edilecek model yok
-        }
-        
-        LOG_DEBUG("Rendering {} models", renderQueue.size());
-        
-        // Bind pipeline
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-        
-        // Her model için ayrı ayrı render et
-        for (const auto& cmd : renderQueue) {
-            RenderModelWithUniforms(commandBuffer, cmd, viewMatrix, projMatrix);
-        }
-        
-        renderQueue.clear();
+    	LOG_DEBUG("=== ModelRenderSystem::Render START ===");
+    	LOG_DEBUG("Pipeline: {}, PipelineLayout: {}, Descriptor: {}", 
+				 (void*)pipeline, (void*)pipelineLayout, (void*)descriptor);
+    
+    	if (!pipeline || !pipelineLayout || !descriptor)
+    	{
+    		LOG_ERROR("Pipeline, layout or descriptor is null!");
+    		return;
+    	}
+    
+    	// Collect render commands
+    	CollectRenderCommands(cameraPos);
+    
+    	LOG_DEBUG("Total entities to check: {}", Entities.size());
+    	LOG_DEBUG("Render queue size: {}", renderQueue.size());
+    
+    	if (renderQueue.empty())
+    	{
+    		LOG_WARN("Render queue is empty - no models to render");
+    		return;
+    	}
+    
+    	//LOG_INFO("Rendering {} models", renderQueue.size());
+    
+    	// Bind pipeline
+    	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    
+    	// Her model için ayrı ayrı render et
+    	for (const auto& cmd : renderQueue) {
+    		LOG_DEBUG("Rendering entity {} at distance {}", cmd.entity, cmd.distance);
+    		RenderModelWithUniforms(commandBuffer, cmd, viewMatrix, projMatrix);
+    	}
+    
+    	renderQueue.clear();
+    	LOG_DEBUG("=== ModelRenderSystem::Render END ===");
     }
     
 private:
     void RenderModelWithUniforms(VkCommandBuffer commandBuffer, const RenderCommand& cmd,
                                  const glm::mat4& viewMatrix, const glm::mat4& projMatrix) {
-        auto& modelComp = world->GetComponent<ModelComponent>(cmd.entity);
+    	auto& modelComp = world->GetComponent<ModelComponent>(cmd.entity);
+    
+    	if (!modelComp.modelData) {
+    		LOG_ERROR("Entity {} has null modelData", cmd.entity);
+    		return;
+    	}
+    
+    	LOG_DEBUG("Rendering entity {} with {} meshes", cmd.entity, modelComp.modelData->Meshes.size());
+    
+    	// Uniform buffer'ı bu model için güncelle
+    	UniformBufferObject ubo{};
+    	ubo.Model = cmd.modelMatrix;
+    	ubo.View = viewMatrix;
+    	ubo.Proj = projMatrix;
+    
+    	// Descriptor'ı güncelle
+    	descriptor->UpdateUniformBuffer(currentFrame, ubo);
+    
+    	// Descriptor set'i bind et
+    	VkDescriptorSet descriptorSet = descriptor->GetDescriptorSet(currentFrame);
+    	LOG_DEBUG("Binding descriptor set: {}", (void*)descriptorSet);
+    
+    	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+							   pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+    
+    	// Mesh'leri render et
+    	for (size_t i = 0; i < modelComp.modelData->Meshes.size(); ++i) {
+    		const auto& mesh = modelComp.modelData->Meshes[i];
         
-        if (!modelComp.modelData) return;
+    		if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
+    			LOG_ERROR("Entity {} mesh {} has null buffers - VB: {}, IB: {}", 
+						 cmd.entity, i, (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
+    			continue;
+    		}
         
-        // Uniform buffer'ı bu model için güncelle
-        UniformBufferObject ubo{};
-        ubo.Model = cmd.modelMatrix;
-        ubo.View = viewMatrix;
-        ubo.Proj = projMatrix;
+    		LOG_DEBUG("Rendering mesh {} with {} indices", i, mesh.Indices.size());
         
-        // Descriptor'ı güncelle
-        descriptor->UpdateUniformBuffer(currentFrame, ubo);
+    		const VkBuffer vertexBuffers[] = {mesh.VertexBuffer};
+    		const VkDeviceSize offsets[] = {0};
         
-        // Descriptor set'i bind et
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                               pipelineLayout, 0, 1, &descriptor->GetDescriptorSet(currentFrame), 
-                               0, nullptr);
+    		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+    		vkCmdBindIndexBuffer(commandBuffer, mesh.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.Indices.size()), 1, 0, 0, 0);
         
-        // Mesh'leri render et
-        for (const auto& mesh : modelComp.modelData->Meshes) {
-            if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
-                continue;
-            }
-            
-            const VkBuffer vertexBuffers[] = {mesh.VertexBuffer};
-            const VkDeviceSize offsets[] = {0};
-            
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(commandBuffer, mesh.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.Indices.size()), 1, 0, 0, 0);
-        }
+    		LOG_DEBUG("Draw call issued for mesh {} with {} indices", i, mesh.Indices.size());
+    	}
     }
     
     void CollectRenderCommands(const glm::vec3& cameraPos) {
-        renderQueue.clear();
-        
-        for (auto entity : Entities) {
-            auto& modelComp = world->GetComponent<ModelComponent>(entity);
-            auto& transform = world->GetComponent<TransformComponent>(entity);
-            
-            // Skip if not ready
-            if (!modelComp.IsReadyForRender()) continue;
-            
-            // Visibility check
-            if (world->HasComponent<RenderableComponent>(entity)) {
-                auto& renderable = world->GetComponent<RenderableComponent>(entity);
-                if (!renderable.isVisible) continue;
-            }
-            
-            // Create render command
-            RenderCommand cmd;
-            cmd.entity = entity;
-            cmd.modelMatrix = transform.GetTransformMatrix();
-            cmd.distance = glm::distance(cameraPos, transform.position);
-            
-            renderQueue.push_back(cmd);
-        }
-        
-        // Sort by distance (front to back)
-        std::sort(renderQueue.begin(), renderQueue.end(), 
-                 [](const RenderCommand& a, const RenderCommand& b) {
-                     return a.distance < b.distance;
-                 });
+	    renderQueue.clear();
+	    
+	    LOG_DEBUG("=== CollectRenderCommands START ===");
+	    LOG_DEBUG("Total entities in system: {}", Entities.size());
+	    
+	    for (auto entity : Entities) {
+	        LOG_DEBUG("Checking entity {}", entity);
+	        
+	        // Check if has required components
+	        if (!world->HasComponent<ModelComponent>(entity)) {
+	            LOG_DEBUG("Entity {} missing ModelComponent", entity);
+	            continue;
+	        }
+	        
+	        if (!world->HasComponent<TransformComponent>(entity)) {
+	            LOG_DEBUG("Entity {} missing TransformComponent", entity);
+	            continue;
+	        }
+	        
+	        auto& modelComp = world->GetComponent<ModelComponent>(entity);
+	        auto& transform = world->GetComponent<TransformComponent>(entity);
+	        
+	        LOG_DEBUG("Entity {} - ModelPath: '{}', IsLoaded: {}, ModelData: {}", 
+	                 entity, modelComp.modelPath, modelComp.isLoaded, (void*)modelComp.modelData.get());
+	        
+	        // Skip if not ready
+	        if (!modelComp.IsReadyForRender()) {
+	            LOG_DEBUG("Entity {} not ready for render", entity);
+	            continue;
+	        }
+	        
+	        LOG_DEBUG("Entity {} model has {} meshes", entity, modelComp.modelData->Meshes.size());
+	        
+	        // Check each mesh buffer status
+	        for (size_t i = 0; i < modelComp.modelData->Meshes.size(); ++i) {
+	            const auto& mesh = modelComp.modelData->Meshes[i];
+	            LOG_DEBUG("Mesh {} - VertexBuffer: {}, IndexBuffer: {}, Vertices: {}, Indices: {}", 
+	                     i, (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer, 
+	                     mesh.Vertices.size(), mesh.Indices.size());
+	        }
+	        
+	        // Visibility check
+	        if (world->HasComponent<RenderableComponent>(entity)) {
+	            auto& renderable = world->GetComponent<RenderableComponent>(entity);
+	            LOG_DEBUG("Entity {} visibility: {}", entity, renderable.isVisible);
+	            if (!renderable.isVisible) continue;
+	        }
+	        
+	        // Create render command
+	        RenderCommand cmd;
+	        cmd.entity = entity;
+	        cmd.modelMatrix = transform.GetTransformMatrix();
+	        cmd.distance = glm::distance(cameraPos, transform.position);
+	        
+	        LOG_DEBUG("Entity {} added to render queue - Position: ({}, {}, {})", 
+	                 entity, transform.position.x, transform.position.y, transform.position.z);
+	        
+	        renderQueue.push_back(cmd);
+	    }
+	    
+	    LOG_DEBUG("Final render queue size: {}", renderQueue.size());
+	    
+	    // Sort by distance (front to back)
+	    std::sort(renderQueue.begin(), renderQueue.end(), 
+	             [](const RenderCommand& a, const RenderCommand& b) {
+	                 return a.distance < b.distance;
+	             });
+	    
+	    LOG_DEBUG("=== CollectRenderCommands END ===");
     }
 };
