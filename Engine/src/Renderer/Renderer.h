@@ -32,14 +32,12 @@ public:
 	Descriptor* GetDescriptor() const { return m_Descriptor.get(); }
 	
 	// Model loading
-	void LoadModel(const std::string& path);
 	void LoadTexture(const std::string& texturePath);
 	
 private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
 	void CreateDepthResources();
-	void CreateModelBuffers() const;
 	
 	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
 	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
@@ -66,7 +64,6 @@ private:
 	std::shared_ptr<CameraLayer> m_CameraLayer;
 	std::shared_ptr<ModelLayer> m_ModelLayer;
 	std::shared_ptr<PhysicsLayer> m_PhysicsLayer;
-	std::unique_ptr<Model> m_Model;
 	std::unique_ptr<Texture> m_Texture;
 	
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;

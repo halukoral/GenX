@@ -47,12 +47,6 @@ void Renderer::InitVulkan()
 	Application::Get().PushLayer(m_PhysicsLayer);
 }
 
-void Renderer::LoadModel(const std::string& path)
-{
-    m_Model = std::make_unique<Model>(path);
-    CreateModelBuffers();
-}
-
 void Renderer::LoadTexture(const std::string& texturePath)
 {
 	m_Texture = std::make_unique<Texture>(m_Device.get(), texturePath);
@@ -70,57 +64,6 @@ void Renderer::CreateDepthResources()
                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
 
     m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-}
-
-void Renderer::CreateModelBuffers() const
-{
-    if (!m_Model) return;
-    
-    for (auto& mesh : m_Model->Meshes)
-    {
-        // Vertex buffer
-        const VkDeviceSize vertexBufferSize = sizeof(mesh.Vertices[0]) * mesh.Vertices.size();
-        VkBuffer vertexStagingBuffer;
-        VkDeviceMemory vertexStagingBufferMemory;
-        
-        CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                    vertexStagingBuffer, vertexStagingBufferMemory);
-
-        void* data;
-        vkMapMemory(m_Device->GetLogicalDevice(), vertexStagingBufferMemory, 0, vertexBufferSize, 0, &data);
-        memcpy(data, mesh.Vertices.data(), (size_t) vertexBufferSize);
-        vkUnmapMemory(m_Device->GetLogicalDevice(), vertexStagingBufferMemory);
-
-        CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh.VertexBuffer, mesh.VertexBufferMemory);
-
-        CopyBuffer(vertexStagingBuffer, mesh.VertexBuffer, vertexBufferSize);
-
-        vkDestroyBuffer(m_Device->GetLogicalDevice(), vertexStagingBuffer, nullptr);
-        vkFreeMemory(m_Device->GetLogicalDevice(), vertexStagingBufferMemory, nullptr);
-
-        // Index buffer
-        const VkDeviceSize indexBufferSize = sizeof(mesh.Indices[0]) * mesh.Indices.size();
-        VkBuffer indexStagingBuffer;
-        VkDeviceMemory indexStagingBufferMemory;
-
-        CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                    indexStagingBuffer, indexStagingBufferMemory);
-
-        vkMapMemory(m_Device->GetLogicalDevice(), indexStagingBufferMemory, 0, indexBufferSize, 0, &data);
-        memcpy(data, mesh.Indices.data(), (size_t) indexBufferSize);
-        vkUnmapMemory(m_Device->GetLogicalDevice(), indexStagingBufferMemory);
-
-        CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mesh.IndexBuffer, mesh.IndexBufferMemory);
-
-        CopyBuffer(indexStagingBuffer, mesh.IndexBuffer, indexBufferSize);
-
-        vkDestroyBuffer(m_Device->GetLogicalDevice(), indexStagingBuffer, nullptr);
-        vkFreeMemory(m_Device->GetLogicalDevice(), indexStagingBufferMemory, nullptr);
-    }
 }
 
 void Renderer::UpdateUniformBuffer(const uint32_t currentFrame) const
@@ -422,13 +365,6 @@ void Renderer::Cleanup()
 	vkDestroyImage(m_Device->GetLogicalDevice(), m_DepthImage, nullptr);
 	vkFreeMemory(m_Device->GetLogicalDevice(), m_DepthImageMemory, nullptr);
 
-	// Model cleanup
-	if (m_Model)
-	{
-		m_Model->Cleanup(m_Device->GetLogicalDevice());
-	}
-
-	m_Model.reset();
 	m_Texture.reset();
 	
 	imguiRenderer.reset();
