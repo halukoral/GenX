@@ -3,6 +3,55 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+std::unique_ptr<Texture> Texture::CreateDefaultTexture(Device* device)
+{
+    // Create a 1x1 white pixel texture
+    const uint32_t width = 1;
+    const uint32_t height = 1;
+    const VkDeviceSize imageSize = width * height * 4;
+    const unsigned char pixel[4] = {255, 255, 255, 255}; // White pixel
+    
+    auto texture = std::make_unique<Texture>();
+    texture->m_Device = device;
+    
+    // Create staging buffer
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    texture->CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory);
+    
+    void* data;
+    vkMapMemory(device->GetLogicalDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, pixel, static_cast<size_t>(imageSize));
+    vkUnmapMemory(device->GetLogicalDevice(), stagingBufferMemory);
+    
+    // Create texture image
+    texture->CreateImage(width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+                        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+                        texture->m_TextureImage, texture->m_TextureImageMemory);
+    
+    texture->TransitionImageLayout(texture->m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB,
+                                  VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    
+    texture->CopyBufferToImage(stagingBuffer, texture->m_TextureImage, width, height);
+    
+    texture->TransitionImageLayout(texture->m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB,
+                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    
+    vkDestroyBuffer(device->GetLogicalDevice(), stagingBuffer, nullptr);
+    vkFreeMemory(device->GetLogicalDevice(), stagingBufferMemory, nullptr);
+    
+    // Create texture image view and sampler
+    texture->CreateTextureImageView();
+    texture->CreateTextureSampler();
+    
+    LOG_INFO("Default white texture created");
+    
+    return texture;
+}
+
 Texture::Texture(Device* device, const std::string& imagePath) : m_Device(device)
 {
     CreateTextureImage(imagePath);

@@ -38,6 +38,8 @@ void Renderer::InitVulkan()
     
 	// Create some models
 	auto viking = m_ModelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 2));
+	m_Texture = Texture::CreateDefaultTexture(m_Device.get());
+	m_Descriptor->UpdateTextureDescriptor(m_Texture.get());
 	//LoadTexture("../viking_room.png");
 
 }

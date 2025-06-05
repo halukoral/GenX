@@ -6,6 +6,9 @@
 class Texture
 {
 public:
+	static std::unique_ptr<Texture> CreateDefaultTexture(Device* device);
+
+	Texture() = default;
 	Texture(Device* device, const std::string& imagePath);
 	~Texture();
 
