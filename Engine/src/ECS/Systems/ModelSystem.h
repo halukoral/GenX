@@ -29,23 +29,38 @@ public:
     void SetWorld(ECS::World* w) { world = w; }
     void SetDevice(Device* dev) { device = dev; }
     
-    void Update(float dt) override {
-        for (auto entity : Entities) {
-            auto& modelComp = world->GetComponent<ModelComponent>(entity);
-            
-            // Start loading if not loaded and not currently loading
-            if (!modelComp.IsLoaded && !modelComp.ModelPath.empty()) {
-                StartLoadingModel(entity, modelComp);
-            }
-            
-            // Check if loading completed
-            CheckLoadingCompletion(entity, modelComp);
-        }
+	void ModelLoadingSystem::Update(float dt) override {
+    	for (auto entity : Entities) {
+    		auto& modelComp = world->GetComponent<ModelComponent>(entity);
+        
+    		// Skip primitives - they're already loaded and buffered
+    		if (modelComp.ModelPath.find("primitive://") == 0) {
+    			continue;
+    		}
+        
+    		// Normal model loading...
+    		if (!modelComp.IsLoaded && !modelComp.ModelPath.empty()) {
+    			StartLoadingModel(entity, modelComp);
+    		}
+        
+    		CheckLoadingCompletion(entity, modelComp);
+    	}
     }
     
     void StartLoadingModel(ECS::Entity entity, ModelComponent& modelComp) {
         const std::string& path = modelComp.ModelPath;
-        
+
+    	// Check if it's a primitive model
+    	if (path.find("primitive://") == 0)
+    	{
+    		// Primitives are already loaded, just need buffers
+    		if (modelComp.ModelData && modelComp.IsDirty)
+    		{
+    			CreateModelBuffers(modelComp);
+    		}
+    		return;
+    	}
+    	
         // Check cache first
         if (modelCache.contains(path)) {
             modelComp.ModelData = modelCache[path];
