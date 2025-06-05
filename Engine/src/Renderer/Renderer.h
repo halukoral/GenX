@@ -33,6 +33,7 @@ public:
 	// Model loading
 	void LoadModel(const std::string& path);
 	void LoadTexture(const std::string& texturePath);
+	static void CreatePrimitiveDemo();
 	
 private:
 	void CreateFramebuffers();

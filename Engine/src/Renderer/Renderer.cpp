@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "Application.h"
+#include "PrimitiveModels.h"
 #include "Layers/ModelLayer.h"
 
 void Renderer::InitVulkan()
@@ -37,8 +38,49 @@ void Renderer::InitVulkan()
 	Application::Get().PushLayer(m_ModelLayer);
     
 	// Create some models
-	auto viking = m_ModelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 0));
+	//auto viking = m_ModelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 0));
 	//LoadTexture("../viking_room.png");
+	CreatePrimitiveDemo();
+}
+
+void Renderer::CreatePrimitiveDemo() {
+	Device* device = Application::Get().GetRenderer()->GetDevice();
+	ModelLayer* modelLayer = Application::Get().GetModelLayer();
+	auto world = modelLayer->GetModelManager()->GetWorld();
+    
+	// Farklı primitive'ler oluştur
+	std::vector<std::shared_ptr<Model>> primitives = {
+		PrimitiveModels::CreateCube(0.5f, device),
+		PrimitiveModels::CreateSphere(0.5f, 16, 12, device),
+		PrimitiveModels::CreatePlane(2.0f, device)
+	};
+    
+	// Grid şeklinde yerleştir
+	float spacing = 2.0f;
+	for (int i = 0; i < primitives.size(); ++i) {
+		ECS::Entity entity = world->CreateEntity();
+        
+		// Position
+		glm::vec3 pos(i * spacing - spacing, 0, 0);
+		world->AddComponent(entity, TransformComponent(pos));
+        
+		// Model
+		ModelComponent modelComp;
+		modelComp.modelData = primitives[i];
+		modelComp.isLoaded = true;
+		world->AddComponent(entity, modelComp);
+        
+		// Renderable
+		world->AddComponent(entity, RenderableComponent(true));
+        
+		// Farklı renkler
+		glm::vec3 colors[] = {
+			glm::vec3(1, 0, 0),  // Kırmızı
+			glm::vec3(0, 1, 0),  // Yeşil
+			glm::vec3(0, 0, 1)   // Mavi
+		};
+		world->AddComponent(entity, MaterialComponent(colors[i]));
+	}
 }
 
 void Renderer::LoadModel(const std::string& path)
