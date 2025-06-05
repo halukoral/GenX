@@ -109,17 +109,24 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
     colorBlending.attachmentCount = 1;
     colorBlending.pAttachments = &colorBlendAttachment;
 
-    // Pipeline layout...
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &descriptor->GetDescriptorSetLayout();
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
+	// Push constant range tanımla
+	VkPushConstantRange pushConstantRange{};
+	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof(PushConstantData);
+	
+	// Pipeline layout...
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &descriptor->GetDescriptorSetLayout();
+	pipelineLayoutInfo.pushConstantRangeCount = 1;  // Push constant ekle
+	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;  // Push constant range
 
-    if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Pipeline layout creation failed!");
-    }
+	if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Pipeline layout creation failed!");
+	}
 	LOG_INFO("Pipeline layout created successfully!");
 
     // Pipeline create...

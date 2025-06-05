@@ -308,52 +308,56 @@ public:
 private:
     void RenderModelWithUniforms(VkCommandBuffer commandBuffer, const RenderCommand& cmd,
                                  const glm::mat4& viewMatrix, const glm::mat4& projMatrix) {
-    	auto& modelComp = world->GetComponent<ModelComponent>(cmd.entity);
-    
-    	if (!modelComp.modelData) {
-    		LOG_ERROR("Entity {} has null modelData", cmd.entity);
-    		return;
-    	}
-    
-    	LOG_DEBUG("Rendering entity {} with {} meshes", cmd.entity, modelComp.modelData->Meshes.size());
-    
-    	// Uniform buffer'ı bu model için güncelle
-    	UniformBufferObject ubo{};
-    	ubo.Model = cmd.modelMatrix;
-    	ubo.View = viewMatrix;
-    	ubo.Proj = projMatrix;
-    
-    	// Descriptor'ı güncelle
-    	descriptor->UpdateUniformBuffer(currentFrame, ubo);
-    
-    	// Descriptor set'i bind et
-    	VkDescriptorSet descriptorSet = descriptor->GetDescriptorSet(currentFrame);
-    	LOG_DEBUG("Binding descriptor set: {}", (void*)descriptorSet);
-    
-    	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
-							   pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
-    
-    	// Mesh'leri render et
-    	for (size_t i = 0; i < modelComp.modelData->Meshes.size(); ++i) {
-    		const auto& mesh = modelComp.modelData->Meshes[i];
-        
-    		if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
-    			LOG_ERROR("Entity {} mesh {} has null buffers - VB: {}, IB: {}", 
-						 cmd.entity, i, (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
-    			continue;
-    		}
-        
-    		LOG_DEBUG("Rendering mesh {} with {} indices", i, mesh.Indices.size());
-        
-    		const VkBuffer vertexBuffers[] = {mesh.VertexBuffer};
-    		const VkDeviceSize offsets[] = {0};
-        
-    		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-    		vkCmdBindIndexBuffer(commandBuffer, mesh.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.Indices.size()), 1, 0, 0, 0);
-        
-    		LOG_DEBUG("Draw call issued for mesh {} with {} indices", i, mesh.Indices.size());
-    	}
+	    auto& modelComp = world->GetComponent<ModelComponent>(cmd.entity);
+	    
+	    if (!modelComp.modelData) {
+	        LOG_ERROR("Entity {} has null modelData", cmd.entity);
+	        return;
+	    }
+	    
+	    LOG_DEBUG("Rendering entity {} with {} meshes", cmd.entity, modelComp.modelData->Meshes.size());
+	    
+	    // Uniform buffer'ı güncelle (sadece view ve projection)
+	    UniformBufferObject ubo{};
+	    ubo.View = viewMatrix;
+	    ubo.Proj = projMatrix;
+	    
+	    // Descriptor'ı güncelle
+	    descriptor->UpdateUniformBuffer(currentFrame, ubo);
+	    
+	    // Descriptor set'i bind et
+	    VkDescriptorSet descriptorSet = descriptor->GetDescriptorSet(currentFrame);
+	    LOG_DEBUG("Binding descriptor set: {}", (void*)descriptorSet);
+	    
+	    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+	                           pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+	    
+	    // Push constant olarak model matrisini gönder
+	    PushConstantData pushData{};
+	    pushData.Model = cmd.modelMatrix;
+	    
+	    vkCmdPushConstants(commandBuffer, pipelineLayout, 
+	                       VK_SHADER_STAGE_VERTEX_BIT, 0, 
+	                       sizeof(PushConstantData), &pushData);
+	    
+	    // Mesh'leri render et
+	    for (size_t i = 0; i < modelComp.modelData->Meshes.size(); ++i) {
+	        const auto& mesh = modelComp.modelData->Meshes[i];
+	        
+	        if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
+	            LOG_ERROR("Entity {} mesh {} has null buffers", cmd.entity, i);
+	            continue;
+	        }
+	        
+	        LOG_DEBUG("Rendering mesh {} with {} indices", i, mesh.Indices.size());
+	        
+	        const VkBuffer vertexBuffers[] = {mesh.VertexBuffer};
+	        const VkDeviceSize offsets[] = {0};
+	        
+	        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	        vkCmdBindIndexBuffer(commandBuffer, mesh.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+	        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.Indices.size()), 1, 0, 0, 0);
+	    }
     }
     
     void CollectRenderCommands(const glm::vec3& cameraPos) {

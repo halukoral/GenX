@@ -125,16 +125,16 @@ void Renderer::CreateModelBuffers() const
 
 void Renderer::UpdateUniformBuffer(const uint32_t currentFrame) const
 {
-    if (!m_Model || !m_CameraLayer) return;
+	if (!m_CameraLayer) return;
     
 	const auto& cameraData = m_CameraLayer->GetCameraData();
     
 	UniformBufferObject ubo{};
-	ubo.Model = m_Model->GetModelMatrix();
+	// Model matrisi artık yok, sadece view ve projection
 	ubo.View = cameraData.view;
 	ubo.Proj = cameraData.projection;
-	
-    m_Descriptor->UpdateUniformBuffer(currentFrame, ubo);
+    
+	m_Descriptor->UpdateUniformBuffer(currentFrame, ubo);
 }
 
 void Renderer::CreateFramebuffers()

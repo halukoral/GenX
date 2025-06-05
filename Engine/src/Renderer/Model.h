@@ -21,12 +21,17 @@ struct Vertex3D
     }
 };
 
-// Uniform Buffer Object
+// Uniform Buffer Object - Model matrix removed
 struct UniformBufferObject
 {
-    glm::mat4 Model;
-    glm::mat4 View;
-    glm::mat4 Proj;
+	glm::mat4 View;
+	glm::mat4 Proj;
+};
+
+// Push constant structure
+struct PushConstantData
+{
+	glm::mat4 Model;
 };
 
 class Mesh

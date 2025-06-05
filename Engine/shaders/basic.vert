@@ -1,7 +1,12 @@
 #version 450
 
-layout(binding = 0) uniform UniformBufferObject {
+// Push constant for model matrix
+layout(push_constant) uniform PushConstants {
     mat4 model;
+} pushConstants;
+
+// Uniform buffer now only contains view and projection
+layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
 } ubo;
@@ -17,11 +22,11 @@ layout(location = 2) out vec2 fragTexCoord;
 layout(location = 3) out vec3 fragWorldPos;
 
 void main() {
-    vec4 worldPos = ubo.model * vec4(inPosition, 1.0);
+    vec4 worldPos = pushConstants.model * vec4(inPosition, 1.0);
     gl_Position = ubo.proj * ubo.view * worldPos;
 
     fragColor = inColor;
-    fragNormal = mat3(transpose(inverse(ubo.model))) * inNormal; // Normal matrix
+    fragNormal = mat3(transpose(inverse(pushConstants.model))) * inNormal;
     fragTexCoord = inTexCoord;
     fragWorldPos = worldPos.xyz;
 }
