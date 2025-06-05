@@ -67,8 +67,7 @@ public:
     ECS::Entity CreateBoxEntity(const glm::vec3& position,
                                const glm::vec3& halfExtents,
                                float mass = 1.0f,
-                               bool isStatic = false)
-	{
+                               bool isStatic = false) {
         ECS::Entity entity = world->CreateEntity();
         
         // Add transform
@@ -90,8 +89,7 @@ public:
     
     // Create ground plane
     ECS::Entity CreateGroundPlane(const glm::vec3& position = glm::vec3(0, 0, 0),
-                                 const glm::vec3& normal = glm::vec3(0, 1, 0))
-	{
+                                 const glm::vec3& normal = glm::vec3(0, 1, 0)) {
         ECS::Entity entity = world->CreateEntity();
         
         // Add transform
