@@ -5,13 +5,12 @@
 #include "Input/Input.h"
 #include <random>
 
-
 void PhysicsLayer::OnAttach()
 {
     LOG_INFO("PhysicsLayer::OnAttach called");
     
     // Get reference to ModelLayer from Application
-    auto& app = Application::Get();
+    const auto& app = Application::Get();
     modelLayer = app.GetModelLayer();
     
     if (!modelLayer)
@@ -31,8 +30,8 @@ void PhysicsLayer::OnAttach()
     }
     
     LOG_INFO("Shared world found: {}", (void*)sharedWorld);
-    
-    auto renderer = app.GetRenderer();
+
+    const auto renderer = app.GetRenderer();
     if (!renderer)
     {
         LOG_ERROR("Renderer not found!");
@@ -51,7 +50,9 @@ void PhysicsLayer::OnAttach()
     // Create primitive models for physics visualization WITH DEVICE
     LOG_INFO("Creating primitive models with device...");
     
-    try {
+    try
+    {
+    	auto Model = modelLayer->CreateModel("../cube.obj", glm::vec3(0, 0, 2));
         cubeModel = PrimitiveModels::CreateCube(0.5f, device);
         LOG_INFO("Cube model created - Meshes: {}", cubeModel ? cubeModel->Meshes.size() : 0);
         
@@ -109,7 +110,8 @@ void PhysicsLayer::OnDetach()
     
     ClearDemo();
     
-    if (physicsManager) {
+    if (physicsManager)
+    {
         physicsManager.reset();
     }
     
@@ -119,11 +121,13 @@ void PhysicsLayer::OnDetach()
 
 void PhysicsLayer::OnUpdate(float ts)
 {
-    if (physicsManager) {
+    if (physicsManager)
+    {
         physicsManager->Update(ts);
         
         // Demo controls
-        if (demoMode) {
+        if (demoMode)
+        {
             HandleDemoInput();
         }
     }
@@ -132,9 +136,10 @@ void PhysicsLayer::OnUpdate(float ts)
 void PhysicsLayer::OnEvent(Event& event)
 {
     EventDispatcher dispatcher(event);
-    
-    dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) {
-        if (e.GetKeyCode() == KeyCode::P) {
+    dispatcher.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e)
+    {
+        if (e.GetKeyCode() == KeyCode::P)
+        {
             // Toggle physics demo
             demoMode = !demoMode;
             if (demoMode)
@@ -272,9 +277,11 @@ ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,float ra
         LOG_DEBUG("Adding visual representation to entity {}", entity);
         
         // Buffer kontrolü ekle
-        if (!sphereModel->Meshes.empty()) {
+        if (!sphereModel->Meshes.empty())
+        {
             const auto& mesh = sphereModel->Meshes[0];
-            if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE) {
+            if (mesh.VertexBuffer == VK_NULL_HANDLE || mesh.IndexBuffer == VK_NULL_HANDLE)
+            {
                 LOG_ERROR("Sphere model buffers are null! VB: {}, IB: {}", 
                          (void*)mesh.VertexBuffer, (void*)mesh.IndexBuffer);
                 return entity; // Physics entity'yi döndür ama visual ekleme
@@ -319,7 +326,7 @@ ECS::Entity PhysicsLayer::CreatePhysicsSphere(const glm::vec3& position,float ra
     return entity;
 }
 
-void PhysicsLayer::AddExplosion(const glm::vec3& position, float force, float radius)
+void PhysicsLayer::AddExplosion(const glm::vec3& position, float force, float radius) const
 {
     if (!physicsManager) return;
     
@@ -347,7 +354,7 @@ void PhysicsLayer::CreatePhysicsDemo()
                                                 glm::vec3(0.4f, 0.4f, 0.4f));
     
     // Add visuals to box stack
-    for (auto entity : boxStack)
+    for (const auto entity : boxStack)
     {
         AddVisualToPhysicsEntity(entity, "box");
     }
@@ -367,14 +374,18 @@ void PhysicsLayer::CreatePhysicsDemo()
     demoEntities.insert(demoEntities.end(), ballPit.begin(), ballPit.end());
     
     // Create some random objects
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10; ++i)
+    {
         glm::vec3 pos(dis(gen), heightDis(gen), dis(gen));
         
-        if (i % 2 == 0) {
+        if (i % 2 == 0)
+        {
             // Box
             auto entity = CreatePhysicsBox(pos, glm::vec3(0.3f, 0.3f, 0.3f), 1.0f);
             demoEntities.push_back(entity);
-        } else {
+        }
+    	else
+    	{
             // Sphere
             auto entity = CreatePhysicsSphere(pos, 0.4f, 1.0f);
             demoEntities.push_back(entity);
@@ -382,7 +393,7 @@ void PhysicsLayer::CreatePhysicsDemo()
     }
     
     // Create a trigger zone (semi-transparent)
-    auto trigger = physicsManager->CreateBoxEntity(glm::vec3(0, 1, 0), 
+    const auto trigger = physicsManager->CreateBoxEntity(glm::vec3(0, 1, 0), 
                                                   glm::vec3(1.5f, 0.5f, 1.5f), 
                                                   1.0f, true);
     physicsManager->SetTrigger(trigger, true);
@@ -398,7 +409,8 @@ void PhysicsLayer::CreatePhysicsDemo()
         sharedWorld->AddComponent(trigger, RenderableComponent(true));
         sharedWorld->AddComponent(trigger, MaterialComponent(glm::vec3(1.0f, 1.0f, 0.0f))); // Yellow trigger zone
         
-        if (sharedWorld->HasComponent<TransformComponent>(trigger)) {
+        if (sharedWorld->HasComponent<TransformComponent>(trigger))
+        {
             auto& transform = sharedWorld->GetComponent<TransformComponent>(trigger);
             transform.scale = glm::vec3(3.0f, 1.0f, 3.0f); // Scale to match trigger size
         }
@@ -417,19 +429,22 @@ void PhysicsLayer::CreatePhysicsDemo()
 }
 
 // Helper function to add visual components to existing physics entities
-void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::string& type)
+void PhysicsLayer::AddVisualToPhysicsEntity(const ECS::Entity entity, const std::string& type) const
 {
     LOG_DEBUG("=== AddVisualToPhysicsEntity START ===");
     LOG_DEBUG("Entity: {}, Type: {}", entity, type);
     
-    if (!modelLayer || !sharedWorld->HasComponent<TransformComponent>(entity)) {
+    if (!modelLayer || !sharedWorld->HasComponent<TransformComponent>(entity))
+    {
         LOG_ERROR("ModelLayer is null or entity missing TransformComponent");
         return;
     }
     
     // Add appropriate model
-    if (type == "box" || type == "cube") {
-        if (cubeModel) {
+    if (type == "box" || type == "cube")
+    {
+        if (cubeModel)
+        {
             LOG_DEBUG("Adding cube visual to entity {}", entity);
             
             ModelComponent modelComp;
@@ -441,7 +456,8 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
             sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.7f, 0.3f, 0.2f))); // Orange
             
             // Scale to match box collider
-            if (sharedWorld->HasComponent<BoxColliderComponent>(entity)) {
+            if (sharedWorld->HasComponent<BoxColliderComponent>(entity))
+            {
                 auto& collider = sharedWorld->GetComponent<BoxColliderComponent>(entity);
                 auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
                 transform.scale = collider.size * 2.0f; // Half-extents to full size
@@ -449,12 +465,16 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
                 LOG_DEBUG("Box entity {} scaled to ({}, {}, {})", 
                          entity, transform.scale.x, transform.scale.y, transform.scale.z);
             }
-        } else {
+        }
+    	else
+    	{
             LOG_ERROR("Cube model is null!");
         }
     }
-    else if (type == "sphere") {
-        if (sphereModel) {
+    else if (type == "sphere")
+    {
+        if (sphereModel)
+        {
             LOG_DEBUG("Adding sphere visual to entity {}", entity);
             
             ModelComponent modelComp;
@@ -466,7 +486,8 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
             sharedWorld->AddComponent(entity, MaterialComponent(glm::vec3(0.2f, 0.7f, 0.3f))); // Green
             
             // Scale to match sphere collider
-            if (sharedWorld->HasComponent<SphereColliderComponent>(entity)) {
+            if (sharedWorld->HasComponent<SphereColliderComponent>(entity))
+            {
                 auto& collider = sharedWorld->GetComponent<SphereColliderComponent>(entity);
                 auto& transform = sharedWorld->GetComponent<TransformComponent>(entity);
                 transform.scale = glm::vec3(collider.radius * 2.0f); // Radius to diameter
@@ -474,7 +495,9 @@ void PhysicsLayer::AddVisualToPhysicsEntity(ECS::Entity entity, const std::strin
                 LOG_DEBUG("Sphere entity {} scaled to ({}, {}, {})", 
                          entity, transform.scale.x, transform.scale.y, transform.scale.z);
             }
-        } else {
+        }
+    	else
+    	{
             LOG_ERROR("Sphere model is null!");
         }
     }
@@ -487,7 +510,8 @@ void PhysicsLayer::ClearDemo()
 {
     if (!sharedWorld) return;
     
-    for (auto entity : demoEntities) {
+    for (const auto entity : demoEntities)
+    {
         sharedWorld->DestroyEntity(entity);
     }
     demoEntities.clear();
@@ -507,33 +531,39 @@ void PhysicsLayer::AddRandomPhysicsObjects()
     
     glm::vec3 pos(posDis(gen), heightDis(gen), posDis(gen));
     
-    if (typeDis(gen) == 0) {
+    if (typeDis(gen) == 0)
+    {
         // Add box
         auto entity = CreatePhysicsBox(pos, glm::vec3(0.4f, 0.4f, 0.4f), 1.0f);
         demoEntities.push_back(entity);
-    } else {
+    }
+	else
+	{
         // Add sphere
         auto entity = CreatePhysicsSphere(pos, 0.4f, 1.0f);
         demoEntities.push_back(entity);
     }
 }
 
-void PhysicsLayer::HandleDemoInput()
+void PhysicsLayer::HandleDemoInput() const
 {
     // Continuous input handling
-    if (Input::IsKeyDown(KeyCode::G)) {
+    if (Input::IsKeyDown(KeyCode::G))
+    {
         // Increase gravity
         auto gravity = physicsManager->GetGravity();
         physicsManager->SetGravity(gravity + glm::vec3(0, -0.1f, 0));
     }
     
-    if (Input::IsKeyDown(KeyCode::H)) {
+    if (Input::IsKeyDown(KeyCode::H))
+    {
         // Decrease gravity
         auto gravity = physicsManager->GetGravity();
         physicsManager->SetGravity(gravity + glm::vec3(0, 0.1f, 0));
     }
     
-    if (Input::IsKeyDown(KeyCode::R)) {
+    if (Input::IsKeyDown(KeyCode::R))
+    {
         // Reset gravity
         physicsManager->SetGravity(glm::vec3(0.0f, -9.81f, 0.0f));
     }

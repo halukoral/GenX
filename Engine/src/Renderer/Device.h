@@ -39,9 +39,9 @@ public:
 
 private:
 	void CreateInstance();
-	void CreateSurface(Window* window);
+	void CreateSurface(const Window* window);
 	void PickPhysicalDevice();
-	bool IsDeviceSuitable(VkPhysicalDevice device);
+	bool IsDeviceSuitable(VkPhysicalDevice device) const;
 	bool CheckDeviceExtensionSupport(VkPhysicalDevice device) const;
 	void CreateLogicalDevice();
 

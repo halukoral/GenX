@@ -116,63 +116,6 @@ glm::mat4 Model::GetModelMatrix() const
 	return model;
 }
 
-Model Model::CreateCube()
-{
-	Model model;
-        
-	std::vector<Vertex3D> vertices =
-	{
-		// Front face
-		{{-0.5f, -0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{ 0.5f, -0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-		{{ 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f, 0.0f}},
-
-		// Back face
-		{{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 1.0f}},
-		{{ 0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 1.0f}},
-		{{ 0.5f,  0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}, {0.5f, 0.5f, 0.5f}},
-		{{-0.5f,  0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}, {0.8f, 0.2f, 0.6f}},
-
-		// Left face
-		{{-0.5f,  0.5f,  0.5f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 0.5f, 0.0f}},
-		{{-0.5f,  0.5f, -0.5f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}, {0.5f, 1.0f, 0.0f}},
-		{{-0.5f, -0.5f, -0.5f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.5f, 1.0f}},
-		{{-0.5f, -0.5f,  0.5f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.5f}},
-
-		// Right face
-		{{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.8f, 0.3f, 0.1f}},
-		{{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}, {0.2f, 0.8f, 0.3f}},
-		{{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {0.6f, 0.2f, 0.8f}},
-		{{ 0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.9f, 0.7f, 0.2f}},
-
-		// Bottom face
-		{{-0.5f, -0.5f, -0.5f}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}, {0.4f, 0.6f, 0.9f}},
-		{{ 0.5f, -0.5f, -0.5f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}, {0.7f, 0.4f, 0.6f}},
-		{{ 0.5f, -0.5f,  0.5f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}, {0.3f, 0.9f, 0.5f}},
-		{{-0.5f, -0.5f,  0.5f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}, {0.8f, 0.5f, 0.3f}},
-
-		// Top face
-		{{-0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.6f, 0.8f, 0.2f}},
-		{{ 0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.2f, 0.6f, 0.8f}},
-		{{ 0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}, {0.9f, 0.3f, 0.7f}},
-		{{-0.5f,  0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}, {0.5f, 0.9f, 0.4f}}
-	};
-
-	std::vector<uint32_t> indices =
-	{
-		0,  1,  2,  2,  3,  0,   // front
-		4,  5,  6,  6,  7,  4,   // back
-		8,  9,  10, 10, 11, 8,   // left
-		12, 13, 14, 14, 15, 12,  // right
-		16, 17, 18, 18, 19, 16,  // bottom
-		20, 21, 22, 22, 23, 20   // top
-	};
-
-	model.Meshes.emplace_back(vertices, indices);
-	return model;
-}
-
 Model Model::LoadFromFile(const std::string& path)
 {
 	Model model;
@@ -272,9 +215,9 @@ void Model::CalculateNormals(std::vector<Vertex3D>& vertices, const std::vector<
 
 	for (size_t i = 0; i < indices.size(); i += 3)
 	{
-		uint32_t i0 = indices[i];
-		uint32_t i1 = indices[i + 1];
-		uint32_t i2 = indices[i + 2];
+		const uint32_t i0 = indices[i];
+		const uint32_t i1 = indices[i + 1];
+		const uint32_t i2 = indices[i + 2];
 
 		glm::vec3 v0 = vertices[i0].Pos;
 		glm::vec3 v1 = vertices[i1].Pos;

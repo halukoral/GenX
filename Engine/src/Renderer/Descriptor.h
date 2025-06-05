@@ -17,7 +17,7 @@ public:
     VkDescriptorSet& GetDescriptorSet(const int frameIndex) { return descriptorSets[frameIndex]; }
 
     void UpdateUniformBuffer(uint32_t currentFrame, const UniformBufferObject& ubo) const;
-	void UpdateTextureDescriptor(Texture* texture);
+	void UpdateTextureDescriptor(const Texture* texture) const;
 	
 private:
     void CreateDescriptorSetLayout();

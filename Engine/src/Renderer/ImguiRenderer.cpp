@@ -4,8 +4,8 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
-ImGuiRenderer::ImGuiRenderer(Device* dev, Window* win, RenderPass* rp, VkCommandPool* cmdPool, uint32_t minImgCount,
-	uint32_t imgCount): m_Device(dev), m_Window(win), m_RenderPass(rp), m_CommandPool(cmdPool), m_MinImageCount(minImgCount), m_ImageCount(imgCount)
+ImGuiRenderer::ImGuiRenderer(Device* dev, Window* win, RenderPass* rp, VkCommandPool* cmdPool, const uint32_t minImgCount, const uint32_t imgCount)
+: m_Device(dev), m_Window(win), m_RenderPass(rp), m_CommandPool(cmdPool), m_MinImageCount(minImgCount), m_ImageCount(imgCount)
 {
 	InitImGui();
 }
@@ -24,13 +24,10 @@ void ImGuiRenderer::NewFrame()
 
 void ImGuiRenderer::Render(const VkCommandBuffer commandBuffer)
 {
-	// Custom window da ekleyebiliriz
 	ImGui::Begin("Vulkan Triangle Info");
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 
 				1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::Text("Vulkan Renderer");
-	//if (ImGui::Button("Reset Camera"))
-		// Gelecekte kamera reset fonksiyonu
 	ImGui::End();
 
 	// Render
@@ -46,8 +43,9 @@ void ImGuiRenderer::HandleResize() const
 
 void ImGuiRenderer::InitImGui()
 {
-	// Descriptor pool ImGui için
-	VkDescriptorPoolSize poolSizes[] = {
+	// Descriptor pool ImGui 
+	const VkDescriptorPoolSize poolSizes[] =
+	{
 		{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
 		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
 		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },

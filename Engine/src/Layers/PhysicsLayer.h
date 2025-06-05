@@ -53,11 +53,11 @@ public:
                                    float radius = 0.5f,
                                    float mass = 1.0f) const;
     
-    void AddExplosion(const glm::vec3& position, float force = 10.0f, float radius = 5.0f);
+    void AddExplosion(const glm::vec3& position, float force = 10.0f, float radius = 5.0f) const;
     
 private:
     // Helper function to add visual representation to physics entities
-    void AddVisualToPhysicsEntity(ECS::Entity entity, const std::string& type);
+    void AddVisualToPhysicsEntity(ECS::Entity entity, const std::string& type) const;
     void AddRandomPhysicsObjects();
-    void HandleDemoInput();
+    void HandleDemoInput() const;
 };

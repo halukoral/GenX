@@ -50,7 +50,8 @@ void ModelLayer::OnDetach()
 {
     LOG_INFO("ModelLayer detached");
     
-    if (modelManager) {
+    if (modelManager)
+    {
         // Cleanup will happen automatically through destructors
         modelManager.reset();
     }
@@ -62,7 +63,8 @@ void ModelLayer::OnDetach()
 
 void ModelLayer::OnUpdate(float ts)
 {
-    if (modelManager) {
+    if (modelManager)
+    {
         modelManager->Update(ts);
     }
 }
@@ -76,22 +78,22 @@ void ModelLayer::OnEvent(Event& event)
 ECS::Entity ModelLayer::CreateModel(const std::string& modelPath, 
                                    const glm::vec3& position,
                                    const glm::vec3& rotation,
-                                   const glm::vec3& scale)
+                                   const glm::vec3& scale) const
 {
     if (!modelManager)
     {
         LOG_ERROR("ModelManager not initialized!");
         return 0;
     }
-    
-    ECS::Entity entity = modelManager->CreateModelEntity(modelPath, position, rotation, scale);
+
+    const ECS::Entity entity = modelManager->CreateModelEntity(modelPath, position, rotation, scale);
     LOG_INFO("Created model entity {} with path: {}", entity, modelPath);
     return entity;
 }
 
 ECS::Entity ModelLayer::CreateModelWithMaterial(const std::string& modelPath,
                                                const glm::vec3& position,
-                                               const MaterialComponent& material)
+                                               const MaterialComponent& material) const
 {
     if (!modelManager)
     {
@@ -102,30 +104,32 @@ ECS::Entity ModelLayer::CreateModelWithMaterial(const std::string& modelPath,
     return modelManager->CreateModelEntity(modelPath, position, material);
 }
 
-void ModelLayer::SetModelVisibility(ECS::Entity entity, bool visible)
+void ModelLayer::SetModelVisibility(const ECS::Entity entity, const bool visible) const
 {
     if (modelManager) {
         modelManager->SetModelVisibility(entity, visible);
     }
 }
 
-void ModelLayer::SetModelTransform(ECS::Entity entity, const glm::vec3& position, 
-                                  const glm::vec3& rotation, const glm::vec3& scale)
+void ModelLayer::SetModelTransform(const ECS::Entity entity, const glm::vec3& position, 
+                                  const glm::vec3& rotation, const glm::vec3& scale) const
 {
-    if (modelManager) {
+    if (modelManager)
+    {
         modelManager->SetModelTransform(entity, position, rotation, scale);
     }
 }
 
-bool ModelLayer::IsModelLoaded(ECS::Entity entity)
+bool ModelLayer::IsModelLoaded(const ECS::Entity entity) const
 {
-    if (modelManager) {
+    if (modelManager)
+    {
         return modelManager->IsModelLoaded(entity);
     }
     return false;
 }
 
-void ModelLayer::DestroyModel(ECS::Entity entity)
+void ModelLayer::DestroyModel(const ECS::Entity entity) const
 {
     if (modelManager)
     {
@@ -133,11 +137,11 @@ void ModelLayer::DestroyModel(ECS::Entity entity)
     }
 }
 
-void ModelLayer::Render(VkCommandBuffer commandBuffer, 
+void ModelLayer::Render(const VkCommandBuffer commandBuffer, 
                        const glm::vec3& cameraPosition,
                        const glm::mat4& viewMatrix, 
                        const glm::mat4& projectionMatrix,
-					   uint32_t currentFrame)
+					   const uint32_t currentFrame) const
 {
     if (modelManager)
     {
@@ -145,7 +149,7 @@ void ModelLayer::Render(VkCommandBuffer commandBuffer,
     }
 }
 
-void ModelLayer::SetRenderPipeline(VkPipeline pipeline, VkPipelineLayout layout)
+void ModelLayer::SetRenderPipeline(const VkPipeline pipeline, const VkPipelineLayout layout)
 {
 	LOG_INFO("ModelLayer::SetRenderPipeline called - Pipeline: {}, Layout: {}", 
 		 (void*)pipeline, (void*)layout);
@@ -153,7 +157,9 @@ void ModelLayer::SetRenderPipeline(VkPipeline pipeline, VkPipelineLayout layout)
     if (modelManager)
     {
         modelManager->SetRenderPipeline(pipeline, layout);
-    } else {
+    }
+	else
+	{
     	LOG_ERROR("ModelManager is null in SetRenderPipeline!");
     	storedPipeline = pipeline;
     	storedPipelineLayout = layout;
@@ -161,7 +167,7 @@ void ModelLayer::SetRenderPipeline(VkPipeline pipeline, VkPipelineLayout layout)
     }
 }
 
-ModelManager::ModelStats ModelLayer::GetModelStats()
+ModelManager::ModelStats ModelLayer::GetModelStats() const
 {
     if (modelManager)
     {
@@ -177,7 +183,8 @@ void ModelLayer::DebugState() const
 	LOG_INFO("Descriptor: {}", (void*)descriptor);
 	LOG_INFO("ModelManager: {}", (void*)modelManager.get());
         
-	if (modelManager) {
+	if (modelManager)
+	{
 		modelManager->DebugState();
 	}
 }

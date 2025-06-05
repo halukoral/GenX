@@ -130,7 +130,6 @@ void Renderer::UpdateUniformBuffer(const uint32_t currentFrame) const
 	const auto& cameraData = m_CameraLayer->GetCameraData();
     
 	UniformBufferObject ubo{};
-	// Model matrisi artık yok, sadece view ve projection
 	ubo.View = cameraData.view;
 	ubo.Proj = cameraData.projection;
     

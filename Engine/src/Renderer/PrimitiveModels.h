@@ -1,5 +1,3 @@
-// Engine/src/Renderer/PrimitiveModels.h - Buffer oluşturma özelliği ekle
-
 #pragma once
 #include "Renderer/Model.h"
 #include "Renderer/Device.h"
@@ -9,7 +7,6 @@ class PrimitiveModels
 {
 public:
     // Create basic geometric shapes for physics visualization
-    
     static std::shared_ptr<Model> CreateCube(float size = 1.0f, Device* device = nullptr);
 	static std::shared_ptr<Model> CreateSphere(float radius = 1.0f, int segments = 16, int rings = 12, Device* device = nullptr);    
     static std::shared_ptr<Model> CreatePlane(float size = 1.0f, Device* device = nullptr);

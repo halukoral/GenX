@@ -63,10 +63,7 @@ public:
     Model(const std::string& path);
 
     void Cleanup(VkDevice device) const;
-
     glm::mat4 GetModelMatrix() const;
-
-    static Model CreateCube();
     static Model LoadFromFile(const std::string& path);
 
 private:

@@ -96,7 +96,7 @@ void Device::CreateInstance()
 	LOG_INFO("Instance created successfully!");
 }
 
-void Device::CreateSurface(Window* window)
+void Device::CreateSurface(const Window* window)
 {
 	if (glfwCreateWindowSurface(m_Instance, window->GetWindow(), nullptr, &m_Surface) != VK_SUCCESS)
 	{
@@ -134,14 +134,14 @@ void Device::PickPhysicalDevice()
 	LOG_INFO("GPU found and selected successfully!");
 }
 
-bool Device::IsDeviceSuitable(VkPhysicalDevice device)
+bool Device::IsDeviceSuitable(const VkPhysicalDevice device) const
 {
-	QueueFamilyIndices indices = FindQueueFamilies(device);
-	bool extensionsSupported = CheckDeviceExtensionSupport(device);
+	const QueueFamilyIndices indices = FindQueueFamilies(device);
+	const bool extensionsSupported = CheckDeviceExtensionSupport(device);
 	return indices.IsComplete() && extensionsSupported;
 }
 
-bool Device::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
+bool Device::CheckDeviceExtensionSupport(const VkPhysicalDevice device) const
 {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -211,7 +211,7 @@ void Device::CreateLogicalDevice()
 	vkGetDeviceQueue(m_Device, indices.GraphicsFamily, 0, &m_GraphicsQueue);
 	vkGetDeviceQueue(m_Device, indices.PresentFamily, 0, &m_PresentQueue);
 
-	// Command pool oluştur
+	// Create Command pool
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;

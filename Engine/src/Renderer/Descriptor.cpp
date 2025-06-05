@@ -2,7 +2,7 @@
 
 #include "Texture.h"
 
-Descriptor::Descriptor(Device* dev, int maxFrames): device(dev), maxFramesInFlight(maxFrames)
+Descriptor::Descriptor(Device* dev, const int maxFrames): device(dev), maxFramesInFlight(maxFrames)
 {
 	CreateDescriptorSetLayout();
 	CreateUniformBuffers();
@@ -15,12 +15,12 @@ Descriptor::~Descriptor()
 	Cleanup();
 }
 
-void Descriptor::UpdateUniformBuffer(uint32_t currentFrame, const UniformBufferObject& ubo) const
+void Descriptor::UpdateUniformBuffer(const uint32_t currentFrame, const UniformBufferObject& ubo) const
 {
 	memcpy(uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
 }
 
-void Descriptor::UpdateTextureDescriptor(Texture* texture)
+void Descriptor::UpdateTextureDescriptor(const Texture* texture) const
 {
 	for (size_t i = 0; i < maxFramesInFlight; i++)
 	{
@@ -100,7 +100,7 @@ void Descriptor::CreateUniformBuffers()
 
 	for (size_t i = 0; i < maxFramesInFlight; i++)
 	{
-		const VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+		constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
 					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
 					uniformBuffers[i], uniformBuffersMemory[i]);
@@ -149,7 +149,8 @@ void Descriptor::CreateDescriptorSets()
 	}
 	LOG_INFO("Descriptor sets allocated successfully!");
 
-	for (size_t i = 0; i < maxFramesInFlight; i++) {
+	for (size_t i = 0; i < maxFramesInFlight; i++)
+	{
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;

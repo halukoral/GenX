@@ -28,7 +28,7 @@ private:
 	Window* m_Window;
 	RenderPass* m_RenderPass;
 	VkDescriptorPool m_DescriptorPool;
-	VkCommandPool* m_CommandPool; // Command pool referansı
+	VkCommandPool* m_CommandPool;
 	uint32_t m_MinImageCount;
 	uint32_t m_ImageCount;
 };

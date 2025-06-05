@@ -6,7 +6,6 @@
 #include "RenderPass.h"
 #include "SwapChain.h"
 
-// Pipeline Class - Graphics pipeline yönetimi
 class Pipeline
 {
 public:

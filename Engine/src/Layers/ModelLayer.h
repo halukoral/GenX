@@ -31,26 +31,26 @@ public:
     ECS::Entity CreateModel(const std::string& modelPath, 
                            const glm::vec3& position = glm::vec3(0.0f),
                            const glm::vec3& rotation = glm::vec3(0.0f),
-                           const glm::vec3& scale = glm::vec3(1.0f));
+                           const glm::vec3& scale = glm::vec3(1.0f)) const;
     
     ECS::Entity CreateModelWithMaterial(const std::string& modelPath,
                                        const glm::vec3& position,
-                                       const MaterialComponent& material);
+                                       const MaterialComponent& material) const;
     
-    void SetModelVisibility(ECS::Entity entity, bool visible);
+    void SetModelVisibility(ECS::Entity entity, bool visible) const;
     void SetModelTransform(ECS::Entity entity, const glm::vec3& position, 
                           const glm::vec3& rotation = glm::vec3(0.0f),
-                          const glm::vec3& scale = glm::vec3(1.0f));
+                          const glm::vec3& scale = glm::vec3(1.0f)) const;
     
-    bool IsModelLoaded(ECS::Entity entity);
-    void DestroyModel(ECS::Entity entity);
+    bool IsModelLoaded(ECS::Entity entity) const;
+    void DestroyModel(ECS::Entity entity) const;
     
     // Render interface
     void Render(VkCommandBuffer commandBuffer, 
                const glm::vec3& cameraPosition,
                const glm::mat4& viewMatrix, 
                const glm::mat4& projectionMatrix,
-			   uint32_t currentFrame);
+			   uint32_t currentFrame) const;
     
     void SetRenderPipeline(VkPipeline pipeline, VkPipelineLayout layout);
     
@@ -59,7 +59,7 @@ public:
     void SetDescriptor(Descriptor* desc) { descriptor = desc; }
     
     // Get stats for debugging
-    ModelManager::ModelStats GetModelStats();
+    ModelManager::ModelStats GetModelStats() const;
     
     ModelManager* GetModelManager() const { return modelManager.get(); }
 

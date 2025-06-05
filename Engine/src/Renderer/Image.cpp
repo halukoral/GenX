@@ -1,19 +1,19 @@
 #include "Image.h"
 
-Image::Image(Device* dev, SwapChain* swapChain): device(dev)
+Image::Image(Device* dev, const SwapChain* swapChain): device(dev)
 {
 	CreateImageViews(swapChain);
 }
 
 Image::~Image()
 {
-	for (auto imageView : swapChainImageViews)
+	for (const auto imageView : swapChainImageViews)
 	{
 		vkDestroyImageView(device->GetLogicalDevice(), imageView, nullptr);
 	}
 }
 
-void Image::CreateImageViews(SwapChain* swapChain)
+void Image::CreateImageViews(const SwapChain* swapChain)
 {
 	swapChainImageViews.resize(swapChain->GetImages().size());
 
