@@ -1,0 +1,85 @@
+#pragma once
+
+#include "pch.h"
+#include "Descriptor.h"
+#include "Device.h"
+#include "Image.h"
+#include "ImguiRenderer.h"
+#include "Pipeline.h"
+#include "RenderPass.h"
+#include "SwapChain.h"
+
+class Renderer
+{
+	struct Vertex
+	{
+		float pos[2];
+		float color[3];
+	};
+
+	const std::vector<Vertex> vertices =
+	{
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+
+	const std::vector<uint16_t> indices =
+	{
+		0, 1, 2, 2, 3, 0
+	};
+	
+public:
+	Renderer() = default;
+	Renderer(std::shared_ptr<Window> window) : m_Window(window) { }
+
+	void InitVulkan();
+	void Cleanup();
+
+	void DrawFrame();
+
+	const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
+	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
+	VkCommandBuffer GetCurrentCommandBuffer() const	{ return m_CommandBuffers[m_CurrentFrame]; }
+	
+private:
+	void CreateFramebuffers();
+	void CreateCommandPool();
+	void CreateVertexBuffer();
+	void CreateIndexBuffer();
+	
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
+	void CreateCommandBuffers();
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+	void CreateSyncObjects();
+
+private:
+	std::shared_ptr<Window> m_Window;
+	std::unique_ptr<Device> m_Device;
+	std::unique_ptr<SwapChain> m_SwapChain;
+	std::unique_ptr<Image> m_Image;
+	std::unique_ptr<RenderPass> m_RenderPass;
+	std::unique_ptr<Pipeline> m_Pipeline;
+	std::unique_ptr<Descriptor> m_Descriptor;
+	std::unique_ptr<ImGuiRenderer> imguiRenderer;
+	
+	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+
+	VkCommandPool m_CommandPool;
+	std::vector<VkCommandBuffer> m_CommandBuffers;
+	std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+	std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+	std::vector<VkFence> m_InFlightFences;
+
+	size_t m_CurrentFrame = 0;
+
+	VkBuffer m_VertexBuffer;
+	VkDeviceMemory m_VertexBufferMemory;
+
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+	
+	const int MAX_FRAMES_IN_FLIGHT = 2;
+};
