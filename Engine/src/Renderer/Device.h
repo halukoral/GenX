@@ -36,6 +36,10 @@ public:
 	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
 	uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
+	// Buffer operations
+	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
+	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkCommandPool commandPool) const;
+
 private:
 	void CreateInstance();
 	void CreateSurface(Window* window);

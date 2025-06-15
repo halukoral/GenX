@@ -21,13 +21,6 @@ struct AppSpec
 	uint32_t Height = 1440;
 };
 
-struct UniformBufferObject
-{
-	glm::mat4 Model;
-	glm::mat4 View;
-	glm::mat4 Projection;
-};
-
 class Application
 {
 private:
@@ -83,8 +76,6 @@ private:
 	float m_FrameTime = 0.0f;
 	float m_LastFrameTime = 0.0f;
 
-	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-	
 	std::vector<std::shared_ptr<Layer>> m_LayerStack;
 	std::function<void()> m_MenubarCallback;
 	
@@ -92,6 +83,4 @@ private:
 
 	std::shared_ptr<Window> m_Window = std::make_shared<Window>(m_Spec.Width, m_Spec.Height, m_Spec.Name);
 	std::unique_ptr<Renderer> m_Renderer = std::make_unique<Renderer>(m_Window);
-	
-	VkDescriptorPool m_ImGuiDescriptorPool = VK_NULL_HANDLE;
 };

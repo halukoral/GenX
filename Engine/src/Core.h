@@ -5,13 +5,26 @@
 #define ENGINE_DIR "../"
 #endif
 
+// GLM experimental features must be enabled before any GLM includes
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
+#endif
+
+#ifndef GLM_FORCE_RADIANS
+#define GLM_FORCE_RADIANS
+#endif
+
+#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#endif
+
 #ifdef GX_DEBUG
 	#define GX_DEBUGBREAK() __debugbreak()
 	#define GX_ENABLE_ASSERTS
 	inline bool EnableValidationLayers = true;
 #else
-	#define GX_DEBUGBREAK()
-	inline bool EnableValidationLayers = false;
+#define GX_DEBUGBREAK()
+inline bool EnableValidationLayers = false;
 #endif
 
 #define GX_EXPAND_MACRO(x) x

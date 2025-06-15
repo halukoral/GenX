@@ -30,6 +30,11 @@ set(VULKAN_SDK_LIB "${VULKAN_SDK}/Lib")
 add_subdirectory(Engine)
 add_subdirectory(Editor)
 
+target_include_directories(Engine PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tinyobjloader
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/stb_image
+)
+
 # GLFW
 FetchContent_Declare(glfw
 GIT_REPOSITORY "https://github.com/glfw/glfw.git"

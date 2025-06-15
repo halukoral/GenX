@@ -8,28 +8,10 @@
 #include "Pipeline.h"
 #include "RenderPass.h"
 #include "SwapChain.h"
+#include "Model.h"
 
 class Renderer
 {
-	struct Vertex
-	{
-		float pos[2];
-		float color[3];
-	};
-
-	const std::vector<Vertex> vertices =
-	{
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-	};
-
-	const std::vector<uint16_t> indices =
-	{
-		0, 1, 2, 2, 3, 0
-	};
-	
 public:
 	Renderer() = default;
 	Renderer(std::shared_ptr<Window> window) : m_Window(window) { }
@@ -38,6 +20,7 @@ public:
 	void Cleanup();
 
 	void DrawFrame();
+	void LoadModel(const std::string& modelPath);
 
 	const std::unique_ptr<Device>& GetDevice() const { return m_Device; }
 	const std::unique_ptr<RenderPass>& GetSwapChainRenderPass() const { return m_RenderPass; }
@@ -46,11 +29,6 @@ public:
 private:
 	void CreateFramebuffers();
 	void CreateCommandPool();
-	void CreateVertexBuffer();
-	void CreateIndexBuffer();
-	
-	void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
-	void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 	void CreateCommandBuffers();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 	void CreateSyncObjects();
@@ -64,6 +42,7 @@ private:
 	std::unique_ptr<Pipeline> m_Pipeline;
 	std::unique_ptr<Descriptor> m_Descriptor;
 	std::unique_ptr<ImGuiRenderer> imguiRenderer;
+	std::unique_ptr<Model> m_Model;
 	
 	std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
@@ -74,12 +53,6 @@ private:
 	std::vector<VkFence> m_InFlightFences;
 
 	size_t m_CurrentFrame = 0;
-
-	VkBuffer m_VertexBuffer;
-	VkDeviceMemory m_VertexBufferMemory;
-
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
 	
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 };

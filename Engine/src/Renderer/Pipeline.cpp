@@ -1,8 +1,8 @@
 #include "Pipeline.h"
 
-Pipeline::Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass): device(dev)
+Pipeline::Pipeline(Device* dev, SwapChain* swapChain, RenderPass* renderPass, VkDescriptorSetLayout descriptorSetLayout): device(dev)
 {
-	CreateGraphicsPipeline(swapChain, renderPass);
+	CreateGraphicsPipeline(swapChain, renderPass, descriptorSetLayout);
 }
 
 Pipeline::~Pipeline()
@@ -11,7 +11,7 @@ Pipeline::~Pipeline()
 	vkDestroyPipelineLayout(device->GetLogicalDevice(), pipelineLayout, nullptr);
 }
 
-void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass)
+void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPass, VkDescriptorSetLayout descriptorSetLayout)
 {
 	auto vertShaderCode = ReadFile("../basic.vert.spv");
 	auto fragShaderCode = ReadFile("../basic.frag.spv");
@@ -33,21 +33,9 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-	VkVertexInputBindingDescription bindingDescription{};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof(Vertex);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-	attributeDescriptions[0].binding = 0;
-	attributeDescriptions[0].location = 0;
-	attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-	attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-	attributeDescriptions[1].binding = 0;
-	attributeDescriptions[1].location = 1;
-	attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[1].offset = offsetof(Vertex, color);
+	// Use 3D vertex input description
+	VkVertexInputBindingDescription bindingDescription = Vertex3D::getBindingDescription();
+	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = Vertex3D::getAttributeDescriptions();
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -87,7 +75,7 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // Important for 3D models
 	rasterizer.depthBiasEnable = VK_FALSE;
 
 	VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -110,9 +98,11 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 	colorBlending.blendConstants[2] = 0.0f;
 	colorBlending.blendConstants[3] = 0.0f;
 
+	// Pipeline layout with descriptor set layout
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 
 	if (vkCreatePipelineLayout(device->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
