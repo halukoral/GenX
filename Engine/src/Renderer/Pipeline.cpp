@@ -34,8 +34,8 @@ void Pipeline::CreateGraphicsPipeline(SwapChain* swapChain, RenderPass* renderPa
 	VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
 	// Use 3D vertex input description
-	VkVertexInputBindingDescription bindingDescription = Vertex3D::getBindingDescription();
-	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = Vertex3D::getAttributeDescriptions();
+	VkVertexInputBindingDescription bindingDescription = Vertex3D::GetBindingDescription();
+	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = Vertex3D::GetAttributeDescriptions();
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

@@ -2,9 +2,9 @@
 
 Buffer::Buffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, 
                VkMemoryPropertyFlags properties, VkCommandPool commandPool)
-    : device(device), bufferSize(size), usage(usage), commandPool(commandPool)
+    : m_Device(device), m_BufferSize(size), m_Usage(usage), m_CommandPool(commandPool)
 {
-    device->CreateBuffer(size, usage, properties, buffer, bufferMemory);
+    device->CreateBuffer(size, usage, properties, m_Buffer, m_BufferMemory);
 }
 
 Buffer::~Buffer()
@@ -13,13 +13,13 @@ Buffer::~Buffer()
 }
 
 Buffer::Buffer(Buffer&& other) noexcept
-    : device(other.device), buffer(other.buffer), bufferMemory(other.bufferMemory),
-      bufferSize(other.bufferSize), usage(other.usage), commandPool(other.commandPool),
-      mapped(other.mapped)
+    : m_Device(other.m_Device), m_Buffer(other.m_Buffer), m_BufferMemory(other.m_BufferMemory),
+      m_BufferSize(other.m_BufferSize), m_Usage(other.m_Usage), m_CommandPool(other.m_CommandPool),
+      m_Mapped(other.m_Mapped)
 {
-    other.buffer = VK_NULL_HANDLE;
-    other.bufferMemory = VK_NULL_HANDLE;
-    other.mapped = nullptr;
+    other.m_Buffer = VK_NULL_HANDLE;
+    other.m_BufferMemory = VK_NULL_HANDLE;
+    other.m_Mapped = nullptr;
 }
 
 Buffer& Buffer::operator=(Buffer&& other) noexcept
@@ -28,87 +28,87 @@ Buffer& Buffer::operator=(Buffer&& other) noexcept
     {
         Cleanup();
         
-        device = other.device;
-        buffer = other.buffer;
-        bufferMemory = other.bufferMemory;
-        bufferSize = other.bufferSize;
-        usage = other.usage;
-        commandPool = other.commandPool;
-        mapped = other.mapped;
+        m_Device = other.m_Device;
+        m_Buffer = other.m_Buffer;
+        m_BufferMemory = other.m_BufferMemory;
+        m_BufferSize = other.m_BufferSize;
+        m_Usage = other.m_Usage;
+        m_CommandPool = other.m_CommandPool;
+        m_Mapped = other.m_Mapped;
         
-        other.buffer = VK_NULL_HANDLE;
-        other.bufferMemory = VK_NULL_HANDLE;
-        other.mapped = nullptr;
+        other.m_Buffer = VK_NULL_HANDLE;
+        other.m_BufferMemory = VK_NULL_HANDLE;
+        other.m_Mapped = nullptr;
     }
     return *this;
 }
 
-void Buffer::Map(VkDeviceSize size, VkDeviceSize offset)
+void Buffer::Map(const VkDeviceSize size, const VkDeviceSize offset)
 {
-    vkMapMemory(device->GetLogicalDevice(), bufferMemory, offset, size, 0, &mapped);
+    vkMapMemory(m_Device->GetLogicalDevice(), m_BufferMemory, offset, size, 0, &m_Mapped);
 }
 
 void Buffer::Unmap()
 {
-    if (mapped)
+    if (m_Mapped)
     {
-        vkUnmapMemory(device->GetLogicalDevice(), bufferMemory);
-        mapped = nullptr;
+        vkUnmapMemory(m_Device->GetLogicalDevice(), m_BufferMemory);
+        m_Mapped = nullptr;
     }
 }
 
-void Buffer::WriteToBuffer(void* data, VkDeviceSize size, VkDeviceSize offset)
+void Buffer::WriteToBuffer(const void* data, VkDeviceSize size, const VkDeviceSize offset)
 {
     if (size == VK_WHOLE_SIZE)
     {
-        size = bufferSize;
+        size = m_BufferSize;
     }
 
-    if (mapped)
+    if (m_Mapped)
     {
-        memcpy(static_cast<char*>(mapped) + offset, data, size);
+        memcpy(static_cast<char*>(m_Mapped) + offset, data, size);
     }
     else
     {
         Map(size, offset);
-        memcpy(mapped, data, size);
+        memcpy(m_Mapped, data, size);
         Unmap();
     }
 }
 
-void Buffer::CopyFrom(Buffer& srcBuffer, VkDeviceSize size)
+void Buffer::CopyFrom(const Buffer& srcBuffer, const VkDeviceSize size) const
 {
-    device->CopyBuffer(srcBuffer.GetBuffer(), buffer, size, commandPool);
+    m_Device->CopyBuffer(srcBuffer.GetBuffer(), m_Buffer, size, m_CommandPool);
 }
 
-void Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
+void Buffer::Flush(const VkDeviceSize size, const VkDeviceSize offset) const
 {
     VkMappedMemoryRange mappedRange{};
     mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    mappedRange.memory = bufferMemory;
+    mappedRange.memory = m_BufferMemory;
     mappedRange.offset = offset;
     mappedRange.size = size;
-    vkFlushMappedMemoryRanges(device->GetLogicalDevice(), 1, &mappedRange);
+    vkFlushMappedMemoryRanges(m_Device->GetLogicalDevice(), 1, &mappedRange);
 }
 
-void Buffer::Invalidate(VkDeviceSize size, VkDeviceSize offset)
+void Buffer::Invalidate(const VkDeviceSize size, const VkDeviceSize offset) const
 {
     VkMappedMemoryRange mappedRange{};
     mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    mappedRange.memory = bufferMemory;
+    mappedRange.memory = m_BufferMemory;
     mappedRange.offset = offset;
     mappedRange.size = size;
-    vkInvalidateMappedMemoryRanges(device->GetLogicalDevice(), 1, &mappedRange);
+    vkInvalidateMappedMemoryRanges(m_Device->GetLogicalDevice(), 1, &mappedRange);
 }
 
 void Buffer::Cleanup()
 {
-    if (buffer != VK_NULL_HANDLE)
+    if (m_Buffer != VK_NULL_HANDLE)
     {
         Unmap();
-        vkDestroyBuffer(device->GetLogicalDevice(), buffer, nullptr);
-        vkFreeMemory(device->GetLogicalDevice(), bufferMemory, nullptr);
-        buffer = VK_NULL_HANDLE;
-        bufferMemory = VK_NULL_HANDLE;
+        vkDestroyBuffer(m_Device->GetLogicalDevice(), m_Buffer, nullptr);
+        vkFreeMemory(m_Device->GetLogicalDevice(), m_BufferMemory, nullptr);
+        m_Buffer = VK_NULL_HANDLE;
+        m_BufferMemory = VK_NULL_HANDLE;
     }
 }

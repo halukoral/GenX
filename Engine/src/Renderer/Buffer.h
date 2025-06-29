@@ -20,26 +20,26 @@ public:
 
 	void Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 	void Unmap();
-	void WriteToBuffer(void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-	void CopyFrom(Buffer& srcBuffer, VkDeviceSize size);
-	void Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-	void Invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+	void WriteToBuffer(const void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+	void CopyFrom(const Buffer& srcBuffer, VkDeviceSize size) const;
+	void Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
+	void Invalidate(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
 
-	VkBuffer GetBuffer() const { return buffer; }
-	VkDeviceMemory GetMemory() const { return bufferMemory; }
-	void* GetMappedMemory() const { return mapped; }
-	VkDeviceSize GetSize() const { return bufferSize; }
-	VkBufferUsageFlags GetUsage() const { return usage; }
+	VkBuffer			GetBuffer() const { return m_Buffer; }
+	VkDeviceMemory		GetMemory() const { return m_BufferMemory; }
+	void*				GetMappedMemory() const { return m_Mapped; }
+	VkDeviceSize		GetSize() const { return m_BufferSize; }
+	VkBufferUsageFlags	GetUsage() const { return m_Usage; }
 
 private:
 	void Cleanup();
 
 private:
-	Device* device;
-	VkBuffer buffer = VK_NULL_HANDLE;
-	VkDeviceMemory bufferMemory = VK_NULL_HANDLE;
-	VkDeviceSize bufferSize;
-	VkBufferUsageFlags usage;
-	VkCommandPool commandPool;
-	void* mapped = nullptr;
+	Device* m_Device;
+	VkBuffer m_Buffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_BufferMemory = VK_NULL_HANDLE;
+	VkDeviceSize m_BufferSize;
+	VkBufferUsageFlags m_Usage;
+	VkCommandPool m_CommandPool;
+	void* m_Mapped = nullptr;
 };
