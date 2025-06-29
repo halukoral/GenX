@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "Device.h"
 #include "UniformBuffer.h"
+#include "Descriptor.h"
 
 struct Vertex3D {
     glm::vec3 pos;
@@ -68,19 +69,17 @@ public:
     void CreateVertexBuffer();
     void CreateIndexBuffer();
     void CreateUniformBuffers();
-    void CreateDescriptorPool();
-    void CreateDescriptorSets();
+    void CreateDescriptors();
     
     void UpdateUniformBuffer(uint32_t currentImage, VkExtent2D swapChainExtent);
     void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t currentFrame);
     
-    VkDescriptorSetLayout GetDescriptorSetLayout() const { return descriptorSetLayout; }
+    VkDescriptorSetLayout GetDescriptorSetLayout() const { return descriptor->GetDescriptorSetLayout(); }
     const std::vector<Vertex3D>& GetVertices() const { return vertices; }
     const std::vector<uint32_t>& GetIndices() const { return indices; }
 
 private:
     void LoadModel(const std::string& modelPath);
-    void CreateDescriptorSetLayout();
 
 private:
     Device* device;
@@ -94,10 +93,8 @@ private:
 	std::unique_ptr<Buffer> indexBuffer;
 	std::unique_ptr<UniformBuffer<UniformBufferObject>> uniformBuffers;
     
-    
-    VkDescriptorSetLayout descriptorSetLayout;
-    VkDescriptorPool descriptorPool;
-    std::vector<VkDescriptorSet> descriptorSets;
+    // Descriptor management
+    std::unique_ptr<Descriptor<UniformBufferObject>> descriptor;
     
     // Transformation matrices
     glm::mat4 modelMatrix;

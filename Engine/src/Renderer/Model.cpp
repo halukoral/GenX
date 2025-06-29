@@ -8,23 +8,18 @@
 Model::Model(Device* device, const std::string& modelPath, VkCommandPool commandPool) 
     : device(device), commandPool(commandPool) {
     LoadModel(modelPath);
-    CreateDescriptorSetLayout();
+    
     CreateVertexBuffer();
     CreateIndexBuffer();
     CreateUniformBuffers();
-    CreateDescriptorPool();
-    CreateDescriptorSets();
+    CreateDescriptors();
     
     // Initialize transformation matrices
     modelMatrix = glm::mat4(1.0f);
     viewMatrix = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-Model::~Model()
-{
-    vkDestroyDescriptorPool(device->GetLogicalDevice(), descriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(device->GetLogicalDevice(), descriptorSetLayout, nullptr);
-}
+Model::~Model() = default;
 
 void Model::LoadModel(const std::string& modelPath) {
     tinyobj::attrib_t attrib;
@@ -69,24 +64,6 @@ void Model::LoadModel(const std::string& modelPath) {
     }
 
     LOG_INFO("Model loaded: {} vertices, {} indices", vertices.size(), indices.size());
-}
-
-void Model::CreateDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.pImmutableSamplers = nullptr;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
-
-    if (vkCreateDescriptorSetLayout(device->GetLogicalDevice(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create descriptor set layout!");
-    }
 }
 
 void Model::CreateVertexBuffer() {
@@ -149,49 +126,12 @@ void Model::CreateUniformBuffers() {
 	uniformBuffers = std::make_unique<UniformBuffer<UniformBufferObject>>(device, MAX_FRAMES_IN_FLIGHT);
 }
 
-void Model::CreateDescriptorPool() {
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes = &poolSize;
-    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-    if (vkCreateDescriptorPool(device->GetLogicalDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create descriptor pool!");
-    }
-}
-
-void Model::CreateDescriptorSets() {
-    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
-    VkDescriptorSetAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    allocInfo.pSetLayouts = layouts.data();
-
-    descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-    if (vkAllocateDescriptorSets(device->GetLogicalDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to allocate descriptor sets!");
-    }
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        VkDescriptorBufferInfo bufferInfo = uniformBuffers->GetDescriptorInfo(i);;
-
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-
-        vkUpdateDescriptorSets(device->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
-    }
+void Model::CreateDescriptors() {
+    descriptor = std::make_unique<Descriptor<UniformBufferObject>>(device, MAX_FRAMES_IN_FLIGHT);
+    
+    descriptor->CreateDescriptorSetLayout();
+    descriptor->CreateDescriptorPool();
+    descriptor->CreateDescriptorSets(uniformBuffers.get());
 }
 
 void Model::UpdateUniformBuffer(uint32_t currentImage, VkExtent2D swapChainExtent) {
@@ -215,6 +155,7 @@ void Model::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout,
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
     
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+    VkDescriptorSet descriptorSet = descriptor->GetDescriptorSet(currentFrame);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 }
