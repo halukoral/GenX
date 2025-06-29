@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Buffer.h"
 #include "pch.h"
 #include "Device.h"
+#include "UniformBuffer.h"
 
 struct Vertex3D {
     glm::vec3 pos;
@@ -87,14 +89,11 @@ private:
     std::vector<Vertex3D> vertices;
     std::vector<uint32_t> indices;
     
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+	// Buffers
+	std::unique_ptr<Buffer> vertexBuffer;
+	std::unique_ptr<Buffer> indexBuffer;
+	std::unique_ptr<UniformBuffer<UniformBufferObject>> uniformBuffers;
     
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
-    std::vector<void*> uniformBuffersMapped;
     
     VkDescriptorSetLayout descriptorSetLayout;
     VkDescriptorPool descriptorPool;

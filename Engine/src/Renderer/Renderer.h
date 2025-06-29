@@ -40,7 +40,6 @@ private:
 	std::unique_ptr<Image> m_Image;
 	std::unique_ptr<RenderPass> m_RenderPass;
 	std::unique_ptr<Pipeline> m_Pipeline;
-	std::unique_ptr<Descriptor> m_Descriptor;
 	std::unique_ptr<ImGuiRenderer> imguiRenderer;
 	std::unique_ptr<Model> m_Model;
 	

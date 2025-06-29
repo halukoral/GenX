@@ -15,7 +15,6 @@ void Renderer::InitVulkan()
 	
 	m_Pipeline = std::make_unique<Pipeline>(m_Device.get(), m_SwapChain.get(), m_RenderPass.get(), 
 											m_Model->GetDescriptorSetLayout());
-	m_Descriptor = std::make_unique<Descriptor>(m_Device.get());
 
 	imguiRenderer = std::make_unique<ImGuiRenderer>(
 		m_Device.get(), 
@@ -233,7 +232,6 @@ void Renderer::Cleanup()
 	
 	imguiRenderer.reset();
 	m_Model.reset();
-	m_Descriptor.reset();
 	m_Pipeline.reset();
 	m_RenderPass.reset();
 	m_Image.reset();
