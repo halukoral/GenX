@@ -19,9 +19,7 @@ namespace eng
             return;
         }
 
-        // Initialize time tracking
         m_lastTimePoint = std::chrono::high_resolution_clock::now();
-
         while (!m_application->NeedsToBeClosed())
         {
             auto now = std::chrono::high_resolution_clock::now();
